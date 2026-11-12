@@ -1388,3 +1388,16 @@
   - npx tsc --noEmit -> 0 errores (TSC_OK).
   - Playwright automatizado verificado en CREATE, Wardrobe, Mis Skins y CAM con 0 inconsistencias visuales.
   - Sincronizado en GitHub en rama main.
+
+## Validación completada - Desacoplamiento de Cámara PiP, Menú Inferior y 4 Mensajes Visibles en 9:16
+- Fecha: 2026-11-12 20:01
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Solución integral a los 3 problemas de visualización en el formato 9:16 (modo smartphone TikTok Live):
+  1. **Despeje del Menú Inferior sobre la Persona**: La ventana de cámara PiP ("imagen de la persona") ahora cuenta con elevación absoluta calibrada (`bottom: 78px !important; z-index: 80 !important;`), posicionándose de forma holgada y completamente por encima del menú inferior de acciones (`phone-bottom-actions-dock` en `bottom: 0`), sin sufrir ningún recorte o solapamiento.
+  2. **Separación Limpia entre Cámara y Comentarios**: Se ajustó el ancho del PiP a `114px` en la esquina inferior derecha y se restringió el ancho máximo del feed de chat a `calc(100% - 132px)`. Esto crea un corredor de seguridad de 18px entre ambos elementos, garantizando que los mensajes del chat jamás sean tapados ni obstaculizados por la cámara.
+  3. **Visualización de Mínimo 4 Mensajes Simultáneos**: Se amplió la altura máxima del feed de chat a `235px`, se fijó `maxVisible={4}` en el orquestador principal y se suavizó la máscara de gradiente superior (`maskImage`), permitiendo que 4 mensajes completos con sus avatares reales, nombres de autor, insignias y niveles se lean con total claridad y nitidez.
+  4. **Columna de Likes y Corazones Flotantes**: Elevada automáticamente a `margin-bottom: 154px !important` cuando el PiP está activo, garantizando que el contador de likes (50.8K) y las partículas animadas floten limpiamente por encima de la cámara del streamer.
+- Observaciones:
+  - Verificado mediante suite automatizada Playwright (`verify_9_16_pip.py`) comprobando que `PiP bottom (803px) < Dock top (809.6px)`, `Chat right (706px) < PiP left (724px)`, y conteo de mensajes = 4 exactos.
+  - `npx tsc --noEmit` -> 0 errores (`TSC_OK`).
+  - Sincronizado en GitHub en rama `main`.

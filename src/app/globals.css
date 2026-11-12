@@ -9558,3 +9558,28 @@ body {
 .avatar-face-selector-card:hover {
   border-color: rgba(99, 102, 241, 0.4) !important;
 }
+
+/* =============================================================
+   POSICIONAMIENTO CALIBRADO DE CÁMARA PIP EN 9:16 Y MOCKUP
+   - Se eleva por encima del dock inferior (bottom: 78px)
+   - Ancho compacto (114px) para no solapar los comentarios del chat
+   - Columna de likes y corazones por encima del PiP
+   ============================================================= */
+.delulu-monitor-container.aspect-9-16 .monitor-pip-camera,
+.delulu-monitor-container.in-phone-mockup .monitor-pip-camera {
+  bottom: 78px !important;
+  right: 12px !important;
+  top: auto !important;
+  width: 114px !important;
+  max-width: 32% !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--accent-pink) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65) !important;
+  z-index: 80 !important;
+}
+
+.delulu-monitor-container.aspect-9-16:has(.monitor-pip-camera) .real-feel-hearts-col,
+.delulu-monitor-container.in-phone-mockup:has(.monitor-pip-camera) .real-feel-hearts-col {
+  margin-bottom: 154px !important;
+}

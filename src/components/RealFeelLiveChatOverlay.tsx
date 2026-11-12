@@ -424,13 +424,13 @@ export function RealFeelLiveChatOverlay({
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
-              gap: 4,
-              maxWidth: compactMode ? "76%" : "48%",
-              maxHeight: compactMode ? 132 : 165,
+              gap: 5,
+              maxWidth: compactMode || hasPipCamera ? "calc(100% - 132px)" : "48%",
+              maxHeight: compactMode ? 235 : 210,
               overflow: "hidden",
               pointerEvents: "auto",
-              maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.88) 18%, #000 36%, #000 100%)",
-              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.88) 18%, #000 36%, #000 100%)",
+              maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 4%, #000 10%, #000 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 4%, #000 10%, #000 100%)",
             }}
           >
           {localMessages.slice(-maxVisible).map((msg) => {

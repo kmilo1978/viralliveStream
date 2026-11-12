@@ -4234,8 +4234,8 @@ export default function StudioDeluluPage() {
                   showBottomBar={false}
                   showLiveGoal={!showPhoneMockupFrame}
                   streamerName={streamerName}
-                  bottomPadding={showPhoneMockupFrame ? 56 : 14}
-                  maxVisible={showPhoneMockupFrame ? 3 : 4}
+                  bottomPadding={showPhoneMockupFrame ? 72 : 14}
+                  maxVisible={showPhoneMockupFrame ? 4 : 4}
                   compactMode={showPhoneMockupFrame}
                   hasPipCamera={
                     bgPreviewEnabled &&
