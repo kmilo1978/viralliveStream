@@ -1329,3 +1329,26 @@
   2. Mantener la experiencia de visualización limpia y cinematográfica.
 - Pendientes:
   - Commit y push inmediato a `origin/main` en GitHub.
+
+
+## Validación completada
+- Fecha: 2026-11-12 14:05
+- Resultado: Aprobado (score 10/10)
+- Resumen: Limpieza total de insignias en los monitores de Clips Pregrabados y ocultación de nombres de modelos/proveedores de IA internos:
+  1. **Retiro de Badges sobre el Video Dual**: Se eliminaron las etiquetas flotantes `.queue-feed-badge` (`⏵ ENTRADA (16:9 · 1280x720)`) y `.out-ai` (`★ SALIDA IA (lucy-restyle-2 · 720P 16:9)`) de las pantallas de previsualización en [QueueClipsPanel.tsx](file:///c:/Users/Usuario/Documents/MiPlataformaStream/spike-v0/src/components/QueueClipsPanel.tsx).
+  2. **Protección de Marca Blanca (Zero AI Leak)**: Se reemplazaron todas las menciones visibles de motores internos (`lucy-restyle-2`, `lucy-2.6`, `lucy-vton-3.6`, `Decart`) por denominaciones neutras y profesionales de estudio:
+     - `Estilo Visual Artístico (1 cr/s)`
+     - `Personajes y Transformación HD (4 cr/s)`
+     - `Personajes Cinematográfico (4 cr/s)`
+     - `Probador Virtual de Video (4 cr/s)`
+  3. **Limpieza en Skins y Try-On**: Retiradas las referencias en etiquetas de [SkinsStudioPanel.tsx](file:///c:/Users/Usuario/Documents/MiPlataformaStream/spike-v0/src/components/SkinsStudioPanel.tsx) y [TryOnStudioPanel.tsx](file:///c:/Users/Usuario/Documents/MiPlataformaStream/spike-v0/src/components/TryOnStudioPanel.tsx), garantizando que el usuario final nunca vea qué IA backend se está utilizando.
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> `Visible elements with text 'lucy': 0`, `Has queue-feed-badge: False`. Pantallas completamente limpias.
+
+## Nueva sesión
+- Fecha: 2026-11-12 14:05
+- Solicitud: En Clips Pregrabados no se deberían ver las etiquetas sobre la pantalla y menos que vean la IA que usamos.
+- Decisiones clave:
+  1. Eliminar completamente las insignias flotantes sobre los reproductores de video en el monitor dual de Clips Pregrabados.
+  2. Ocultar nombres de modelos backend técnicos en todas las interfaces de usuario.
+- Pendientes:
+  - Commit y push inmediato a `origin/main` en GitHub.

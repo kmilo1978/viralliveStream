@@ -1209,7 +1209,7 @@ export default function StudioDeluluPage() {
       setSelectedModelId("lucy-2.6");
       setPromptText(REFERENCE_SWAP_PROMPT);
       setSelectedPresetId("ref-swap");
-      setStreamInfo("Foto cargada: motor configurado en lucy-2.6 para sustitución.");
+      setStreamInfo("Foto cargada: motor configurado para sustitución facial y corporal.");
     },
     [],
   );
@@ -6949,9 +6949,9 @@ export default function StudioDeluluPage() {
                   )
                 }
               >
-                <option value="lucy-2.6">Personajes y Rostros (lucy-2.6)</option>
-                <option value="lucy-vton-3.6">Probador de Ropa (lucy-vton-3.6)</option>
-                <option value="lucy-restyle-2">Estilo Escénico (lucy-restyle-2)</option>
+                <option value="lucy-2.6">Personajes y Rostros HD</option>
+                <option value="lucy-vton-3.6">Probador Virtual de Ropa</option>
+                <option value="lucy-restyle-2">Estilo Escénico Artístico</option>
               </select>
             </div>
 

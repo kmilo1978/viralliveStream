@@ -19,9 +19,9 @@ export type SpikeModelInfo = {
 export const SPIKE_MODELS: SpikeModelInfo[] = [
   {
     id: "lucy-restyle-2",
-    label: "Estilo visual (lucy-restyle-2)",
+    label: "Estilo Visual Artístico",
     description:
-      "Cambia el estilo artistico de toda la escena (anime, cyberpunk, plastilina). Tarifa base economica.",
+      "Cambia el estilo artístico de toda la escena (anime, cyberpunk, plastilina). Tarifa base económica.",
     decartCreditsPerSec: 1,
     fastCreditsPerSec: null,
     resolutionLabel: "1280x704 · 25 fps",
@@ -30,7 +30,7 @@ export const SPIKE_MODELS: SpikeModelInfo[] = [
   },
   {
     id: "lucy-2.6",
-    label: "Personajes y edicion (lucy-2.6)",
+    label: "Personajes y Transformación HD",
     description: "Cambia personaje, ropa, fondo u objetos en directo con texto o imagen.",
     decartCreditsPerSec: 2,
     fastCreditsPerSec: 4,
@@ -40,8 +40,8 @@ export const SPIKE_MODELS: SpikeModelInfo[] = [
   },
   {
     id: "lucy-2.5",
-    label: "Personajes y edicion (lucy-2.5)",
-    description: "Modelo estable para transformacion de personajes y escena en tiempo real.",
+    label: "Personajes Cinematográfico",
+    description: "Modelo estable para transformación de personajes y escena en tiempo real.",
     decartCreditsPerSec: 2,
     fastCreditsPerSec: 4,
     resolutionLabel: "1280x720 · 30 fps",
@@ -50,7 +50,7 @@ export const SPIKE_MODELS: SpikeModelInfo[] = [
   },
   {
     id: "lucy-vton-3.6",
-    label: "Probador virtual (lucy-vton-3.6)",
+    label: "Probador Virtual de Ropa",
     description: "Prueba prendas de ropa sobre el cuerpo en vivo (ideal para ventas en directo).",
     decartCreditsPerSec: 2,
     fastCreditsPerSec: 4,

@@ -314,7 +314,7 @@ export function QueueClipsPanel({
               <Dashicon name="format-video" size={18} />
             </span>
             <h2 style={{ margin: 0, fontSize: "1.1rem" }}>
-              Monitor Dual de Clips Pregrabados (Entrada vs Salida IA)
+              Monitor Dual de Clips Pregrabados (Original vs Video Mejorado)
             </h2>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -338,9 +338,6 @@ export function QueueClipsPanel({
         <div className="queue-monitor-screens">
           {/* Pantalla 1: ENTRADA (Video Original) */}
           <div className={`queue-feed-box ${activeAspectPreset.cssClass}`}>
-            <span className="queue-feed-badge" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <Dashicon name="video-alt3" size={13} /> ENTRADA ({dualAspect} · {activePixelDims.width}×{activePixelDims.height})
-            </span>
             {inputVideoUrl ? (
               <video
                 ref={inputVideoRef}
@@ -362,11 +359,8 @@ export function QueueClipsPanel({
             )}
           </div>
 
-          {/* Pantalla 2: SALIDA IA (Video Procesado Decart) */}
+          {/* Pantalla 2: SALIDA IA (Video Procesado) */}
           <div className={`queue-feed-box ${activeAspectPreset.cssClass}`}>
-            <span className="queue-feed-badge out-ai" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <Dashicon name="star-filled" size={13} /> SALIDA IA ({modelId} · {dualResolution.toUpperCase()} {dualAspect})
-            </span>
             {activeOutputUrl ? (
               <video
                 ref={outputVideoRef}
@@ -382,7 +376,7 @@ export function QueueClipsPanel({
                   <Dashicon name="clock" size={28} />
                 </div>
                 <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 700 }}>
-                  Procesando en servidores de Decart...
+                  Procesando video con IA...
                 </p>
                 <span style={{ fontSize: "0.72rem", opacity: 0.8 }}>
                   La salida aparecerá aquí automáticamente al completarse
@@ -501,7 +495,7 @@ export function QueueClipsPanel({
                   type="button"
                   className="pill-ctrl-button active-pink"
                   style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-                  onClick={() => onLoadCompletedIntoMonitor(activeOutputUrl, `Clip IA (${modelId})`)}
+                  onClick={() => onLoadCompletedIntoMonitor(activeOutputUrl, "Clip IA HD")}
                   title="Enviar este video procesado a la cabina CAM para transmitirlo en bucle"
                 >
                   <Dashicon name="controls-play" size={13} />
@@ -601,11 +595,11 @@ export function QueueClipsPanel({
       </section>
 
       {/* Formulario de envío */}
-      <section className="studio-card" aria-label="Enviar video a la cola Decart">
+      <section className="studio-card" aria-label="Configurar y procesar clip de video">
         <h2>Configurar y Procesar Clip</h2>
         <p className="muted-copy">
-          Sube un video MP4, WebM, MOV, M4V o MKV (hasta 200 MB, cualquier proporción: 16:9, 9:16, 1:1, 4:5, 4:3 o 21:9) para que Decart lo
-          procese en segundo plano con máxima calidad.
+          Sube un video MP4, WebM, MOV, M4V o MKV (hasta 200 MB, cualquier proporción: 16:9, 9:16, 1:1, 4:5, 4:3 o 21:9) para
+          procesarlo en segundo plano con máxima calidad.
         </p>
 
         <div className="field-row">
@@ -690,7 +684,7 @@ export function QueueClipsPanel({
             disabled={submitting || !videoFile}
           >
             {submitting
-              ? "Subiendo a Decart..."
+              ? "Subiendo video..."
               : `Procesar video en cola (${selectedModelMeta.decartCreditsPerSec} cr/s)`}
           </button>
         </div>

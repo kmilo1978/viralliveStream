@@ -16,25 +16,25 @@ export type QueueModelInfo = {
 export const QUEUE_VIDEO_MODELS: QueueModelInfo[] = [
   {
     id: "lucy-restyle-2",
-    label: "Estilo visual (lucy-restyle-2 · 1 cr/s)",
+    label: "Estilo Visual Artístico (1 cr/s)",
     decartCreditsPerSec: 1,
-    notes: "Transforma todo el video en estilo artistico (hasta 30 min en cola).",
+    notes: "Transforma todo el video en estilo artístico con máxima nitidez (hasta 30 min en cola).",
   },
   {
     id: "lucy-2.6",
-    label: "Personajes y edicion (lucy-2.6 · 4 cr/s)",
+    label: "Personajes y Transformación HD (4 cr/s)",
     decartCreditsPerSec: 4,
     notes: "Cambia personaje, ropa o fondo en videos pregrabados 720p.",
   },
   {
     id: "lucy-2.5",
-    label: "Personajes estable (lucy-2.5 · 4 cr/s)",
+    label: "Personajes Cinematográfico (4 cr/s)",
     decartCreditsPerSec: 4,
-    notes: "Edicion de video por texto o imagen de referencia a 720p.",
+    notes: "Edición de video por texto o imagen de referencia a 720p.",
   },
   {
     id: "lucy-vton-3.6",
-    label: "Probador Virtual (lucy-vton-3.6 · 4 cr/s)",
+    label: "Probador Virtual de Video (4 cr/s)",
     decartCreditsPerSec: 4,
     notes: "Aplica prendas de referencia sobre la persona del video.",
   },

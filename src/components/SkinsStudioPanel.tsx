@@ -206,10 +206,10 @@ export function SkinsStudioPanel({
                   value={skinModel}
                   onChange={(e) => setSkinModel(e.target.value as SavedSkinPreset["modelId"])}
                 >
-                  <option value="lucy-2.6">lucy-2.6 (Personajes/Escena)</option>
-                  <option value="lucy-restyle-2">lucy-restyle-2 (Solo estilo 1 cr/s)</option>
-                  <option value="lucy-vton-3.6">lucy-vton-3.6 (Ropa Try-On)</option>
-                  <option value="lucy-2.5">lucy-2.5 (Personajes estable)</option>
+                  <option value="lucy-2.6">Personajes y Transformación HD</option>
+                  <option value="lucy-restyle-2">Estilo Visual Artístico (1 cr/s)</option>
+                  <option value="lucy-vton-3.6">Probador Virtual de Ropa</option>
+                  <option value="lucy-2.5">Personajes Cinematográfico</option>
                 </select>
               </div>
             </div>
@@ -279,8 +279,8 @@ export function SkinsStudioPanel({
             {skins.length === 0 ? (
               <div className="studio-subcard">
                 <p className="muted-copy" style={{ margin: 0 }}>
-                  Todavia no tienes Skins guardados. Crea uno a la izquierda o genera un personaje
-                  abajo con lucy-image-2 y guardalo aqui.
+                  Todavía no tienes Skins guardados. Crea uno a la izquierda o genera un personaje
+                  abajo con el generador de imágenes y guárdalo aquí.
                 </p>
               </div>
             ) : (
@@ -346,7 +346,7 @@ export function SkinsStudioPanel({
 
       {/* BLOQUE 2: ESTUDIO DE IMAGEN (lucy-image-2) */}
       <section className="studio-card" aria-label="Estudio de Imagen">
-        <h2>Estudio de Imagen y Generador de Personajes (lucy-image-2 · 1 o 2 cr)</h2>
+        <h2>Estudio de Imagen y Generador de Personajes (1 o 2 cr)</h2>
         <p className="muted-copy">
           Prueba estilos o crea un avatar desde tu foto antes de abrir la transmision por segundo.
         </p>

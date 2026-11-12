@@ -352,7 +352,7 @@ export function TryOnStudioPanel({
       if (garmentPreviewUrl) URL.revokeObjectURL(garmentPreviewUrl);
       setGarmentPreviewUrl(URL.createObjectURL(cleanFile));
       setPrompt(TRYON_TEMPLATES[0].prompt);
-      setStatusMsg("Prenda aislada sobre fondo blanco (1 crédito) y lista para lucy-vton-3.6.");
+      setStatusMsg("Prenda aislada sobre fondo blanco (1 crédito) y lista para el probador virtual.");
 
       onLogUsage({
         kind: "image",
@@ -417,7 +417,7 @@ export function TryOnStudioPanel({
             <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
               <Dashicon name="products" size={20} color="#EC4899" />
               <span>Monitor de Probador Virtual en Vivo</span>
-              <span className="nav-badge-new">lucy-vton-3.6</span>
+              <span className="nav-badge-new">Try-On V3</span>
             </h2>
             <p className="muted-copy" style={{ margin: "4px 0 0 0" }}>
               Prueba ropa en tiempo real sobre tu cámara web o sobre un video MP4 pregrabado en bucle.
@@ -697,7 +697,7 @@ export function TryOnStudioPanel({
                       fontWeight: 900,
                     }}
                   >
-                    ● EN VIVO (lucy-vton-3.6)
+                    ● EN VIVO
                   </span>
                 )}
               </div>
@@ -994,7 +994,7 @@ export function TryOnStudioPanel({
             onClick={handleExtractGarment}
             disabled={!garmentFile || extracting}
           >
-            {extracting ? "Extrayendo..." : "Extraer solo la prenda (lucy-image-2 · 1 cr)"}
+            {extracting ? "Extrayendo..." : "Extraer solo la prenda (1 crédito)"}
           </button>
         </div>
 
@@ -1030,7 +1030,7 @@ export function TryOnStudioPanel({
           >
             {isConnectedLive
               ? "Aplicar prenda ahora en vivo"
-              : "Iniciar Probador Virtual (lucy-vton-3.6 · 2 cr/s)"}
+              : "Iniciar Probador Virtual (2 cr/s)"}
           </button>
         </div>
       </section>
