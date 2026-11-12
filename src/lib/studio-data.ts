@@ -1073,7 +1073,7 @@ export const DEFAULT_SCHEDULED_OVERLAYS: ScheduledOverlayItem[] = [
     intervalSeconds: 60,
     durationSeconds: 15,
     animation: "fade",
-    enabled: true,
+    enabled: false,
   },
   {
     id: "ovl-sponsor-ticker",
@@ -1089,7 +1089,7 @@ export const DEFAULT_SCHEDULED_OVERLAYS: ScheduledOverlayItem[] = [
     intervalSeconds: 30, // cada 30 segundos
     durationSeconds: 10, // visible 10 segundos
     animation: "slide",
-    enabled: true,
+    enabled: false,
   },
   {
     id: "ovl-live-badge",
@@ -2598,7 +2598,7 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
   aiAgentEnabled: true,
   aiModel: "openai/gpt-4o-mini",
   aiSystemPrompt: "Eres el Agente de Ventas y Atención Oficial por WhatsApp de la transmisión en vivo. Tu misión es responder cordialmente en español, resolver dudas sobre los productos vistos en el stream, informar precios y guiar al cliente para completar su pedido por este chat.",
-  showOnScreen: true,
+  showOnScreen: false,
   position: "bottom-left",
   callToAction: "Escríbenos en vivo a WhatsApp",
 };

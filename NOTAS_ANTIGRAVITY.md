@@ -1457,3 +1457,9 @@
 - Resultado: Aprobado (score >= 9.8/10)
 - Resumen: Proporcionalidad visual completa en monitor panorámico 16:9 (Chat con fuentes 0.98rem y avatares 32px, PiP de persona a 320x180px, Live Shopping centrado a 440px con QR 68px) y activación funcional de botones activos con confirmación HUD inmediata.
 - Observaciones: Los botones en pantalla ya no están bloqueados por isCockpitTab, se agrupan por cuadrantes (screen-top-right, etc.) evitando solapamientos y ofrecen feedback instantáneo al usuario y ejecución real de controles (espejo, audio, compras, rec, prompts).
+
+## Validación completada - Switches Cerrados por Defecto
+- Fecha: 2026-11-12 16:42
+- Resultado: Aprobado (score >= 9.9/10)
+- Resumen: Configuración de todos los switches de capas y overlays en estado CERRADO / DESACTIVADO por defecto (Total switches: 8, Activos por defecto: 0).
+- Observaciones: El escenario de transmisión inicia 100% limpio (Shopping: 0, WhatsApp: 0, Banners: 0, PiP: 0, Botones: 0, Chat: 0). Cada switch se activa limpiamente a petición del usuario sin sobrecargar la pantalla.

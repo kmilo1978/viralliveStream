@@ -325,7 +325,7 @@ export default function StudioDeluluPage() {
   // Fondos Virtuales (Chroma Key & Escenarios)
   const BG_STORAGE_KEY = "miplataformastream.virtualBackgrounds.v2";
   const [virtualBackgrounds, setVirtualBackgrounds] = useState<VirtualBackgroundItem[]>(DEFAULT_VIRTUAL_BACKGROUNDS);
-  const [selectedBgId, setSelectedBgId] = useState<string>("bg-chroma-green");
+  const [selectedBgId, setSelectedBgId] = useState<string>("bg-none");
   const bgUploadInputRef = useRef<HTMLInputElement | null>(null);
   const bgVideoUploadInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -345,7 +345,7 @@ export default function StudioDeluluPage() {
 
   // Logos y Banners Programados en Pantalla
   const OVERLAYS_STORAGE_KEY = "miplataformastream.scheduledOverlays.v1";
-  const [scheduledOverlays, setScheduledOverlays] = useState<ScheduledOverlayItem[]>(DEFAULT_SCHEDULED_OVERLAYS);
+  const [scheduledOverlays, setScheduledOverlays] = useState<ScheduledOverlayItem[]>(DEFAULT_SCHEDULED_OVERLAYS.map((o) => ({ ...o, enabled: false })));
   const [overlayTick, setOverlayTick] = useState<number>(0);
   const [showAddBannerModal, setShowAddBannerModal] = useState<boolean>(false);
   const [newBannerName, setNewBannerName] = useState<string>("");
@@ -391,7 +391,7 @@ export default function StudioDeluluPage() {
   // Shoppable Product Cards (Tarjetas de Productos Comprables en Vivo)
   const PRODUCTS_STORAGE_KEY = "miplataformastream.shoppableProducts.v1";
   const [shoppableProducts, setShoppableProducts] = useState<ShoppableProductItem[]>(DEFAULT_SHOPPABLE_PRODUCTS);
-  const [activeProductId, setActiveProductId] = useState<string | null>("prod-headphones");
+  const [activeProductId, setActiveProductId] = useState<string | null>(null);
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
   const [showProductCatalogModal, setShowProductCatalogModal] = useState<boolean>(false);
 
@@ -430,7 +430,7 @@ export default function StudioDeluluPage() {
     viewerRange: DEFAULT_VIEWER_RANGES[6], // 49K-51K (50.7K)
     isGuestSpeaking: true,
   });
-  const [realFeelChatEnabled, setRealFeelChatEnabled] = useState<boolean>(true);
+  const [realFeelChatEnabled, setRealFeelChatEnabled] = useState<boolean>(false);
   const [underMonitorChatText, setUnderMonitorChatText] = useState<string>("");
   const [underMonitorChatPush, setUnderMonitorChatPush] = useState<{ nonce: number; text: string } | null>(null);
   const underMonitorNonceRef = useRef<number>(1);
@@ -455,9 +455,9 @@ export default function StudioDeluluPage() {
   const [streamerName, setStreamerName] = useState<string>("Maddy");
 
   // Previsualización de Fondos en el momento sin gastar créditos
-  const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(true);
+  const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(false);
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
-  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(true);
+  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
   const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(true);
   const [showPhoneMockupBottomDock, setShowPhoneMockupBottomDock] = useState<boolean>(false);
 
@@ -1729,7 +1729,7 @@ export default function StudioDeluluPage() {
         let cfg: WhatsAppConfig = DEFAULT_WHATSAPP_CONFIG;
         if (stored) {
           const parsed = JSON.parse(stored) as Partial<WhatsAppConfig>;
-          cfg = { ...DEFAULT_WHATSAPP_CONFIG, ...parsed };
+          cfg = { ...DEFAULT_WHATSAPP_CONFIG, ...parsed, showOnScreen: false };
         }
         const cleanPhone = cfg.phoneNumber.replace(/[^0-9]/g, "");
         const waLink = cleanPhone
@@ -2169,7 +2169,7 @@ export default function StudioDeluluPage() {
       if (stored) {
         const parsed = JSON.parse(stored) as ScheduledOverlayItem[];
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setScheduledOverlays(parsed);
+          setScheduledOverlays(parsed.map((item) => ({ ...item, enabled: false })));
         }
       }
     } catch {}
