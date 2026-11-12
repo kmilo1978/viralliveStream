@@ -22,6 +22,7 @@ import { StreamConfigModal } from "@/components/StreamConfigModal";
 import { ViewerRangeControl } from "@/components/ViewerRangeControl";
 import { Dashicon, type DashiconName } from "@/components/Dashicons";
 import { ViraliveLogo } from "@/components/ViraliveLogo";
+import { CamStyleThumb } from "@/components/CamStyleThumb";
 import { PlatformLogo, SocialIcon, type SocialNetworkName } from "@/components/PlatformLogos";
 import {
   DEFAULT_SAFE_PROMPT,
@@ -37,7 +38,17 @@ import {
   type SavedSkinPreset,
   type UsageLedgerEntry,
   EXPLORE_CATALOG_ITEMS,
+  CAM_STYLE_PRESETS,
+  CAM_VFX_PRESETS,
+  getCamStyleGroup,
+  type CamStyleGroup,
   DELULU_BUILDER_SECTIONS,
+  DELULU_WARDROBE_SECTIONS,
+  WARDROBE_RANDOM_OUTFIT_PRESETS,
+  DELULU_ACCESSORIES_SECTIONS,
+  ACCESSORIES_RANDOM_PRESETS,
+  type BuilderChipSection,
+  type WardrobePresetIdea,
   type ExploreCardItem,
   DEFAULT_TRYON_CAROUSEL,
   type TryOnGarmentItem,
@@ -83,7 +94,16 @@ declare global {
   }
 }
 
-type MainNavigationTab = "CAM" | "TRY_ON" | "DUO" | "EXPLORE" | "CREATE" | "PRO" | "SETTINGS";
+type MainNavigationTab =
+  | "CAM"
+  | "TRY_ON"
+  | "DUO"
+  | "CLIPS"
+  | "TIKTOK_LIVE"
+  | "EXPLORE"
+  | "CREATE"
+  | "PRO"
+  | "SETTINGS";
 
 const MAIN_NAV_ITEMS: {
   id: MainNavigationTab;
@@ -97,17 +117,67 @@ const MAIN_NAV_ITEMS: {
   { id: "CAM", group: "live", label: "CAM", shortLabel: "CAM", drawerLabel: "CAM · Cabina en Vivo", icon: "video-alt3" },
   { id: "TRY_ON", group: "live", label: "TRY ON", shortLabel: "TRY ON", drawerLabel: "TRY ON · Probador Virtual", icon: "products" },
   { id: "DUO", group: "live", label: "DÚO", shortLabel: "DÚO", drawerLabel: "DÚO · Pantalla Dividida", icon: "groups" },
+  { id: "CLIPS", group: "live", label: "CLIPS PREGRABADOS", shortLabel: "CLIPS", drawerLabel: "CLIPS · Videos Pregrabados", icon: "video-alt2" },
+  { id: "TIKTOK_LIVE", group: "live", label: "TIKTOK CON MARCAS", shortLabel: "TIKTOK", drawerLabel: "TIKTOK · Live con Marcas", icon: "smartphone" },
   { id: "EXPLORE", group: "studio", label: "EXPLORE", shortLabel: "EXPLORE", drawerLabel: "EXPLORE · Catálogo IA", icon: "search" },
   { id: "CREATE", group: "studio", label: "CREATE", shortLabel: "CREATE", drawerLabel: "CREATE · Crear Personaje", icon: "edit" },
   { id: "PRO", group: "studio", label: "MODULOS PRO", shortLabel: "PRO", drawerLabel: "MÓDULOS PRO · Redes & Chat", icon: "star-filled", badge: "PRO" },
   { id: "SETTINGS", group: "system", label: "CONFIGURACIÓN", shortLabel: "AJUSTES", drawerLabel: "CONFIGURACIÓN · APIs, OBS y Docs", icon: "admin-generic" },
 ];
+
+type BuilderDraftCategory = "outfit" | "props";
+const CREATE_CATEGORY_CONFIG: Record<
+  BuilderDraftCategory,
+  {
+    promptLabel: string;
+    promptPlaceholder: string;
+    sections: BuilderChipSection[];
+    presets: WardrobePresetIdea[];
+    emptyHint: string;
+    resultAlt: string;
+    downloadName: string;
+    camBtnLabel: string;
+    camPromptPrefix: string;
+    randomTitle: string;
+    clearTitle: string;
+    ledgerPrefix: string;
+  }
+> = {
+  outfit: {
+    promptLabel: "DESCRIBE YOUR OUTFIT",
+    promptPlaceholder: "A glowing techwear jacket with neon trim and oversized hood...",
+    sections: DELULU_WARDROBE_SECTIONS,
+    presets: WARDROBE_RANDOM_OUTFIT_PRESETS,
+    emptyHint:
+      "Selecciona tipo de prenda, color, material, estilo, corte y detalles o añade notas en Custom Additions y pulsa CREATE.",
+    resultAlt: "Vestuario generado",
+    downloadName: "vestuario-decart.png",
+    camBtnLabel: "USAR EN CAM",
+    camPromptPrefix: "Dress the person in:",
+    randomTitle: "Generar idea de vestuario",
+    clearTitle: "Limpiar vestuario",
+    ledgerPrefix: "Wardrobe",
+  },
+  props: {
+    promptLabel: "DESCRIBE YOUR ACCESSORY",
+    promptPlaceholder: "A floating crystal pendant with sparkling magical aura...",
+    sections: DELULU_ACCESSORIES_SECTIONS,
+    presets: ACCESSORIES_RANDOM_PRESETS,
+    emptyHint:
+      "Selecciona tipo de accesorio, color, material, tamaño, estilo y efectos o añade notas en Custom Additions y pulsa CREATE.",
+    resultAlt: "Accesorio generado",
+    downloadName: "accesorio-decart.png",
+    camBtnLabel: "USAR ACCESORIO EN CAM",
+    camPromptPrefix: "Add this accessory to the person in the scene:",
+    randomTitle: "Generar idea de accesorio",
+    clearTitle: "Limpiar accesorio",
+    ledgerPrefix: "Accessory",
+  },
+};
 type ProSubTab =
-  | "tiktok_live"
   | "playlist_stream"
   | "unified_chat"
   | "schedule_live"
-  | "queue"
   | "obs_alerts"
   | "voice_finance"
   | "skins";
@@ -118,8 +188,7 @@ type StudioDockTab =
   | "teleprompter"
   | "deck"
   | "recording"
-  | "chat"
-  | "tiktok_brand";
+  | "chat";
 type SourceMode = "camera" | "video_file";
 
 type AccountStatusState = {
@@ -173,7 +242,7 @@ export default function StudioDeluluPage() {
 
   // Navegación principal viralive.app
   const [activeTab, setActiveTab] = useState<MainNavigationTab>("CAM");
-  const [proSubTab, setProSubTab] = useState<ProSubTab>("tiktok_live");
+  const [proSubTab, setProSubTab] = useState<ProSubTab>("playlist_stream");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const mobileMenuBtnRef = useRef<HTMLButtonElement | null>(null);
   const [activeTikTokTheme, setActiveTikTokTheme] = useState<TikTokBrandTheme | null>(null);
@@ -201,6 +270,12 @@ export default function StudioDeluluPage() {
 
   // Dock de CAM y Filtro de Cabina Try-On
   const [dockCategory, setDockCategory] = useState<"Persona" | "Ropa" | "Estilo" | "Edicion">("Persona");
+  const [camStyleSearch, setCamStyleSearch] = useState<string>("");
+  const [camStyleGroup, setCamStyleGroup] = useState<"Todos" | CamStyleGroup>("Todos");
+  const [layersExpanded, setLayersExpanded] = useState<boolean>(false);
+  const [lastActionFeedback, setLastActionFeedback] = useState<{ badge: string; text: string } | null>(null);
+  const [monitorInView, setMonitorInView] = useState<boolean>(true);
+  const stageHeroRef = useRef<HTMLElement | null>(null);
   const [tryOnCatFilter, setTryOnCatFilter] = useState<"Todo" | "Casual" | "Elegante" | "Personalizada">("Todo");
   const [selectedPresetId, setSelectedPresetId] = useState<string>("ref-swap");
   const [splitView, setSplitView] = useState<boolean>(false);
@@ -322,8 +397,8 @@ export default function StudioDeluluPage() {
   const [newProdPosition, setNewProdPosition] = useState<"bottom-center" | "bottom-left" | "bottom-right">("bottom-center");
   const productUploadInputRef = useRef<HTMLInputElement | null>(null);
 
-  // UX Limpia y Distribución de Funcionalidades en CAM
-  const [activeStudioTab, setActiveStudioTab] = useState<StudioDockTab>("backgrounds");
+  // UX Limpia y Distribución de Funcionalidades en CAM (abre Chat IA con Agente IA en derecha por defecto)
+  const [activeStudioTab, setActiveStudioTab] = useState<StudioDockTab>("chat");
   const [isDockStackedView, setIsDockStackedView] = useState<boolean>(false);
 
   // Límite de elementos activos en pantalla (Máximo 4 simultáneos para permitir dúo + chat + shopping + fondo)
@@ -462,7 +537,7 @@ export default function StudioDeluluPage() {
   const [uploadIsNsfw, setUploadIsNsfw] = useState(false);
   const [uploadBadge, setUploadBadge] = useState("PROPIO");
 
-  // CREATE Workspace (Delulu Builder)
+  // CREATE Workspace (Delulu Builder: Characters, Wardrobe & Accessories)
   const [createMode, setCreateMode] = useState<"scratch" | "image">("scratch");
   const [createCategory, setCreateCategory] = useState<"person" | "outfit" | "props">("person");
   const [createPrompt, setCreatePrompt] = useState<string>(
@@ -473,6 +548,23 @@ export default function StudioDeluluPage() {
     style: "REALISTIC",
     outfit: "FUTURISTIC",
   });
+  const [categoryDrafts, setCategoryDrafts] = useState<
+    Record<
+      "outfit" | "props",
+      {
+        prompt: string;
+        chips: Record<string, string>;
+        multi: string[];
+        customAdditions: string;
+        presetIdx: number;
+      }
+    >
+  >({
+    outfit: { prompt: "", chips: {}, multi: [], customAdditions: "", presetIdx: 0 },
+    props: { prompt: "", chips: {}, multi: [], customAdditions: "", presetIdx: 0 },
+  });
+  const [collapsedBuilderSections, setCollapsedBuilderSections] = useState<Record<string, boolean>>({});
+  const [createSourceFile, setCreateSourceFile] = useState<File | null>(null);
   const [createGenerating, setCreateGenerating] = useState<boolean>(false);
   const [createResultUrl, setCreateResultUrl] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -1073,6 +1165,7 @@ export default function StudioDeluluPage() {
         image: refImageFile ?? null,
       });
       setStreamInfo("Transformación actualizada en vivo.");
+      setLastActionFeedback({ badge: "EN VIVO", text: `Ejecutado: ${cleanPrompt.slice(0, 42)}...` });
     } catch (err) {
       setStreamError(err instanceof Error ? err.message : "Error actualizando en vivo.");
     }
@@ -1105,6 +1198,10 @@ export default function StudioDeluluPage() {
       setSelectedPresetId(preset.id);
       setPromptText(preset.prompt);
       setSelectedModelId(preset.suggestedModel);
+      setLastActionFeedback({
+        badge: preset.category === "VFX" ? "VFX" : preset.category,
+        text: `${preset.label} listo (${preset.suggestedModel})`,
+      });
 
       if (preset.requiresReferenceImage) {
         if (!refImageFile && refFileInputRef.current) {
@@ -1164,7 +1261,46 @@ export default function StudioDeluluPage() {
     [],
   );
 
-  // Creador Delulu (Tags builder & Lucy Image 2)
+  // Creador Delulu (Characters, Wardrobe & Accessories builder + Lucy Image 2)
+  const composeCategoryPrompt = useCallback(
+    (category: BuilderDraftCategory, chips: Record<string, string>, multi: string[]): string => {
+      if (category === "outfit") {
+        const noun = (chips.clothing_type || "outfit").toLowerCase();
+        const descriptors: string[] = [];
+        if (chips.wardrobe_style) descriptors.push(chips.wardrobe_style.toLowerCase());
+        if (chips.wardrobe_fit) descriptors.push(chips.wardrobe_fit.toLowerCase());
+        if (chips.wardrobe_color) descriptors.push(chips.wardrobe_color.toLowerCase());
+        if (chips.wardrobe_material) descriptors.push(chips.wardrobe_material.toLowerCase());
+        const headline = descriptors.length > 0 ? `A ${descriptors.join(" ")} ${noun}` : `A ${noun}`;
+        const detailSuffix =
+          multi.length > 0 ? ` featuring ${multi.map((d) => d.toLowerCase()).join(", ")}` : "";
+        return `${headline}${detailSuffix}, studio fashion product photo, neutral backdrop.`;
+      }
+
+      const item = (chips.acc_type || "accessory").toLowerCase();
+      const descriptors: string[] = [];
+      if (chips.acc_size) descriptors.push(chips.acc_size.toLowerCase());
+      if (chips.acc_style) descriptors.push(chips.acc_style.toLowerCase());
+      if (chips.acc_color) descriptors.push(chips.acc_color.toLowerCase());
+      if (chips.acc_material) descriptors.push(chips.acc_material.toLowerCase());
+      const activeEffects = multi.filter((ef) => ef !== "NONE");
+      const headline = descriptors.length > 0 ? `A ${descriptors.join(" ")} ${item}` : `A ${item}`;
+      const effectSuffix =
+        activeEffects.length > 0
+          ? ` with ${activeEffects.map((ef) => ef.toLowerCase()).join(", ")} effect`
+          : "";
+      return `${headline}${effectSuffix}, studio macro product photo, dark neutral backdrop.`;
+    },
+    [],
+  );
+
+  const handleToggleBuilderSection = useCallback((sectionId: string) => {
+    setCollapsedBuilderSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  }, []);
+
   const handleToggleChip = useCallback((sectionId: string, option: string) => {
     setCreateSelectedChips((prev) => {
       const current = prev[sectionId];
@@ -1188,36 +1324,189 @@ export default function StudioDeluluPage() {
     });
   }, []);
 
+  const handleToggleDraftChip = useCallback(
+    (category: BuilderDraftCategory, sectionId: string, option: string, multiSelect?: boolean) => {
+      setCategoryDrafts((prev) => {
+        const draft = prev[category];
+        let nextChips = draft.chips;
+        let nextMulti = draft.multi;
+
+        if (multiSelect) {
+          if (option === "NONE") {
+            nextMulti = draft.multi.includes("NONE") ? [] : ["NONE"];
+          } else {
+            const withoutNone = draft.multi.filter((item) => item !== "NONE");
+            nextMulti = withoutNone.includes(option)
+              ? withoutNone.filter((item) => item !== option)
+              : [...withoutNone, option];
+          }
+        } else {
+          nextChips = {
+            ...draft.chips,
+            [sectionId]: draft.chips[sectionId] === option ? "" : option,
+          };
+        }
+
+        const hasAny = Object.values(nextChips).some(Boolean) || nextMulti.length > 0;
+        const nextPrompt = hasAny ? composeCategoryPrompt(category, nextChips, nextMulti) : "";
+        return {
+          ...prev,
+          [category]: {
+            ...draft,
+            chips: nextChips,
+            multi: nextMulti,
+            prompt: nextPrompt,
+          },
+        };
+      });
+    },
+    [composeCategoryPrompt],
+  );
+
+  const handleUpdateDraftText = useCallback(
+    (category: BuilderDraftCategory, field: "prompt" | "customAdditions", value: string) => {
+      setCategoryDrafts((prev) => ({
+        ...prev,
+        [category]: { ...prev[category], [field]: value },
+      }));
+    },
+    [],
+  );
+
+  const handleRandomizeDraft = useCallback((category: BuilderDraftCategory) => {
+    const presets = CREATE_CATEGORY_CONFIG[category].presets;
+    setCategoryDrafts((prev) => {
+      const draft = prev[category];
+      const preset = presets[draft.presetIdx % presets.length];
+      return {
+        ...prev,
+        [category]: {
+          prompt: preset.prompt,
+          chips: { ...preset.chips },
+          multi: [...preset.details],
+          customAdditions: preset.customAdditions ?? "",
+          presetIdx: (draft.presetIdx + 1) % presets.length,
+        },
+      };
+    });
+    setCreateError(null);
+  }, []);
+
+  const handleClearDraft = useCallback((category: BuilderDraftCategory) => {
+    setCategoryDrafts((prev) => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        prompt: "",
+        chips: {},
+        multi: [],
+        customAdditions: "",
+      },
+    }));
+    setCreateError(null);
+  }, []);
+
+  const createStudioSeedFile = useCallback(async (): Promise<File> => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = "#16161f";
+      ctx.fillRect(0, 0, 512, 512);
+    }
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("No se pudo preparar el lienzo base para la generación.");
+    return new File([blob], "studio-seed.png", { type: "image/png" });
+  }, []);
+
   const handleGenerateCharacterImage = useCallback(async () => {
     if (createGenerating) return;
+
+    const isDraftCat = createCategory === "outfit" || createCategory === "props";
+    const activeDraft = isDraftCat ? categoryDrafts[createCategory] : null;
+    const basePrompt =
+      isDraftCat && activeDraft
+        ? activeDraft.prompt.trim() ||
+          (Object.values(activeDraft.chips).some(Boolean) || activeDraft.multi.length > 0
+            ? composeCategoryPrompt(createCategory, activeDraft.chips, activeDraft.multi)
+            : "")
+        : createPrompt.trim();
+    const extraNotes = activeDraft ? activeDraft.customAdditions.trim() : "";
+    const finalPrompt = [basePrompt, extraNotes].filter(Boolean).join(", ");
+
+    if (!finalPrompt) {
+      setCreateError(
+        createCategory === "outfit"
+          ? "Describe tu vestuario o selecciona etiquetas en Wardrobe antes de crear."
+          : createCategory === "props"
+            ? "Describe tu accesorio o selecciona etiquetas en Accesorios antes de crear."
+            : "Describe tu personaje o selecciona atributos antes de crear.",
+      );
+      return;
+    }
+
+    if (createMode === "image" && !createSourceFile) {
+      setCreateError("Selecciona una imagen base para usar FROM IMAGE.");
+      createFileInputRef.current?.click();
+      return;
+    }
+
     setCreateGenerating(true);
     setCreateError(null);
     try {
+      const seedFile =
+        createMode === "image" && createSourceFile ? createSourceFile : await createStudioSeedFile();
+      const form = new FormData();
+      form.append("prompt", finalPrompt);
+      form.append("resolution", "480p");
+      form.append("data", seedFile);
+
       const res = await fetch("/api/process-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: createPrompt }),
+        body: form,
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string; resultDataUrl?: string };
-      if (!res.ok || !data.ok || !data.resultDataUrl) {
-        throw new Error(data.error || "No se pudo generar la imagen del personaje.");
+      if (!res.ok) {
+        const errData = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errData.error || "No se pudo generar la imagen con lucy-image-2.");
       }
-      setCreateResultUrl(data.resultDataUrl);
+
+      const outBlob = await res.blob();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("No se pudo leer la imagen generada."));
+        reader.readAsDataURL(outBlob);
+      });
+
+      const prefix = isDraftCat ? CREATE_CATEGORY_CONFIG[createCategory].ledgerPrefix : "Creación";
+      setCreateResultUrl(dataUrl);
       appendLedgerEntry({
         kind: "image",
         modelId: "lucy-image-2",
-        detail: `Creación: ${createPrompt.slice(0, 30)}...`,
+        detail: `${prefix}: ${finalPrompt.slice(0, 30)}...`,
         decartCredits: 1,
         usdCost: 0.01,
         copCost: 42,
       });
       void refreshAccountStatus();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Error generando personaje.");
+      setCreateError(err instanceof Error ? err.message : "Error generando imagen con lucy-image-2.");
     } finally {
       setCreateGenerating(false);
     }
-  }, [appendLedgerEntry, createGenerating, createPrompt, refreshAccountStatus]);
+  }, [
+    appendLedgerEntry,
+    categoryDrafts,
+    composeCategoryPrompt,
+    createCategory,
+    createGenerating,
+    createMode,
+    createPrompt,
+    createSourceFile,
+    createStudioSeedFile,
+    refreshAccountStatus,
+  ]);
 
   // Cargar prendas guardadas del carrusel Try-On
   useEffect(() => {
@@ -1311,6 +1600,44 @@ export default function StudioDeluluPage() {
     },
     [persistTryOnGarments, selectedGarmentId, tryOnGarments],
   );
+
+  const handleUseWardrobeResultInTryOn = useCallback(() => {
+    if (!createResultUrl) return;
+    const outfitDraft = categoryDrafts.outfit;
+    const labelType = outfitDraft.chips.clothing_type || "Wardrobe Outfit";
+    const builtPrompt =
+      [
+        outfitDraft.prompt.trim() ||
+          composeCategoryPrompt("outfit", outfitDraft.chips, outfitDraft.multi),
+        outfitDraft.customAdditions.trim(),
+      ]
+        .filter(Boolean)
+        .join(", ") ||
+      "Substitute the person's outfit with the custom wardrobe garment shown in the reference image.";
+
+    const customGarment: TryOnGarmentItem = {
+      id: `wardrobe-garment-${Date.now()}`,
+      name: labelType.slice(0, 18),
+      category: "Personalizada",
+      prompt: `Substitute the person's outfit with ${builtPrompt}`,
+      customImageUrl: createResultUrl,
+      isCustom: true,
+    };
+
+    if (tryOnGarments.length < 10) {
+      const updated = [...tryOnGarments, customGarment];
+      persistTryOnGarments(updated);
+    }
+    void handleSelectGarment(customGarment);
+    setActiveTab("TRY_ON");
+  }, [
+    categoryDrafts.outfit,
+    composeCategoryPrompt,
+    createResultUrl,
+    handleSelectGarment,
+    persistTryOnGarments,
+    tryOnGarments,
+  ]);
 
   // Cargar fondos virtuales guardados
   useEffect(() => {
@@ -1630,6 +1957,30 @@ export default function StudioDeluluPage() {
     mq.addEventListener("change", syncViewport);
     return () => mq.removeEventListener("change", syncViewport);
   }, []);
+
+  // Detectar si el monitor real (.delulu-monitor-container) sigue visible al hacer scroll
+  useEffect(() => {
+    if (!isCockpitTab) {
+      setMonitorInView(true);
+      return;
+    }
+    const checkMonitorVisibility = () => {
+      const mon = stageHeroRef.current?.querySelector(".delulu-monitor-container");
+      if (!mon) {
+        setMonitorInView(true);
+        return;
+      }
+      const rect = mon.getBoundingClientRect();
+      setMonitorInView(rect.bottom > 110 && rect.top < window.innerHeight - 40);
+    };
+    checkMonitorVisibility();
+    window.addEventListener("scroll", checkMonitorVisibility, { passive: true });
+    window.addEventListener("resize", checkMonitorVisibility, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", checkMonitorVisibility);
+      window.removeEventListener("resize", checkMonitorVisibility);
+    };
+  }, [isCockpitTab, activeTab]);
 
   // Reloj de animación y ciclo para overlays programados (actualiza cada segundo)
   useEffect(() => {
@@ -2282,10 +2633,9 @@ export default function StudioDeluluPage() {
                     type="button"
                     className="mobile-social-icon-btn"
                     aria-label={s.label}
-                    title={`${s.label} en Multistream / Chat`}
+                    title={`${s.label} en TikTok Live con Marcas`}
                     onClick={() => {
-                      setActiveTab("PRO");
-                      setProSubTab("tiktok_live");
+                      setActiveTab("TIKTOK_LIVE");
                       setMobileMenuOpen(false);
                     }}
                   >
@@ -2341,13 +2691,54 @@ export default function StudioDeluluPage() {
         </div>
       )}
 
+      {/* Barra flotante rápida cuando el monitor queda fuera de pantalla al hacer scroll */}
+      {isCockpitTab && !monitorInView && (
+        <div className="floating-monitor-hud" role="region" aria-label="Acceso rápido al monitor">
+          <div className="floating-hud-info">
+            <span className={`live-indicator-dot ${isConnectedLive ? "active" : ""}`} />
+            <span className="floating-hud-text">
+              {lastActionFeedback
+                ? `${lastActionFeedback.badge}: ${lastActionFeedback.text}`
+                : activeTab === "DUO"
+                  ? `DÚO · ${guestSplitConfig.layout === "horizontal" ? "Batalla PK" : guestSplitConfig.layout === "pip" ? "Flotante PiP" : "Vertical 50/50"}`
+                  : `${selectedModelId} · Listo para ejecutar`}
+            </span>
+          </div>
+          <div className="floating-hud-actions">
+            <button
+              type="button"
+              className="floating-hud-exec-btn"
+              disabled={streamBusy}
+              onClick={isConnectedLive ? applyLiveChanges : isLive ? applyLiveChanges : startRealtime}
+            >
+              {isConnectedLive ? "Aplicar" : "⚡ Execute"}
+            </button>
+            <button
+              type="button"
+              className="floating-hud-top-btn"
+              onClick={() => stageHeroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            >
+              ↑ Ver Monitor
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* -------------------------------------------------------------
           VISTA 1: CABINAS EN VIVO COMPARTIDAS (CAM · TRY ON · DÚO)
           ------------------------------------------------------------- */}
       {isCockpitTab && (
         <UnifiedLiveChatProvider
           cropMode={effectiveCropMode}
-          onPinCommentToScreen={(msg) => setPinnedChatMessage(msg)}
+          onPinCommentToScreen={(msg) => {
+            setPinnedChatMessage(msg);
+            if (msg) {
+              setLastActionFeedback({
+                badge: "CHAT FIJO",
+                text: `${msg.author}: ${msg.message.slice(0, 34)}`,
+              });
+            }
+          }}
           pinnedCommentId={pinnedChatMessage?.id}
           pinnedMessage={pinnedChatMessage}
         >
@@ -2414,6 +2805,10 @@ export default function StudioDeluluPage() {
                   onChangeConfig={(newCfg) => {
                     setGuestSplitConfig(newCfg);
                     setSplitView(newCfg.active);
+                    setLastActionFeedback({
+                      badge: "DÚO",
+                      text: `${newCfg.active ? "ON" : "OFF"} · ${newCfg.layout === "horizontal" ? "Batalla PK" : newCfg.layout === "pip" ? "PiP" : "Vertical"} · ${newCfg.selectedGuest.name}`,
+                    });
                   }}
                   hostSourceMode={sourceMode}
                   hostVideoUrl={localVideoFileUrl}
@@ -2613,140 +3008,287 @@ export default function StudioDeluluPage() {
                     <Dashicon name="products" size={18} />
                   </button>
                   <button
+                    type="button"
                     className={`dock-cat-icon-btn ${dockCategory === "Estilo" ? "active" : ""}`}
                     onClick={() => setDockCategory("Estilo")}
-                    title="Estilos y Efectos Visuales"
-                    aria-label="Estilos Visuales"
+                    title="Estilos Visuales (45 presets)"
+                    aria-label="Style"
                   >
-                    <Dashicon name="art" size={18} />
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 3L14.2 8.8L20 11L14.2 13.2L12 19L9.8 13.2L4 11L9.8 8.8L12 3Z"
+                        stroke="currentColor"
+                        strokeWidth="1.9"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M19 3V7M17 5H21M5 17V20M3.5 18.5H6.5"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </button>
                   <button
+                    type="button"
                     className={`dock-cat-icon-btn ${dockCategory === "Edicion" ? "active" : ""}`}
                     onClick={() => setDockCategory("Edicion")}
-                    title="Edición y Retoques"
-                    aria-label="Edición y Retoques"
+                    title="VFX y Efectos Especiales"
+                    aria-label="VFX"
                   >
-                    <Dashicon name="admin-tools" size={18} />
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M15 4L20 9L8 21H3V16L15 4Z"
+                        stroke="currentColor"
+                        strokeWidth="1.9"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M12.5 6.5L17.5 11.5M5 5V8M3.5 6.5H6.5"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </button>
                 </div>
 
-                {/* Recuadro + ADD NEW */}
-                <button
-                  className="card-add-new-preset"
-                  onClick={() => {
-                    if (refFileInputRef.current) refFileInputRef.current.click();
-                  }}
-                >
-                  <Dashicon name="plus" size={18} />
-                  <span>ADD NEW</span>
-                </button>
-
-                {/* Rejilla de tarjetas de personajes en 2 columnas */}
-                <div className="dock-preset-cards-grid">
-                  {/* Tarjeta de imagen de referencia activa */}
-                  <div
-                    className={`delulu-preset-card ${selectedPresetId === "ref-swap" ? "selected" : ""}`}
-                    onClick={() => {
-                      setSelectedPresetId("ref-swap");
-                      setSelectedModelId("lucy-2.6");
-                      setPromptText(REFERENCE_SWAP_PROMPT);
-                      if (!refImageFile && refFileInputRef.current) {
-                        refFileInputRef.current.click();
-                      }
-                    }}
-                  >
-                    <div
-                      className="preset-card-thumb"
-                      style={{
-                        backgroundColor: "#18181F",
-                        backgroundImage: refImageDataUrl ? `url(${refImageDataUrl})` : "none",
-                      }}
-                    >
-                      {!refImageDataUrl && (
-                        <span style={{ fontSize: "0.75rem", color: "var(--accent-pink)", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                          <Dashicon name="camera" size={15} />
-                          <span>SUBIR FOTO</span>
-                        </span>
-                      )}
+                {dockCategory === "Estilo" ? (
+                  <div className="cam-style-catalog-box">
+                    <div className="cam-style-toolbar">
+                      <input
+                        type="search"
+                        className="cam-style-search-input"
+                        placeholder="Buscar entre 45 estilos..."
+                        aria-label="Buscar estilo visual"
+                        value={camStyleSearch}
+                        onChange={(e) => setCamStyleSearch(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="cam-style-top-btn"
+                        title="Volver arriba"
+                        aria-label="Volver arriba"
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                      >
+                        ^
+                      </button>
                     </div>
-                    <div className="preset-card-label">REFERENCE IMAGE</div>
+
+                    <div className="cam-style-filter-chips" role="tablist" aria-label="Filtrar categoría de estilos">
+                      {(["Todos", "Anime", "Series", "Games", "Deportes", "Cine"] as const).map((grp) => (
+                        <button
+                          key={grp}
+                          type="button"
+                          className={`cam-style-filter-chip ${camStyleGroup === grp ? "active" : ""}`}
+                          onClick={() => setCamStyleGroup(grp)}
+                        >
+                          {grp}
+                        </button>
+                      ))}
+                    </div>
+
+                    {(() => {
+                      const q = camStyleSearch.trim().toLowerCase();
+                      const visibleStyles = CAM_STYLE_PRESETS.filter((st) => {
+                        const matchGroup = camStyleGroup === "Todos" || getCamStyleGroup(st) === camStyleGroup;
+                        if (!matchGroup) return false;
+                        if (!q) return true;
+                        return (
+                          st.label.toLowerCase().includes(q) ||
+                          st.keywords.toLowerCase().includes(q) ||
+                          st.prompt.toLowerCase().includes(q)
+                        );
+                      });
+
+                      return visibleStyles.length > 0 ? (
+                        <div className="dock-style-cards-grid">
+                          {visibleStyles.map((styleItem) => {
+                            const isSelected = selectedPresetId === styleItem.id;
+                            return (
+                              <button
+                                key={styleItem.id}
+                                type="button"
+                                className={`cam-style-card ${isSelected ? "selected" : ""}`}
+                                onClick={() => handleSelectPreset(styleItem)}
+                                title={`${styleItem.label} · ${styleItem.suggestedModel}`}
+                              >
+                                <div className="cam-style-thumb-box">
+                                  <CamStyleThumb styleItem={styleItem} />
+                                </div>
+                                <span className="cam-style-label">{styleItem.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="cam-style-empty-msg">
+                          Sin coincidencias para &ldquo;{camStyleSearch}&rdquo;.{" "}
+                          <button
+                            type="button"
+                            className="cam-style-clear-link"
+                            onClick={() => {
+                              setCamStyleSearch("");
+                              setCamStyleGroup("Todos");
+                            }}
+                          >
+                            Ver los 45 estilos
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
-
-                  {/* Presets oficiales filtrados */}
-                  {OFFICIAL_PROMPT_PRESETS.filter((p) => {
-                    if (dockCategory === "Persona") return p.category === "Personaje";
-                    if (dockCategory === "Ropa") return p.id.includes("clothes") || p.category === "Personaje";
-                    if (dockCategory === "Estilo") return p.category === "Estilo" || p.category === "Fondo";
-                    if (dockCategory === "Edicion") return p.category === "Edicion" || p.category === "VFX";
-                    return true;
-                  }).map((preset) => (
-                    <div
-                      key={preset.id}
-                      className={`delulu-preset-card ${selectedPresetId === preset.id ? "selected" : ""}`}
-                      onClick={() => handleSelectPreset(preset)}
-                    >
-                      <div
-                        className="preset-card-thumb"
-                        style={{
-                          background:
-                            preset.category === "Estilo"
-                              ? "linear-gradient(135deg, #1E1B4B 0%, #701A75 100%)"
-                              : preset.category === "Personaje"
-                              ? "linear-gradient(135deg, #1E40AF 0%, #172554 100%)"
-                              : preset.category === "Fondo"
-                              ? "linear-gradient(135deg, #065F46 0%, #047857 100%)"
-                              : "linear-gradient(135deg, #374151 0%, #111827 100%)",
-                          color: "#E2E8F0",
-                        }}
-                      >
-                        <Dashicon
-                          name={
-                            preset.category === "Estilo"
-                              ? "art"
-                              : preset.category === "Personaje"
-                                ? "admin-users"
-                                : preset.category === "Fondo"
-                                  ? "format-gallery"
-                                  : "admin-tools"
-                          }
-                          size={22}
-                        />
-                      </div>
-                      <div className="preset-card-label">{preset.label}</div>
+                ) : dockCategory === "Edicion" ? (
+                  <div className="cam-style-catalog-box">
+                    <div className="dock-style-cards-grid">
+                      {CAM_VFX_PRESETS.map((vfxItem) => {
+                        const isSelected = selectedPresetId === vfxItem.id;
+                        return (
+                          <button
+                            key={vfxItem.id}
+                            type="button"
+                            className={`cam-style-card ${isSelected ? "selected" : ""}`}
+                            onClick={() => handleSelectPreset(vfxItem)}
+                            title={`${vfxItem.label} · ${vfxItem.suggestedModel}`}
+                          >
+                            <div className="cam-style-thumb-box">
+                              <CamStyleThumb styleItem={vfxItem} />
+                            </div>
+                            <span className="cam-style-label">{vfxItem.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  ))}
 
-                  {/* Skins guardados por el usuario */}
-                  {savedSkins.map((skin) => (
-                    <div
-                      key={skin.id}
-                      className={`delulu-preset-card ${selectedPresetId === skin.id ? "selected" : ""}`}
+                    <div className="cam-vfx-quick-row">
+                      {OFFICIAL_PROMPT_PRESETS.filter((p) => p.category === "Edicion").map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          className={`pill-ctrl-button ${selectedPresetId === preset.id ? "active-pink" : ""}`}
+                          onClick={() => handleSelectPreset(preset)}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Recuadro + ADD NEW */}
+                    <button
+                      className="card-add-new-preset"
                       onClick={() => {
-                        setSelectedPresetId(skin.id);
-                        setPromptText(skin.prompt);
-                        setSelectedModelId(skin.modelId);
-                        if (skin.refImageDataUrl) {
-                          setRefImageDataUrl(skin.refImageDataUrl);
-                          setRefImageFile(dataUrlToFile(skin.refImageDataUrl));
-                        }
+                        if (refFileInputRef.current) refFileInputRef.current.click();
                       }}
                     >
+                      <Dashicon name="plus" size={18} />
+                      <span>ADD NEW</span>
+                    </button>
+
+                    {/* Rejilla de tarjetas en 2 columnas */}
+                    <div className="dock-preset-cards-grid">
+                      {/* Tarjeta de imagen de referencia activa */}
                       <div
-                        className="preset-card-thumb"
-                        style={{
-                          backgroundImage: skin.refImageDataUrl ? `url(${skin.refImageDataUrl})` : "none",
-                          background: !skin.refImageDataUrl
-                            ? "linear-gradient(135deg, #831843 0%, #500724 100%)"
-                            : undefined,
-                          color: "#FBBF24",
+                        className={`delulu-preset-card ${selectedPresetId === "ref-swap" ? "selected" : ""}`}
+                        onClick={() => {
+                          setSelectedPresetId("ref-swap");
+                          setSelectedModelId("lucy-2.6");
+                          setPromptText(REFERENCE_SWAP_PROMPT);
+                          if (!refImageFile && refFileInputRef.current) {
+                            refFileInputRef.current.click();
+                          }
                         }}
                       >
-                        {!skin.refImageDataUrl && <Dashicon name="star-filled" size={20} />}
+                        <div
+                          className="preset-card-thumb"
+                          style={{
+                            backgroundColor: "#18181F",
+                            backgroundImage: refImageDataUrl ? `url(${refImageDataUrl})` : "none",
+                          }}
+                        >
+                          {!refImageDataUrl && (
+                            <span style={{ fontSize: "0.75rem", color: "var(--accent-pink)", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                              <Dashicon name="camera" size={15} />
+                              <span>SUBIR FOTO</span>
+                            </span>
+                          )}
+                        </div>
+                        <div className="preset-card-label">REFERENCE IMAGE</div>
                       </div>
-                      <div className="preset-card-label">{skin.name}</div>
+
+                      {/* Presets oficiales filtrados */}
+                      {OFFICIAL_PROMPT_PRESETS.filter((p) => {
+                        if (dockCategory === "Persona") return p.category === "Personaje";
+                        if (dockCategory === "Ropa") return p.id.includes("clothes") || p.category === "Personaje";
+                        if (dockCategory === "Edicion") return p.category === "Edicion" || p.category === "VFX";
+                        return true;
+                      }).map((preset) => (
+                        <div
+                          key={preset.id}
+                          className={`delulu-preset-card ${selectedPresetId === preset.id ? "selected" : ""}`}
+                          onClick={() => handleSelectPreset(preset)}
+                        >
+                          <div
+                            className="preset-card-thumb"
+                            style={{
+                              background:
+                                preset.category === "Personaje"
+                                  ? "linear-gradient(135deg, #1E40AF 0%, #172554 100%)"
+                                  : preset.category === "Fondo"
+                                    ? "linear-gradient(135deg, #065F46 0%, #047857 100%)"
+                                    : "linear-gradient(135deg, #374151 0%, #111827 100%)",
+                              color: "#E2E8F0",
+                            }}
+                          >
+                            <Dashicon
+                              name={
+                                preset.category === "Personaje"
+                                  ? "admin-users"
+                                  : preset.category === "Fondo"
+                                    ? "format-gallery"
+                                    : "admin-tools"
+                              }
+                              size={22}
+                            />
+                          </div>
+                          <div className="preset-card-label">{preset.label}</div>
+                        </div>
+                      ))}
+
+                      {/* Skins guardados por el usuario */}
+                      {savedSkins.map((skin) => (
+                        <div
+                          key={skin.id}
+                          className={`delulu-preset-card ${selectedPresetId === skin.id ? "selected" : ""}`}
+                          onClick={() => {
+                            setSelectedPresetId(skin.id);
+                            setPromptText(skin.prompt);
+                            setSelectedModelId(skin.modelId);
+                            if (skin.refImageDataUrl) {
+                              setRefImageDataUrl(skin.refImageDataUrl);
+                              setRefImageFile(dataUrlToFile(skin.refImageDataUrl));
+                            }
+                          }}
+                        >
+                          <div
+                            className="preset-card-thumb"
+                            style={{
+                              backgroundImage: skin.refImageDataUrl ? `url(${skin.refImageDataUrl})` : "none",
+                              background: !skin.refImageDataUrl
+                                ? "linear-gradient(135deg, #831843 0%, #500724 100%)"
+                                : undefined,
+                              color: "#FBBF24",
+                            }}
+                          >
+                            {!skin.refImageDataUrl && <Dashicon name="star-filled" size={20} />}
+                          </div>
+                          <div className="preset-card-label">{skin.name}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </>
             )}
 
@@ -2763,7 +3305,7 @@ export default function StudioDeluluPage() {
           </aside>
 
           {/* MONITOR CENTRAL HERO CON RETICULAS EN ESQUINAS Y CONTROLES AL PIE */}
-          <main className="cam-stage-hero">
+          <main ref={stageHeroRef} className="cam-stage-hero">
             {/* TOAST DE ALERTA DE LÍMITE DE CAPAS EN PANTALLA (PREVIENE SOBRECARGA UX) */}
             {limitWarningMessage && (
               <div className="screen-limit-toast">
@@ -3257,7 +3799,16 @@ export default function StudioDeluluPage() {
                   if (compactPip) {
                     return (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", color: "#FFFFFF", padding: 8 }}>
-                        <Dashicon name={guestIconName} size={26} />
+                        {guestSplitConfig.selectedGuest.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={guestSplitConfig.selectedGuest.avatarUrl}
+                            alt={guestSplitConfig.selectedGuest.name}
+                            style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.45)" }}
+                          />
+                        ) : (
+                          <Dashicon name={guestIconName} size={26} />
+                        )}
                         <span style={{ fontSize: "0.7rem", fontWeight: 800, marginTop: 4 }}>{guestSplitConfig.selectedGuest.name}</span>
                       </div>
                     );
@@ -3287,9 +3838,19 @@ export default function StudioDeluluPage() {
                           alignItems: "center",
                           justifyContent: "center",
                           color: "#FFFFFF",
+                          overflow: "hidden",
                         }}
                       >
-                        <Dashicon name={guestIconName} size={36} />
+                        {guestSplitConfig.selectedGuest.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={guestSplitConfig.selectedGuest.avatarUrl}
+                            alt={guestSplitConfig.selectedGuest.name}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <Dashicon name={guestIconName} size={36} />
+                        )}
                       </div>
                       <span style={{ marginTop: 6, fontSize: "0.82rem", color: "#FFFFFF", fontWeight: 800 }}>
                         {guestSplitConfig.selectedGuest.name}
@@ -3866,7 +4427,7 @@ export default function StudioDeluluPage() {
                       <div className="phone-bottom-tool-icon"><Dashicon name="admin-generic" size={15} /></div>
                       <span>Config</span>
                     </button>
-                    <button type="button" className="phone-bottom-tool-item" onClick={() => setActiveStudioTab("tiktok_brand")} title="Plantillas de marca TikTok">
+                    <button type="button" className="phone-bottom-tool-item" onClick={() => navigateToMainTab("TIKTOK_LIVE")} title="Abrir página TikTok Live con Marcas">
                       <div className="phone-bottom-tool-icon"><Dashicon name="art" size={15} /></div>
                       <span>Brand</span>
                     </button>
@@ -3906,6 +4467,21 @@ export default function StudioDeluluPage() {
                 </span>
               )}
             </div>
+
+            {lastActionFeedback && (
+              <div className="stage-live-feedback-strip" role="status">
+                <span className="stage-feedback-badge">{lastActionFeedback.badge}</span>
+                <span className="stage-feedback-text">{lastActionFeedback.text}</span>
+                <button
+                  type="button"
+                  className="stage-feedback-close"
+                  onClick={() => setLastActionFeedback(null)}
+                  aria-label="Cerrar confirmación"
+                >
+                  ×
+                </button>
+              </div>
+            )}
 
             {/* Video oculto para archivo pregrabado */}
             <video
@@ -4130,28 +4706,32 @@ export default function StudioDeluluPage() {
               Agrupa capas maestras, grabación y herramientas a la derecha sin scrollbar horizontal
               ============================================================= */}
           <aside className="cam-right-studio-sidebar">
-            {/* 1. CONTROL DE CAPAS EN PANTALLA COMPACTO Y ESPACIOSO */}
+            {/* 1. CONTROL DE CAPAS EN PANTALLA COMPACTO EN 2 COLUMNAS */}
             <div className="studio-layers-manager-card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <button
+                  type="button"
+                  className="studio-layers-header-toggle"
+                  onClick={() => setLayersExpanded((prev) => !prev)}
+                  aria-expanded={layersExpanded}
+                >
                   <span style={{ color: "var(--accent-pink)", display: "inline-flex" }}>
-                    <Dashicon name="shield" size={18} />
+                    <Dashicon name="shield" size={16} />
                   </span>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 700, color: "#FFFFFF" }}>
-                      Capas en Pantalla
-                    </h4>
-                    <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>
-                      Control visual para evitar sobrecarga en directo
-                    </span>
-                  </div>
-                </div>
+                  <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF" }}>
+                    Capas en Pantalla
+                  </span>
+                  <span style={{ fontSize: "0.72rem", color: "#94A3B8" }}>
+                    {layersExpanded ? "▴" : "▾"}
+                  </span>
+                </button>
                 <span className={`layers-counter-pill ${countActiveOnScreen() >= MAX_ONSCREEN_ELEMENTS ? "limit-reached" : ""}`}>
                   {countActiveOnScreen()} / {MAX_ONSCREEN_ELEMENTS} máx
                 </span>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+              {layersExpanded && (
+              <div className="studio-layers-rows-grid">
                 {/* Switch Fondo */}
                 <div className="studio-layers-row-item" title="Alternar capa de fondo virtual en pantalla">
                   <div className="studio-layers-row-label">
@@ -4256,9 +4836,10 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
               </div>
+              )}
             </div>
 
-            {/* 2. NAVEGADOR CATEGORIZADO DE HERRAMIENTAS DE ESCENA (8 HERRAMIENTAS ÚNICAS 4×2) */}
+            {/* 2. NAVEGADOR CATEGORIZADO DE HERRAMIENTAS DE ESCENA (7 HERRAMIENTAS ÚNICAS) */}
             <div className="studio-tools-nav-section">
               <div className="studio-tools-nav-header">
                 <span>HERRAMIENTAS DE ESCENA</span>
@@ -4299,17 +4880,6 @@ export default function StudioDeluluPage() {
                   <Dashicon name="megaphone" size={16} />
                   <span className="tool-label">Banners</span>
                   <span className="tool-counter">{scheduledOverlays.length}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`studio-tools-nav-btn ${activeStudioTab === "tiktok_brand" ? "active" : ""}`}
-                  onClick={() => setActiveStudioTab("tiktok_brand")}
-                  title="Plantillas de Marca TikTok Live (Beauty, Fitness, Music, Travel)"
-                >
-                  <SocialIcon network="tiktok" size={15} />
-                  <span className="tool-label">TikTok</span>
-                  <span className="tool-counter">4</span>
                 </button>
 
                 <button
@@ -5031,34 +5601,6 @@ export default function StudioDeluluPage() {
                   />
                 </div>
               )}
-
-              {/* PANEL DE PLANTILLAS DE MARCA TIKTOK LIVE (FOTO 1: BEAUTY, FITNESS, MUSIC, TRAVEL) */}
-              {(isDockStackedView || activeStudioTab === "tiktok_brand") && (
-                <TikTokBrandedStudioPanel
-                  viewerRange={guestSplitConfig.viewerRange}
-                  onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
-                  hideViewerRangeCard={isCockpitTab}
-                  onApplyThemeToCam={(theme, bgId) => {
-                    setActiveTikTokTheme(theme);
-                    setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
-                    if (bgId) {
-                      setSelectedBgId(bgId);
-                      setBgPreviewEnabled(true);
-                    }
-                  }}
-                  onSelectCropAspect={(aspect) => handleSelectAspectRatio(aspect)}
-                  virtualBackgrounds={virtualBackgrounds}
-                  selectedBgId={selectedBgId}
-                  onSelectBackground={(bg) => void handleSelectBackground(bg)}
-                  onAddCustomBackground={(file, mediaType) => {
-                    if (mediaType === "video") {
-                      const url = URL.createObjectURL(file);
-                      setLocalVideoFileUrl(url);
-                      setSourceMode("video_file");
-                    }
-                  }}
-                />
-              )}
             </div>
 
             {/* 5. BARRA DE SESIÓN / FREE TIER AL PIE DEL PANEL DERECHO */}
@@ -5206,6 +5748,7 @@ export default function StudioDeluluPage() {
             {/* Toggle de Modo: FROM SCRATCH vs FROM IMAGE */}
             <div className="create-mode-switch-row">
               <button
+                type="button"
                 className={`btn-mode-toggle ${createMode === "scratch" ? "active" : ""}`}
                 onClick={() => setCreateMode("scratch")}
               >
@@ -5213,6 +5756,7 @@ export default function StudioDeluluPage() {
                 <span>FROM SCRATCH</span>
               </button>
               <button
+                type="button"
                 className={`btn-mode-toggle ${createMode === "image" ? "active" : ""}`}
                 onClick={() => {
                   setCreateMode("image");
@@ -5232,6 +5776,7 @@ export default function StudioDeluluPage() {
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) {
+                  setCreateSourceFile(f);
                   const reader = new FileReader();
                   reader.onload = (ev) => setCreateResultUrl(ev.target?.result as string);
                   reader.readAsDataURL(f);
@@ -5239,86 +5784,272 @@ export default function StudioDeluluPage() {
               }}
             />
 
-            {/* Sub-tabs: Persona, Ropa, Corona */}
+            {/* Sub-tabs: Persona, Wardrobe (Outfits), Accesorios (Props) */}
             <div className="create-subtabs-row">
               <button
+                type="button"
                 className={`create-subtab-icon-btn ${createCategory === "person" ? "active" : ""}`}
                 onClick={() => setCreateCategory("person")}
                 title="Characters"
+                aria-label="Characters"
               >
                 <Dashicon name="admin-users" size={18} />
               </button>
               <button
+                type="button"
                 className={`create-subtab-icon-btn ${createCategory === "outfit" ? "active" : ""}`}
                 onClick={() => setCreateCategory("outfit")}
-                title="Outfits"
+                title="Wardrobe (Outfits)"
+                aria-label="Wardrobe"
               >
                 <Dashicon name="products" size={18} />
               </button>
               <button
+                type="button"
                 className={`create-subtab-icon-btn ${createCategory === "props" ? "active" : ""}`}
                 onClick={() => setCreateCategory("props")}
-                title="Props"
+                title="Accesorios (Props)"
+                aria-label="Accessories"
               >
                 <Dashicon name="art" size={18} />
               </button>
             </div>
 
-            {/* Prompt de descripción con botón de limpiar */}
-            <div className="builder-accordion-group" style={{ borderTop: "none" }}>
-              <div className="builder-accordion-label">
-                <span>DESCRIBE YOUR CHARACTER</span>
-                <button
-                  className="btn-prompt-icon"
-                  onClick={() => setCreatePrompt("")}
-                  title="Limpiar descripción"
-                >
-                  ↺
-                </button>
-              </div>
-              <textarea
-                className="dock-prompt-textarea"
-                style={{
-                  height: 72,
-                  backgroundColor: "var(--surface-card)",
-                  border: "1px solid var(--border-dark)",
-                  borderRadius: 10,
-                  padding: "8px 10px",
-                }}
-                value={createPrompt}
-                onChange={(e) => setCreatePrompt(e.target.value)}
-              />
-            </div>
+            {createCategory === "outfit" || createCategory === "props" ? (
+              (() => {
+                const draftCfg = CREATE_CATEGORY_CONFIG[createCategory];
+                const activeDraft = categoryDrafts[createCategory];
+                const hasDraftInput =
+                  activeDraft.prompt.trim().length > 0 ||
+                  Object.values(activeDraft.chips).some(Boolean) ||
+                  activeDraft.multi.length > 0 ||
+                  activeDraft.customAdditions.trim().length > 0;
+                return (
+                  <>
+                    {/* Prompt con botón aleatorio + limpiar */}
+                    <div className="builder-accordion-group" style={{ borderTop: "none" }}>
+                      <div className="builder-accordion-label">
+                        <span>{draftCfg.promptLabel}</span>
+                        <div className="create-prompt-actions">
+                          {hasDraftInput && (
+                            <button
+                              type="button"
+                              className="btn-prompt-icon"
+                              onClick={() => handleClearDraft(createCategory)}
+                              title={draftCfg.clearTitle}
+                              aria-label={draftCfg.clearTitle}
+                            >
+                              ×
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn-prompt-icon btn-prompt-cycle"
+                            onClick={() => handleRandomizeDraft(createCategory)}
+                            title={draftCfg.randomTitle}
+                            aria-label={draftCfg.randomTitle}
+                          >
+                            ↻
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        className="dock-prompt-textarea builder-custom-textarea"
+                        placeholder={draftCfg.promptPlaceholder}
+                        value={activeDraft.prompt}
+                        onChange={(e) => handleUpdateDraftText(createCategory, "prompt", e.target.value)}
+                      />
+                    </div>
 
-            {/* Acordeones con chips interactivos Delulu */}
-            {DELULU_BUILDER_SECTIONS.map((section) => (
-              <div key={section.id} className="builder-accordion-group">
-                <span className="builder-accordion-label">{section.label}</span>
-                <div className="builder-chips-wrap">
-                  {section.options.map((option) => {
-                    const isSelected = createSelectedChips[section.id] === option;
-                    return (
-                      <button
-                        key={option}
-                        className={`builder-chip-pill ${isSelected ? "active" : ""}`}
-                        onClick={() => handleToggleChip(section.id, option)}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
+                    {/* Acordeones colapsables con single-select y multi-select dots */}
+                    {draftCfg.sections.map((section) => {
+                      const isCollapsed = Boolean(collapsedBuilderSections[section.id]);
+                      const activeCount = section.multiSelect
+                        ? activeDraft.multi.length
+                        : activeDraft.chips[section.id]
+                          ? 1
+                          : 0;
+                      return (
+                        <div key={section.id} className="builder-accordion-group">
+                          <button
+                            type="button"
+                            className={`builder-accordion-label builder-accordion-toggle ${isCollapsed ? "is-collapsed" : ""}`}
+                            onClick={() => handleToggleBuilderSection(section.id)}
+                            aria-expanded={!isCollapsed}
+                          >
+                            <span>
+                              {section.label}
+                              {activeCount > 0 && (
+                                <span className="builder-section-count"> ({activeCount})</span>
+                              )}
+                            </span>
+                            <svg
+                              className="builder-accordion-chevron"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M2.5 7.5L6 4L9.5 7.5"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                          {!isCollapsed && (
+                            <div className="builder-chips-wrap">
+                              {section.options.map((option) => {
+                                const isSelected = section.multiSelect
+                                  ? activeDraft.multi.includes(option)
+                                  : activeDraft.chips[section.id] === option;
+                                return (
+                                  <button
+                                    key={option}
+                                    type="button"
+                                    className={`builder-chip-pill ${isSelected ? "active" : ""} ${section.multiSelect ? "has-multi-dot" : ""}`}
+                                    onClick={() =>
+                                      handleToggleDraftChip(
+                                        createCategory,
+                                        section.id,
+                                        option,
+                                        section.multiSelect,
+                                      )
+                                    }
+                                    aria-pressed={isSelected}
+                                  >
+                                    <span>{option}</span>
+                                    {section.multiSelect && (
+                                      <span className="builder-chip-dot" aria-hidden="true" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* CUSTOM ADDITIONS al final antes del botón CREATE */}
+                    <div className="builder-accordion-group">
+                      <span className="builder-accordion-label">CUSTOM ADDITIONS</span>
+                      <textarea
+                        className="dock-prompt-textarea builder-custom-textarea"
+                        placeholder="Optional. Extra details to refine the result — colors, vibes, accessories, anything you'd add..."
+                        value={activeDraft.customAdditions}
+                        onChange={(e) =>
+                          handleUpdateDraftText(createCategory, "customAdditions", e.target.value)
+                        }
+                      />
+                    </div>
+                  </>
+                );
+              })()
+            ) : (
+              <>
+                {/* Prompt de descripción de personaje con botón de limpiar */}
+                <div className="builder-accordion-group" style={{ borderTop: "none" }}>
+                  <div className="builder-accordion-label">
+                    <span>DESCRIBE YOUR CHARACTER</span>
+                    <button
+                      type="button"
+                      className="btn-prompt-icon"
+                      onClick={() => setCreatePrompt("")}
+                      title="Limpiar descripción"
+                    >
+                      ↺
+                    </button>
+                  </div>
+                  <textarea
+                    className="dock-prompt-textarea builder-custom-textarea"
+                    value={createPrompt}
+                    onChange={(e) => setCreatePrompt(e.target.value)}
+                  />
                 </div>
-              </div>
-            ))}
+
+                {/* Acordeones con chips interactivos Delulu */}
+                {DELULU_BUILDER_SECTIONS.map((section) => {
+                  const isCollapsed = Boolean(collapsedBuilderSections[section.id]);
+                  return (
+                    <div key={section.id} className="builder-accordion-group">
+                      <button
+                        type="button"
+                        className={`builder-accordion-label builder-accordion-toggle ${isCollapsed ? "is-collapsed" : ""}`}
+                        onClick={() => handleToggleBuilderSection(section.id)}
+                        aria-expanded={!isCollapsed}
+                      >
+                        <span>{section.label}</span>
+                        <svg
+                          className="builder-accordion-chevron"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M2.5 7.5L6 4L9.5 7.5"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      {!isCollapsed && (
+                        <div className="builder-chips-wrap">
+                          {section.options.map((option) => {
+                            const isSelected = createSelectedChips[section.id] === option;
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                className={`builder-chip-pill ${isSelected ? "active" : ""}`}
+                                onClick={() => handleToggleChip(section.id, option)}
+                              >
+                                {option}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
 
             {/* Botón de acción CREATE conectado a lucy-image-2 */}
-            <button
-              className="btn-create-submit"
-              onClick={handleGenerateCharacterImage}
-              disabled={createGenerating}
-            >
-              {createGenerating ? "GENERANDO CON LUCY-IMAGE-2..." : "CREATE (1 CR)"}
-            </button>
+            {(() => {
+              const isDraftCat = createCategory === "outfit" || createCategory === "props";
+              const activeDraft = isDraftCat ? categoryDrafts[createCategory] : null;
+              const isBuilderReady =
+                !isDraftCat ||
+                !activeDraft ||
+                activeDraft.prompt.trim().length > 0 ||
+                Object.values(activeDraft.chips).some(Boolean) ||
+                activeDraft.multi.length > 0 ||
+                activeDraft.customAdditions.trim().length > 0 ||
+                Boolean(createSourceFile);
+              return (
+                <button
+                  type="button"
+                  className={`btn-create-submit ${!isBuilderReady ? "is-muted" : ""}`}
+                  onClick={handleGenerateCharacterImage}
+                  disabled={createGenerating || !isBuilderReady}
+                >
+                  {createGenerating
+                    ? "GENERANDO CON LUCY-IMAGE-2..."
+                    : isDraftCat
+                      ? "CREATE"
+                      : "CREATE (1 CR)"}
+                </button>
+              );
+            })()}
 
             {createError && (
               <div style={{ color: "var(--danger-red)", fontSize: "0.75rem", textAlign: "center" }}>
@@ -5343,7 +6074,11 @@ export default function StudioDeluluPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={createResultUrl}
-                  alt="Personaje generado"
+                  alt={
+                    createCategory === "outfit" || createCategory === "props"
+                      ? CREATE_CATEGORY_CONFIG[createCategory].resultAlt
+                      : "Personaje generado"
+                  }
                   style={{
                     width: "100%",
                     borderRadius: 16,
@@ -5352,24 +6087,64 @@ export default function StudioDeluluPage() {
                   }}
                 />
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                  {createCategory === "outfit" && (
+                    <button
+                      type="button"
+                      className="pill-ctrl-button active-pink"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                      onClick={handleUseWardrobeResultInTryOn}
+                    >
+                      <Dashicon name="products" size={14} />
+                      <span>USAR EN TRY-ON</span>
+                    </button>
+                  )}
                   <button
-                    className="pill-ctrl-button active-pink"
+                    type="button"
+                    className={`pill-ctrl-button ${createCategory === "outfit" ? "" : "active-pink"}`}
                     style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
                     onClick={() => {
+                      const isDraftCat = createCategory === "outfit" || createCategory === "props";
+                      const activeDraft = isDraftCat ? categoryDrafts[createCategory] : null;
+                      const cfg = isDraftCat ? CREATE_CATEGORY_CONFIG[createCategory] : null;
                       setRefImageDataUrl(createResultUrl);
-                      setRefImageFile(dataUrlToFile(createResultUrl, "personaje-generado.png"));
+                      setRefImageFile(
+                        dataUrlToFile(
+                          createResultUrl,
+                          cfg ? cfg.downloadName : "personaje-generado.png",
+                        ),
+                      );
                       setSelectedPresetId("ref-swap");
-                      setPromptText(REFERENCE_SWAP_PROMPT);
+                      if (isDraftCat && activeDraft && cfg) {
+                        const finalPrompt =
+                          [
+                            activeDraft.prompt.trim() ||
+                              composeCategoryPrompt(createCategory, activeDraft.chips, activeDraft.multi),
+                            activeDraft.customAdditions.trim(),
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || REFERENCE_SWAP_PROMPT;
+                        setPromptText(`${cfg.camPromptPrefix} ${finalPrompt}`);
+                      } else {
+                        setPromptText(REFERENCE_SWAP_PROMPT);
+                      }
                       setSelectedModelId("lucy-2.6");
                       setActiveTab("CAM");
                     }}
                   >
                     <Dashicon name="star-filled" size={14} />
-                    <span>USAR COMO PERSONAJE EN CAM</span>
+                    <span>
+                      {createCategory === "outfit" || createCategory === "props"
+                        ? CREATE_CATEGORY_CONFIG[createCategory].camBtnLabel
+                        : "USAR COMO PERSONAJE EN CAM"}
+                    </span>
                   </button>
                   <a
                     href={createResultUrl}
-                    download="personaje-decart.png"
+                    download={
+                      createCategory === "outfit" || createCategory === "props"
+                        ? CREATE_CATEGORY_CONFIG[createCategory].downloadName
+                        : "personaje-decart.png"
+                    }
                     className="pill-ctrl-button"
                     style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
                   >
@@ -5381,12 +6156,49 @@ export default function StudioDeluluPage() {
             ) : (
               <div className="create-dashed-preview-box">
                 <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 52, height: 52, borderRadius: 14, background: "rgba(236, 72, 153, 0.14)", color: "#EC4899" }}>
-                  <Dashicon name="art" size={28} />
+                  <Dashicon name={createCategory === "outfit" ? "products" : "art"} size={28} />
                 </span>
                 <span className="preview-main-heading">PREVIEW WILL APPEAR HERE</span>
                 <span className="preview-sub-text">
-                  Selecciona atributos con las etiquetas o escribe tu descripción y pulsa CREATE para generar tu personaje con IA en tiempo real.
+                  {createCategory === "outfit" || createCategory === "props"
+                    ? CREATE_CATEGORY_CONFIG[createCategory].emptyHint
+                    : "Selecciona atributos con las etiquetas o escribe tu descripción y pulsa CREATE para generar tu personaje con IA en tiempo real."}
                 </span>
+                {(createCategory === "outfit" || createCategory === "props") &&
+                  (() => {
+                    const activeDraft = categoryDrafts[createCategory];
+                    const hasAnySummary =
+                      activeDraft.prompt.trim().length > 0 ||
+                      Object.values(activeDraft.chips).some(Boolean) ||
+                      activeDraft.multi.length > 0 ||
+                      activeDraft.customAdditions.trim().length > 0;
+                    if (!hasAnySummary) return null;
+                    return (
+                      <div className="wardrobe-preview-summary">
+                        <div className="wardrobe-summary-pills">
+                          {Object.values(activeDraft.chips)
+                            .filter(Boolean)
+                            .map((val) => (
+                              <span key={val} className="wardrobe-summary-chip">
+                                {val}
+                              </span>
+                            ))}
+                          {activeDraft.multi.map((detail) => (
+                            <span key={detail} className="wardrobe-summary-chip is-detail">
+                              + {detail}
+                            </span>
+                          ))}
+                        </div>
+                        {(activeDraft.prompt.trim() || activeDraft.customAdditions.trim()) && (
+                          <p className="wardrobe-summary-prompt">
+                            {[activeDraft.prompt.trim(), activeDraft.customAdditions.trim()]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
               </div>
             )}
           </main>
@@ -5394,19 +6206,59 @@ export default function StudioDeluluPage() {
       )}
 
       {/* -------------------------------------------------------------
-          VISTA 4: MODULOS PRO (TRY-ON, CLIPS COLA, OBS V2, VOZ/FINANZAS)
+          VISTA 3B: CLIPS PREGRABADOS (DESTACADO EN MENU DESPUÉS DE DÚO)
+          ------------------------------------------------------------- */}
+      {activeTab === "CLIPS" && (
+        <section className="pro-workspace-layout">
+          <QueueClipsPanel
+            onLoadCompletedIntoMonitor={(videoUrl) => {
+              setLocalVideoFileUrl(videoUrl);
+              setSourceMode("video_file");
+              setActiveTab("CAM");
+            }}
+            onRefreshAccount={refreshAccountStatus}
+          />
+        </section>
+      )}
+
+      {/* -------------------------------------------------------------
+          VISTA 3C: TIKTOK LIVE CON MARCAS (DESTACADO EN MENU DESPUÉS DE CLIPS)
+          ------------------------------------------------------------- */}
+      {activeTab === "TIKTOK_LIVE" && (
+        <section className="pro-workspace-layout">
+          <TikTokBrandedStudioPanel
+            viewerRange={guestSplitConfig.viewerRange}
+            onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
+            onApplyThemeToCam={(theme, bgId) => {
+              setActiveTikTokTheme(theme);
+              setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
+              if (bgId) {
+                setSelectedBgId(bgId);
+                setBgPreviewEnabled(true);
+              }
+              setStreamInfo(`📱 Marco TikTok "${theme.brandName}" aplicado en 9:16.`);
+              setActiveTab("CAM");
+            }}
+            onSelectCropAspect={(aspect) => {
+              setPreprocOpts((prev) => ({ ...prev, cropMode: aspect as CropAspectMode }));
+            }}
+            virtualBackgrounds={virtualBackgrounds}
+            selectedBgId={selectedBgId}
+            onSelectBackground={(bg) => {
+              setSelectedBgId(bg.id);
+              setBgPreviewEnabled(true);
+            }}
+            onAddCustomBackground={handleAddCustomBackground}
+          />
+        </section>
+      )}
+
+      {/* -------------------------------------------------------------
+          VISTA 4: MODULOS PRO (PLAYLIST, CHAT, SCHEDULE, OBS V2, VOZ, SKINS)
           ------------------------------------------------------------- */}
       {activeTab === "PRO" && (
         <section className="pro-workspace-layout">
           <div className="pro-subtabs-row">
-            <button
-              type="button"
-              className={`pro-subtab-btn ${proSubTab === "tiktok_live" ? "active" : ""}`}
-              onClick={() => setProSubTab("tiktok_live")}
-            >
-              <SocialIcon network="tiktok" size={14} />
-              <span>TikTok Live con Marcas</span>
-            </button>
             <button
               type="button"
               className={`pro-subtab-btn ${proSubTab === "playlist_stream" ? "active" : ""}`}
@@ -5430,14 +6282,6 @@ export default function StudioDeluluPage() {
             >
               <Dashicon name="clock" size={14} />
               <span>Schedule or Go Live</span>
-            </button>
-            <button
-              type="button"
-              className={`pro-subtab-btn ${proSubTab === "queue" ? "active" : ""}`}
-              onClick={() => setProSubTab("queue")}
-            >
-              <Dashicon name="video-alt2" size={14} />
-              <span>Clips Pregrabados</span>
             </button>
             <button
               type="button"
@@ -5466,33 +6310,6 @@ export default function StudioDeluluPage() {
           </div>
 
           <div>
-            {proSubTab === "tiktok_live" && (
-              <TikTokBrandedStudioPanel
-                viewerRange={guestSplitConfig.viewerRange}
-                onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
-                onApplyThemeToCam={(theme, bgId) => {
-                  setActiveTikTokTheme(theme);
-                  setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
-                  if (bgId) {
-                    setSelectedBgId(bgId);
-                    setBgPreviewEnabled(true);
-                  }
-                  setStreamInfo(`📱 Marco TikTok "${theme.brandName}" aplicado en 9:16.`);
-                  setActiveTab("CAM");
-                }}
-                onSelectCropAspect={(aspect) => {
-                  setPreprocOpts((prev) => ({ ...prev, cropMode: aspect as CropAspectMode }));
-                }}
-                virtualBackgrounds={virtualBackgrounds}
-                selectedBgId={selectedBgId}
-                onSelectBackground={(bg) => {
-                  setSelectedBgId(bg.id);
-                  setBgPreviewEnabled(true);
-                }}
-                onAddCustomBackground={handleAddCustomBackground}
-              />
-            )}
-
             {proSubTab === "playlist_stream" && (
               <PlaylistStreamingPanel
                 onLoadClipToMonitor={(url) => {
@@ -5530,17 +6347,6 @@ export default function StudioDeluluPage() {
                   void startRealtime();
                 }}
                 isCurrentlyLive={isConnectedLive}
-              />
-            )}
-
-            {proSubTab === "queue" && (
-              <QueueClipsPanel
-                onLoadCompletedIntoMonitor={(videoUrl) => {
-                  setLocalVideoFileUrl(videoUrl);
-                  setSourceMode("video_file");
-                  setActiveTab("CAM");
-                }}
-                onRefreshAccount={refreshAccountStatus}
               />
             )}
 
@@ -5618,6 +6424,14 @@ export default function StudioDeluluPage() {
           onNavigateToTab={(tab, subTab) => {
             if (subTab === "try_on") {
               navigateToMainTab("TRY_ON");
+              return;
+            }
+            if (subTab === "queue") {
+              navigateToMainTab("CLIPS");
+              return;
+            }
+            if (subTab === "tiktok_live") {
+              navigateToMainTab("TIKTOK_LIVE");
               return;
             }
             navigateToMainTab(tab === "DOCS" ? "SETTINGS" : tab);
@@ -7311,7 +8125,7 @@ export default function StudioDeluluPage() {
           </div>
 
           <div className="viralive-footer-links" aria-label="Accesos rápidos de navegación">
-            {MAIN_NAV_ITEMS.filter((i) => ["CAM", "TRY_ON", "DUO", "PRO", "SETTINGS"].includes(i.id)).map((item) => (
+            {MAIN_NAV_ITEMS.filter((i) => ["CAM", "TRY_ON", "DUO", "CLIPS", "TIKTOK_LIVE", "PRO", "SETTINGS"].includes(i.id)).map((item) => (
               <button key={item.id} type="button" className="footer-tab-link" onClick={() => navigateToMainTab(item.id)}>
                 <Dashicon name={item.icon} size={14} />
                 <span>{item.shortLabel}</span>
@@ -7336,11 +8150,8 @@ export default function StudioDeluluPage() {
                 type="button"
                 className="footer-social-btn"
                 aria-label={s.label}
-                title={`Ir a ${s.label} en Módulos PRO`}
-                onClick={() => {
-                  setActiveTab("PRO");
-                  setProSubTab("tiktok_live");
-                }}
+                title={`Ir a ${s.label} en TikTok Live con Marcas`}
+                onClick={() => setActiveTab("TIKTOK_LIVE")}
               >
                 <SocialIcon network={s.net as SocialNetworkName} size={17} />
               </button>

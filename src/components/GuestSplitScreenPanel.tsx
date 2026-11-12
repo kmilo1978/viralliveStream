@@ -1,11 +1,22 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   type GuestSimItem,
   DEFAULT_GUEST_PRESETS,
   type ViewerRangeOption,
+  fileToCompactDataUrl,
 } from "@/lib/studio-data";
+
+const CUSTOM_GUESTS_STORAGE_KEY = "miplataformastream.customDuoGuests.v2";
+
+const GUEST_BG_SWATCHES = [
+  { id: "indigo", label: "Índigo VIP", value: "linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)", dot: "#4338CA" },
+  { id: "pink", label: "Rosa Glam", value: "linear-gradient(135deg, #831843 0%, #BE185D 50%, #F43F5E 100%)", dot: "#EC4899" },
+  { id: "cyan", label: "Azul Tech", value: "linear-gradient(135deg, #0F172A 0%, #1D4ED8 60%, #0284C7 100%)", dot: "#0284C7" },
+  { id: "emerald", label: "Esmeralda Pro", value: "linear-gradient(135deg, #064E3B 0%, #047857 55%, #10B981 100%)", dot: "#10B981" },
+  { id: "obsidian", label: "Oscuro Neutro", value: "linear-gradient(135deg, #18181B 0%, #27272A 100%)", dot: "#3F3F46" },
+];
 import { Dashicon } from "@/components/Dashicons";
 import { ViewerRangeControl } from "@/components/ViewerRangeControl";
 
@@ -47,8 +58,148 @@ export function GuestSplitScreenPanel({
 }: GuestSplitScreenPanelProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const hostFileInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarFileInputRef = useRef<HTMLInputElement | null>(null);
   const configRef = useRef(config);
   configRef.current = config;
+
+  // Perfiles personalizados + edición directa de cualquier perfil
+  const [guestProfiles, setGuestProfiles] = useState<GuestSimItem[]>(DEFAULT_GUEST_PRESETS);
+  const [editorMode, setEditorMode] = useState<"closed" | "edit" | "create">("closed");
+  const [draftName, setDraftName] = useState("");
+  const [draftHandle, setDraftHandle] = useState("");
+  const [draftRole, setDraftRole] = useState("");
+  const [draftStatusText, setDraftStatusText] = useState("🟢 En directo (Co-Host)");
+  const [draftVerified, setDraftVerified] = useState(true);
+  const [draftPosterBg, setDraftPosterBg] = useState(GUEST_BG_SWATCHES[0].value);
+  const [draftAvatarUrl, setDraftAvatarUrl] = useState<string | undefined>(undefined);
+  const [draftPromptsText, setDraftPromptsText] = useState("");
+  const [editingQuoteInline, setEditingQuoteInline] = useState(false);
+  const [inlineQuoteText, setInlineQuoteText] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(CUSTOM_GUESTS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as GuestSimItem[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setGuestProfiles(parsed);
+        }
+      }
+    } catch {
+      // Ignorar JSON inválido en storage
+    }
+  }, []);
+
+  const persistGuestProfiles = (list: GuestSimItem[]) => {
+    setGuestProfiles(list);
+    try {
+      window.localStorage.setItem(CUSTOM_GUESTS_STORAGE_KEY, JSON.stringify(list));
+    } catch {
+      // Ignorar si localStorage está lleno
+    }
+  };
+
+  const openProfileEditor = (mode: "edit" | "create") => {
+    setEditorMode(mode);
+    if (mode === "edit") {
+      const g = config.selectedGuest;
+      setDraftName(g.name);
+      setDraftHandle(g.handle);
+      setDraftRole(g.role);
+      setDraftStatusText(g.statusText);
+      setDraftVerified(g.isVerified);
+      setDraftPosterBg(g.posterBg);
+      setDraftAvatarUrl(g.avatarUrl);
+      setDraftPromptsText(g.speechPrompts.join("\n"));
+    } else {
+      setDraftName("");
+      setDraftHandle("");
+      setDraftRole("Co-Host Personalizado");
+      setDraftStatusText("🟢 En directo (Co-Host)");
+      setDraftVerified(true);
+      setDraftPosterBg(GUEST_BG_SWATCHES[1].value);
+      setDraftAvatarUrl(undefined);
+      setDraftPromptsText("¡Hola a toda la audiencia conectada en el directo!\n¿Qué opinan de lo que estamos viendo hoy en pantalla?");
+    }
+  };
+
+  const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compactUrl = await fileToCompactDataUrl(file, 160);
+      setDraftAvatarUrl(compactUrl);
+    } catch {
+      // Fallback FileReader directo si falla compresión
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (typeof ev.target?.result === "string") setDraftAvatarUrl(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = "";
+  };
+
+  const handleSaveGuestProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = draftName.trim();
+    if (!cleanName) return;
+
+    const cleanHandleRaw = draftHandle.trim() || `@${cleanName.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+    const cleanHandle = cleanHandleRaw.startsWith("@") ? cleanHandleRaw : `@${cleanHandleRaw}`;
+    const prompts = draftPromptsText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const basePrompts =
+      prompts.length > 0
+        ? prompts
+        : ["¡Hola a todos! Gracias por sumarse a este directo 🙌", "¿Qué les parece lo que estamos mostrando hoy?"];
+
+    const isCreating = editorMode === "create";
+    const targetId = isCreating ? `guest-custom-${Date.now()}` : config.selectedGuest.id;
+    const savedProfile: GuestSimItem = {
+      id: targetId,
+      name: cleanName,
+      handle: cleanHandle,
+      role: draftRole.trim() || "Co-Host Invitado",
+      posterBg: draftPosterBg,
+      avatarUrl: draftAvatarUrl,
+      customVideoUrl: !isCreating ? config.selectedGuest.customVideoUrl : undefined,
+      isVerified: draftVerified,
+      statusText: draftStatusText.trim() || "🟢 En directo (Co-Host)",
+      speechPrompts: basePrompts,
+    };
+
+    const exists = guestProfiles.some((item) => item.id === targetId);
+    const updatedList = exists
+      ? guestProfiles.map((item) => (item.id === targetId ? savedProfile : item))
+      : [...guestProfiles, savedProfile];
+
+    persistGuestProfiles(updatedList);
+    onChangeConfig({
+      ...config,
+      selectedGuest: savedProfile,
+      currentPromptIndex: 0,
+      isGuestSpeaking: true,
+    });
+    setEditorMode("closed");
+  };
+
+  const handleDeleteCustomGuest = (guestId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const filtered = guestProfiles.filter((item) => item.id !== guestId);
+    const nextList = filtered.length > 0 ? filtered : DEFAULT_GUEST_PRESETS;
+    persistGuestProfiles(nextList);
+    if (config.selectedGuest.id === guestId) {
+      onChangeConfig({
+        ...config,
+        selectedGuest: nextList[0],
+        currentPromptIndex: 0,
+      });
+    }
+  };
 
   // Rotación automática de diálogo del invitado usando referencia fresca
   useEffect(() => {
@@ -369,24 +520,190 @@ export function GuestSplitScreenPanel({
         </div>
       </div>
 
-      {/* 4. LISTA LEGIBLE DE INVITADOS (SIN TEXTOS CORTADOS) */}
+      {/* 4. PERFIL DE INVITADO PERSONALIZABLE EN DIRECTO */}
       <div className="duo-section-block">
         <div className="duo-section-header-row">
           <span className="duo-section-label">Perfil de invitado en directo</span>
+          <div className="duo-profile-actions-row">
+            <button
+              type="button"
+              className={`duo-action-mini-pill ${editorMode === "edit" ? "active" : ""}`}
+              onClick={() => (editorMode === "edit" ? setEditorMode("closed") : openProfileEditor("edit"))}
+              title="Editar nombre, foto, rol, verificado y diálogo del invitado activo"
+            >
+              ✎ Personalizar
+            </button>
+            <button
+              type="button"
+              className={`duo-action-mini-pill ${editorMode === "create" ? "active" : ""}`}
+              onClick={() => (editorMode === "create" ? setEditorMode("closed") : openProfileEditor("create"))}
+              title="Crear un nuevo perfil de invitado guardado"
+            >
+              + Nuevo
+            </button>
+          </div>
         </div>
 
-        <div className="duo-guest-list">
-          {DEFAULT_GUEST_PRESETS.map((guest) => {
-            const isSelected = config.selectedGuest.id === guest.id;
-            return (
+        {editorMode !== "closed" && (
+          <form className="duo-profile-editor-card" onSubmit={handleSaveGuestProfile}>
+            <div className="duo-editor-top-title">
+              <span>{editorMode === "create" ? "Crear perfil de invitado" : `Editando: ${config.selectedGuest.name}`}</span>
+            </div>
+
+            <div className="duo-editor-avatar-row">
+              <div className="duo-guest-avatar is-preview" style={{ background: draftPosterBg }}>
+                {draftAvatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={draftAvatarUrl} alt="Avatar invitado" className="duo-guest-avatar-img" />
+                ) : (
+                  <Dashicon name="admin-users" size={16} />
+                )}
+              </div>
+              <div className="duo-editor-avatar-btns">
+                <label className="duo-action-mini-pill" style={{ cursor: "pointer" }}>
+                  <span>{draftAvatarUrl ? "Cambiar foto" : "Subir foto"}</span>
+                  <input
+                    ref={avatarFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(ev) => void handleUploadAvatar(ev)}
+                  />
+                </label>
+                {draftAvatarUrl && (
+                  <button
+                    type="button"
+                    className="duo-action-mini-pill"
+                    onClick={() => setDraftAvatarUrl(undefined)}
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="duo-editor-grid-2">
+              <label className="duo-editor-field">
+                <span>Nombre visible</span>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Camila Store"
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                />
+              </label>
+              <label className="duo-editor-field">
+                <span>Usuario (@handle)</span>
+                <input
+                  type="text"
+                  placeholder="Ej: @camila_live"
+                  value={draftHandle}
+                  onChange={(e) => setDraftHandle(e.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="duo-editor-grid-2">
+              <label className="duo-editor-field">
+                <span>Rol / Bio corta</span>
+                <input
+                  type="text"
+                  placeholder="Ej: Invitada Moda VIP"
+                  value={draftRole}
+                  onChange={(e) => setDraftRole(e.target.value)}
+                />
+              </label>
+              <label className="duo-editor-field">
+                <span>Etiqueta de estado</span>
+                <input
+                  type="text"
+                  placeholder="Ej: 🟢 En directo (Co-Host)"
+                  value={draftStatusText}
+                  onChange={(e) => setDraftStatusText(e.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="duo-editor-inline-bar">
+              <div className="duo-swatch-row" aria-label="Color de fondo del invitado">
+                {GUEST_BG_SWATCHES.map((sw) => (
+                  <button
+                    key={sw.id}
+                    type="button"
+                    className={`duo-swatch-dot ${draftPosterBg === sw.value ? "selected" : ""}`}
+                    style={{ background: sw.dot }}
+                    title={sw.label}
+                    aria-label={sw.label}
+                    onClick={() => setDraftPosterBg(sw.value)}
+                  />
+                ))}
+              </div>
+              <div className="duo-inline-switch">
+                <span>Verificado ✓</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draftVerified}
+                  aria-label="Insignia de invitado verificado"
+                  className={`switchy-toggle compact-switch ${draftVerified ? "active-green" : ""}`}
+                  onClick={() => setDraftVerified((v) => !v)}
+                >
+                  <div className="switchy-thumb" />
+                </button>
+              </div>
+            </div>
+
+            <label className="duo-editor-field">
+              <span>Frases en pantalla (1 por línea)</span>
+              <textarea
+                rows={2}
+                placeholder="¡Hola a todos! Bienvenidos al directo..."
+                value={draftPromptsText}
+                onChange={(e) => setDraftPromptsText(e.target.value)}
+              />
+            </label>
+
+            <div className="duo-editor-submit-row">
+              <button type="submit" className="duo-save-profile-btn">
+                Guardar y aplicar
+              </button>
               <button
-                key={guest.id}
                 type="button"
+                className="duo-cancel-profile-btn"
+                onClick={() => setEditorMode("closed")}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="duo-guest-list">
+          {guestProfiles.map((guest) => {
+            const isSelected = config.selectedGuest.id === guest.id;
+            const isDefaultPreset = DEFAULT_GUEST_PRESETS.some((def) => def.id === guest.id);
+            return (
+              <div
+                key={guest.id}
+                role="button"
+                tabIndex={0}
                 className={`duo-guest-row ${isSelected ? "selected" : ""}`}
                 onClick={() => handleSelectPreset(guest)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSelectPreset(guest);
+                  }
+                }}
               >
                 <div className="duo-guest-avatar" style={{ background: guest.posterBg }}>
-                  <Dashicon name={getGuestIconName(guest.id)} size={14} />
+                  {guest.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={guest.avatarUrl} alt={guest.name} className="duo-guest-avatar-img" />
+                  ) : (
+                    <Dashicon name={getGuestIconName(guest.id)} size={14} />
+                  )}
                 </div>
                 <div className="duo-guest-meta">
                   <span className="duo-guest-name-line">
@@ -395,16 +712,29 @@ export function GuestSplitScreenPanel({
                   </span>
                   <span className="duo-guest-role">{guest.role}</span>
                 </div>
-                <span className={`duo-guest-radio ${isSelected ? "checked" : ""}`}>
-                  {isSelected ? "Activo" : "Elegir"}
-                </span>
-              </button>
+                <div className="duo-guest-row-right">
+                  {!isDefaultPreset && (
+                    <button
+                      type="button"
+                      className="duo-guest-delete-btn"
+                      title="Eliminar perfil personalizado"
+                      aria-label={`Eliminar perfil ${guest.name}`}
+                      onClick={(e) => handleDeleteCustomGuest(guest.id, e)}
+                    >
+                      ×
+                    </button>
+                  )}
+                  <span className={`duo-guest-radio ${isSelected ? "checked" : ""}`}>
+                    {isSelected ? "Activo" : "Elegir"}
+                  </span>
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* 4. DIÁLOGO DEL INVITADO CON SWITCH AUTO-AVANZAR */}
+      {/* 4. DIÁLOGO DEL INVITADO CON SWITCH AUTO-AVANZAR Y EDICIÓN RÁPIDA */}
       <div className="duo-dialogue-card">
         <div className="duo-dialogue-top">
           <span className="duo-dialogue-heading">
@@ -412,22 +742,80 @@ export function GuestSplitScreenPanel({
             <span>Diálogo ({config.currentPromptIndex + 1}/{promptsTotal})</span>
           </span>
 
-          <div className="duo-inline-switch">
-            <span>Auto 14s</span>
+          <div className="duo-dialogue-controls-right">
             <button
               type="button"
-              role="switch"
-              aria-checked={config.autoRotatePrompts}
-              aria-label="Auto-avanzar diálogo cada 14 segundos"
-              className={`switchy-toggle compact-switch ${config.autoRotatePrompts ? "active" : ""}`}
-              onClick={() => onChangeConfig({ ...config, autoRotatePrompts: !config.autoRotatePrompts })}
+              className={`duo-action-mini-pill ${editingQuoteInline ? "active" : ""}`}
+              onClick={() => {
+                if (editingQuoteInline) {
+                  setEditingQuoteInline(false);
+                } else {
+                  setInlineQuoteText(activePromptText);
+                  setEditingQuoteInline(true);
+                }
+              }}
+              title="Editar el texto que dice el invitado ahora"
             >
-              <div className="switchy-thumb" />
+              ✎ Texto
             </button>
+            <div className="duo-inline-switch">
+              <span>Auto 14s</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={config.autoRotatePrompts}
+                aria-label="Auto-avanzar diálogo cada 14 segundos"
+                className={`switchy-toggle compact-switch ${config.autoRotatePrompts ? "active" : ""}`}
+                onClick={() => onChangeConfig({ ...config, autoRotatePrompts: !config.autoRotatePrompts })}
+              >
+                <div className="switchy-thumb" />
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="duo-dialogue-quote">&quot;{activePromptText}&quot;</div>
+        {editingQuoteInline ? (
+          <div className="duo-inline-quote-editor">
+            <textarea
+              rows={2}
+              className="duo-inline-quote-textarea"
+              value={inlineQuoteText}
+              onChange={(e) => setInlineQuoteText(e.target.value)}
+            />
+            <div className="duo-editor-submit-row">
+              <button
+                type="button"
+                className="duo-save-profile-btn"
+                onClick={() => {
+                  const trimmed = inlineQuoteText.trim();
+                  if (!trimmed) return;
+                  const nextPrompts = [...config.selectedGuest.speechPrompts];
+                  nextPrompts[config.currentPromptIndex] = trimmed;
+                  const updatedGuest: GuestSimItem = {
+                    ...config.selectedGuest,
+                    speechPrompts: nextPrompts,
+                  };
+                  persistGuestProfiles(
+                    guestProfiles.map((g) => (g.id === updatedGuest.id ? updatedGuest : g)),
+                  );
+                  onChangeConfig({ ...config, selectedGuest: updatedGuest, isGuestSpeaking: true });
+                  setEditingQuoteInline(false);
+                }}
+              >
+                Aplicar frase
+              </button>
+              <button
+                type="button"
+                className="duo-cancel-profile-btn"
+                onClick={() => setEditingQuoteInline(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="duo-dialogue-quote">&quot;{activePromptText}&quot;</div>
+        )}
 
         <button type="button" className="duo-next-dialogue-btn" onClick={handleNextPrompt}>
           <span>Siguiente diálogo</span>

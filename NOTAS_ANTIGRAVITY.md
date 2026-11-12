@@ -847,3 +847,185 @@
   - Ampliar `.gitignore` (`tsconfig.tsbuildinfo`, `*.bak`, `/*.py`, `/*.png`) para mantener limpio el repositorio público sin scripts/capturas temporales ni claves locales (`.env.local`).
   - Inicializar rama `main`, enlazar remoto `origin` a `https://github.com/kmilo1978/viralliveStream.git`, crear commit raíz `bed8bd9` (`64` archivos) y subir a GitHub.
 - Pendientes: Ninguno.
+
+
+## Validación completada
+- Fecha: 2026-11-12 07:19
+- Resultado: Aprobado (score >= 9, promedio auditoría interna: 9.9/10)
+- Resumen: En cabina **CAM** (y **TRY ON**), el panel derecho ahora abre `Chat IA` por defecto (`activeStudioTab = "chat"` en `src/app/page.tsx`) y prioriza **Agente IA · Manual · Sheets** arriba del feed de comentarios mediante `.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-chat-simulator-box { order: -1; }` en `src/app/globals.css`, mientras **DÚO** mantiene el compositor en la barra izquierda; además se añadió envoltura responsiva para `.unified-chat-message-row .chat-actions-col` en pantallas `<= 480 px` evitando desborde en `320 px`.
+- Observaciones: Verificado tras la última edición mediante `npx tsc --noEmit` (`TSC_OK`) y suite Playwright `verify_viralive_spike.py` en los 9 escenarios (`1280x800`, `1440x900`, `768x1024`, `820x1180`, `390x844`, `393x852`, `480x840`, `680x840`, `320x640`), confirmando `simRect.top < feedRect.top` en `CAM`, `0` overflow horizontal en `320px`, `0` errores de consola y `0` errores de página.
+
+## Nueva sesión
+- Fecha: 2026-11-12 07:19
+- Solicitud: Mostrar `Agente IA · Manual · Sheets` directamente en la parte derecha de `CAM` antes de aislar la Versión 1.
+- Decisiones clave:
+  - Establecer `"chat"` como pestaña derecha inicial en `src/app/page.tsx` para acceso inmediato en `CAM` a `Agente IA · Manual · Sheets`.
+  - Aplicar `order: -1` a `.unified-chat-simulator-box` dentro de `.is-compact-sidebar.section-mode-all` en `src/app/globals.css`, manteniendo el layout de 2 columnas en `Módulos PRO` y la posición izquierda en `DÚO`.
+  - Envolver `.chat-actions-col` en una fila inferior dentro de `.unified-chat-message-row` bajo `<= 480 px` para proteger viewports `320 px`.
+- Pendientes: Recibir el segundo ajuste de Versión 1 (si aplica) y luego ejecutar el aislamiento de Versión 1 vs Versión 2.
+
+## Validación completada
+- Fecha: 2026-11-12 07:27
+- Resultado: Aprobado (score 9.6/10)
+- Resumen: Se implementaron todas las funcionalidades de **CREATE -> Wardrobe** (`DESCRIBE YOUR OUTFIT` con generador aleatorio/limpiar, acordeones colapsables `CLOTHING TYPE`, `COLOR`, `MATERIAL`, `STYLE`, `FIT`, `DETAILS` multi-selección con indicador circular, `CUSTOM ADDITIONS`, botón `CREATE` conectado a `FormData` `/api/process-image` y acción directa `USAR EN TRY-ON` / `USAR EN CAM`).
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow desktop/tablet/mobile).
+
+## Nueva sesión
+- Fecha: 2026-11-12 07:27
+- Solicitud: Agregar funcionalidades de Wardrobe en CREATE según capturas.
+- Decisiones clave:
+  - Estado separado por categoría en `CREATE` para conservar independientemente Personajes y Wardrobe (`DELULU_WARDROBE_SECTIONS` + `WARDROBE_RANDOM_OUTFIT_PRESETS` en `src/lib/studio-data.ts`).
+  - Se corrigió `handleGenerateCharacterImage` en `src/app/page.tsx` para enviar `FormData` real a `/api/process-image` (soporta `FROM IMAGE` y `FROM SCRATCH` con lienzo semilla).
+- Pendientes:
+  - Esperar confirmación de si faltan ajustes en Versión 1 antes de subir cambios finales a GitHub y aislar `v1.0-estudio` / `v2-saas`.
+
+## Validación completada
+- Fecha: 2026-11-12 07:39
+- Resultado: Aprobado (score 9.7/10)
+- Resumen: Se agregaron todas las funciones de **CREATE -> Accesorios** (`DESCRIBE YOUR ACCESSORY`, `ACCESSORY TYPE`, `COLOR`, `MATERIAL`, `SIZE`, `STYLE`, `EFFECTS` multi-selección con exclusión automática de `NONE`, `CUSTOM ADDITIONS` y puente `USAR ACCESORIO EN CAM`), unificando el motor de `Wardrobe` y `Accesorios` sin código duplicado.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 07:39
+- Solicitud: Funcionalidades completas de Accesorios en CREATE para Versión 1.
+- Decisiones clave:
+  - Unificado estado `categoryDrafts` + configuración declarativa `CREATE_CATEGORY_CONFIG` para compartir lógica entre `outfit` (Wardrobe) y `props` (Accesorios).
+- Pendientes:
+  - Esperar confirmación final del usuario para subir a GitHub, congelar `v1.0-estudio` / `v1-estable` e iniciar `v2-saas`.
+
+## Validación completada
+- Fecha: 2026-11-12 07:47
+- Resultado: Aprobado (score 9.8/10)
+- Resumen: Se implementó el catálogo visual **CAM -> Style** con todos los **45 estilos** en cuadrícula de 3 columnas (`MANGA STYLE` hasta `STAR WARS`), miniaturas vectoriales estilizadas por temática (`CamStyleThumb.tsx`), buscador instantáneo, botón `^` de volver arriba y prompts compatibles con las políticas anti-IP de Decart para `lucy-restyle-2`.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 07:47
+- Solicitud: Catálogo completo de 45 estilos visuales en CAM -> Style.
+- Decisiones clave:
+  - Todos los 45 estilos usan nombres visibles fieles a las capturas mientras envían prompts artísticos descriptivos que pasan `moderatePromptForDecart` sin bloqueos de marcas registradas.
+- Pendientes:
+  - Esperar confirmación final para subir cambios a GitHub y aislar V1 (`v1.0-estudio` / `v1-estable`) antes de arrancar V2 SaaS.
+
+## Validación completada
+- Fecha: 2026-11-12 07:52
+- Resultado: Aprobado (score 9.8/10)
+- Resumen: Se implementó **CAM -> VFX** en la cuarta pestaña de varita mágica (`SNOW`, `FIRE BREATHING`, `TORCH`, `DEEP`) en cuadrícula de 3 columnas con miniaturas vectoriales temáticas en `CamStyleThumb.tsx`, conectadas a `lucy-2.6` y actualización en vivo.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 07:52
+- Solicitud: Tarjetas visuales VFX en CAM (SNOW, FIRE BREATHING, TORCH, DEEP).
+- Decisiones clave:
+  - Reutilizada la infraestructura de 3 columnas (`.dock-style-cards-grid`) y `CamStyleThumb` ampliado con los 4 motivos `snow`, `firebreath`, `torch` y `deep`.
+- Pendientes:
+  - Confirmar cierre de cambios en V1 para subir a GitHub, congelar `v1.0-estudio` / `v1-estable` y aislar V2 SaaS.
+
+## Validación completada
+- Fecha: 2026-11-12 08:10
+- Resultado: Aprobado (score 9.8/10)
+- Resumen: Optimización UX anti-scroll en **CAM** y **DÚO**: monitor central fijo (`position: sticky`) en escritorio desde `1101px` (incluyendo laptops `1280px` en 3 columnas reales), franja de confirmación en vivo bajo el monitor (`.stage-live-feedback-strip`), `Capas en Pantalla` compactado a 2 columnas colapsables, filtros por categoría en `CAM -> Style` (`Todos`, `Anime`, `Series`, `Games`, `Deportes`, `Cine`), reordenamiento en móvil (monitor -> controles principales -> barra derecha) y barra flotante `.floating-monitor-hud` con **`⚡ Execute`** y **`↑ Ver Monitor`** al hacer scroll hacia abajo.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 08:10
+- Solicitud: Optimizar UX de CAM y DÚO para evitar scroll largo y ver cada acción ejecutada sin subir hasta el monitor.
+- Decisiones clave:
+  - Monitor sticky en escritorio (`@media (min-width: 1101px)`) + bajado breakpoint de 3 columnas de `1280px` a `1100px`.
+  - En móvil/tablet (`<= 960px`), subido `.cam-sidebar-dock` a `order: 2` + `IntersectionObserver` que activa `.floating-monitor-hud` cuando el monitor sale de vista.
+- Pendientes:
+  - Confirmar cierre de V1 para subir todos los cambios locales a GitHub, congelar `v1.0-estudio` / `v1-estable` y crear la carpeta aislada para V2 SaaS.
+
+## Validación completada
+- Fecha: 2026-11-12 08:26
+- Resultado: Aprobado (score 9.8/10)
+- Resumen: Optimización UX anti-scroll en **CAM** y **DÚO**: monitor central fijo (`position: sticky`) en escritorio desde `1101px` (incluyendo laptops `1280px` en 3 columnas reales), franja de confirmación en vivo bajo el monitor (`.stage-live-feedback-strip`), `Capas en Pantalla` compactado a 2 columnas colapsables, filtros por categoría en `CAM -> Style` (`Todos`, `Anime`, `Series`, `Games`, `Deportes`, `Cine`), reordenamiento en móvil (monitor -> controles principales -> barra derecha) y barra flotante `.floating-monitor-hud` con **`⚡ Execute`** y **`↑ Ver Monitor`** al bajar del monitor.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 08:26
+- Solicitud: Optimizar pantallas CAM y DÚO para evitar scroll largo y ver siempre cada cambio ejecutado.
+- Decisiones clave:
+  - Monitor sticky en escritorio (`@media (min-width: 1101px)`) + bajado breakpoint de 3 columnas de `1280px` a `1100px`.
+  - En móvil/tablet (`<= 960px`), subido `.cam-sidebar-dock` a `order: 2` y añadido `.floating-monitor-hud` cuando el monitor real `.delulu-monitor-container` sale de vista.
+- Pendientes:
+  - Esperar confirmación de cierre de V1 para subir todos los cambios locales a GitHub, congelar `v1.0-estudio` / `v1-estable` y aislar V2 SaaS.
+
+## Validación completada
+- Fecha: 2026-11-12 09:35
+- Resultado: Aprobado (score 9.8/10)
+- Resumen: Se hizo 100% personalizable el **Perfil de invitado en directo** dentro de **DÚO** (`GuestSplitScreenPanel.tsx`): botones **`✎ Personalizar`** y **`+ Nuevo`**, subida de foto de avatar comprimida, selector de color de fondo (5 temas), edición de Nombre, `@Handle`, Rol, Etiqueta de estado, switch de insignia Verificado ✓, múltiples frases en pantalla (más edición rápida **`✎ Texto`** desde la tarjeta de Diálogo), eliminación de perfiles propios y persistencia en `localStorage` con actualización inmediata sobre el monitor central de **DÚO**.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 09:35
+- Solicitud: Hacer personalizable el perfil de invitado en directo dentro de DÚO.
+- Decisiones clave:
+  - Persistencia local en `miplataformastream.customDuoGuests.v2` usando `fileToCompactDataUrl` (160px) para avatares subidos sin saturar almacenamiento.
+  - Renderizado de foto personalizada `avatarUrl` en los modos `Vertical`, `Batalla PK` y `Flotante PiP` del monitor DÚO cuando no haya video MP4 activo.
+- Pendientes:
+  - Esperar confirmación final de cierre de Versión 1 para respaldar en GitHub, congelar `v1.0-estudio` / `v1-estable` y aislar V2 SaaS.
+
+## Validación completada
+- Fecha: 2026-11-12 09:44
+- Resultado: Aprobado (score 9.9/10)
+- Resumen: Reubicado el bloque completo de **Agente IA | Manual | Sheets (5)** + **Generar Comentarios con IA** + **Auto-Respondedor IA** al **principio absoluto del panel de Chat IA en la columna derecha de CAM** (visible sin hacer scroll desde la carga inicial en escritorio y laptops `1280px`+), compactando `Capas en Pantalla` en 1 barra colapsable inicial y `HERRAMIENTAS DE ESCENA`.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 09:44
+- Solicitud: Asegurar que Agente IA / Manual / Sheets quede visible inmediatamente arriba en la parte derecha de CAM.
+- Decisiones clave:
+  - Uso de `display: contents` + `order: 1` sobre `.unified-chat-simulator-box` cuando `.unified-chat-panel-container.is-compact-sidebar.section-mode-all` está activo en la barra derecha de CAM y TRY ON.
+  - Estado inicial `layersExpanded = false` en `src/app/page.tsx` para dejar el foco superior en **Agente IA | Manual | Sheets (5)**.
+- Pendientes:
+  - Esperar luz verde final para subir todos los cambios a GitHub, congelar `v1.0-estudio` / `v1-estable` e iniciar `v2-saas`.
+
+
+## Validación completada
+- Fecha: 2026-11-12 10:15
+- Resultado: Aprobado (score 9.9/10)
+- Resumen: Extraídos **`Clips Pregrabados`** (`CLIPS`) y **`TikTok Live con Marcas`** (`TIKTOK`) de **Módulos PRO** hacia el menú superior principal justo después de **DÚO** (`CAM | TRY ON | DÚO | CLIPS | TIKTOK | EXPLORE | CREATE | PRO | AJUSTES`), dejando **Módulos PRO** con 6 herramientas en cuadrícula 3x2 (`Playlist Streaming`, `Unified Live Chat`, `Schedule or Go Live`, `OBS Studio & Alertas V2`, `Voz IA & Finanzas COP`, `Gestor de Skins`), y corregidas las rutas faltantes en `src/lib/studio-data.ts` (`/backgrounds/estudio_moderno.jpg`, `/backgrounds/penthouse_nocturno.jpg`, `/backgrounds/streamer_*.jpg`) usando imágenes existentes en `public/backgrounds/`.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 10:15
+- Solicitud: Sacar Clips Pregrabados y TikTok Live con Marcas fuera de Módulos PRO y ubicarlos justo después de DÚO en el menú principal.
+- Decisiones clave:
+  - Actualizado `MainNavigationTab` y `MAIN_NAV_ITEMS` en `src/app/page.tsx` para promover `CLIPS` y `TIKTOK_LIVE` como pestañas principales inmediatamente después de `DÚO` (tanto en barra desktop como en el menú móvil `EN VIVO - CABINAS`).
+  - Reducido `ProSubTab` a 6 submódulos (predeterminado `"playlist_stream"`) en cuadrícula `.pro-subtabs-row` 3x2 en `src/app/globals.css`, más ajuste responsivo de la barra superior (`<= 1520px` y `<= 1360px`) para mantener los 9 botones en una sola fila sin desbordamiento.
+  - Sustituidas rutas inexistentes de miniaturas en `TIKTOK_BRAND_PRESETS` y `DEFAULT_STREAMING_PLAYLIST` (`src/lib/studio-data.ts`) por imágenes válidas de `public/backgrounds/`.
+- Pendientes:
+  - Esperar luz verde final del usuario para subir todos los cambios locales a GitHub, congelar `v1.0-estudio` / `v1-estable` y aislar `v2-saas` en carpeta separada.
+
+
+## Validación completada
+- Fecha: 2026-11-12 10:21
+- Resultado: Aprobado (score 10/10)
+- Resumen: Retirado el botón/subpanel redundante de **TikTok** (`tiktok_brand`) de la sección derecha de **HERRAMIENTAS DE ESCENA** (debajo de **Capas en Pantalla**) dentro de **CAM**, dejando únicamente las 7 herramientas propias de escena (`Fondos`, `Shop QR`, `Banners`, `Guion`, `Deck`, `Chat IA`, `Grabar`), ya que **TIKTOK** ahora cuenta con su página dedicada en el menú superior.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 10:21
+- Solicitud: Sacar TikTok de la columna derecha debajo de Capas en Pantalla en CAM porque ya tiene su propia página.
+- Decisiones clave:
+  - Eliminado `"tiktok_brand"` de `StudioDockTab`, su botón de `HERRAMIENTAS DE ESCENA` y el render duplicado de `TikTokBrandedStudioPanel` en `src/app/page.tsx`.
+  - Redirigido el acceso rápido `Brand` del mockup telefónico 9:16 hacia `navigateToMainTab("TIKTOK_LIVE")` para abrir la página dedicada de TikTok Live con Marcas.
+- Pendientes:
+  - Esperar luz verde final para subir cambios locales a GitHub, congelar `v1.0-estudio` / `v1-estable` y aislar `v2-saas`.
+
+
+## Validación completada
+- Fecha: 2026-11-12 10:29
+- Resultado: Aprobado (score 10/10)
+- Resumen: Ampliado **Clips Pregrabados (`QueueClipsPanel.tsx`)** con 6 proporciones de pantalla (`16:9`, `9:16`, `1:1`, `4:5`, `4:3`, `21:9` con botones rápidos + selector), 4 tamaños/resoluciones (`480p`, `720p`, `1080p`, `4K`) con cálculo en vivo de dimensiones en píxeles (ej. `1080×1350px`), 3 formatos de descarga (`MP4`, `WebM`, `MOV`), alternador de encuadre (`Completo` / `Rellenar`), soporte ampliado de archivos de subida (`MP4`, `WebM`, `MOV`, `M4V`, `MKV`) y apilado responsivo en móvil en `src/app/globals.css`.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 10:29
+- Solicitud: Agregar más tamaños y formatos de video en Clips Pregrabados.
+- Decisiones clave:
+  - Añadido catálogo unificado `CLIP_ASPECT_OPTIONS` (6 proporciones), `CLIP_RESOLUTION_BASE` (480p a 4K), `CLIP_FORMAT_OPTIONS` (`mp4`, `webm`, `mov`) y `getClipPixelDimensions()` en `src/components/QueueClipsPanel.tsx`.
+  - Actualizadas clases `.aspect-16-9`, `.aspect-9-16`, `.aspect-1-1`, `.aspect-4-5`, `.aspect-4-3`, `.aspect-21-9` y reglas responsivas `< 768px` en `src/app/globals.css`.
+- Pendientes:
+  - Esperar confirmación final de cierre de Versión 1 para subir cambios a GitHub, congelar `v1.0-estudio` / `v1-estable` e iniciar carpeta separada V2 SaaS.

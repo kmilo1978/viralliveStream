@@ -5210,7 +5210,7 @@ button {
 .studio-tools-nav-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 5px;
 }
 
 .studio-tools-nav-btn {
@@ -5218,11 +5218,11 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   background: #12131F;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  padding: 8px 4px;
+  border-radius: 9px;
+  padding: 5px 4px;
   cursor: pointer;
   transition: all 0.18s ease;
 }
@@ -6000,21 +6000,21 @@ body {
   color: var(--accent-pink);
 }
 
-@media (max-width: 1380px) {
+@media (max-width: 1520px) {
   .delulu-header {
     gap: 8px;
     padding: 6px 12px;
   }
   .delulu-header-left {
-    gap: 10px;
+    gap: 8px;
   }
   .delulu-brand svg {
-    height: 28px !important;
+    height: 26px !important;
     width: auto !important;
   }
   .delulu-nav-tab {
     padding: 6px 8px;
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     gap: 4px;
   }
   .nav-badge-new {
@@ -6022,13 +6022,13 @@ body {
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1360px) {
   .delulu-header-left {
-    gap: 8px;
+    gap: 6px;
   }
   .delulu-nav-tab {
     padding: 6px 7px;
-    font-size: 0.72rem;
+    font-size: 0.71rem;
     gap: 4px;
   }
   .nav-label-full {
@@ -6051,25 +6051,25 @@ body {
 @media (max-width: 960px) {
   .delulu-header {
     flex-wrap: nowrap;
-    padding: 6px 10px;
-    gap: 6px;
+    padding: 6px 8px;
+    gap: 4px;
   }
 
   .delulu-header-left {
-    gap: 6px;
+    gap: 4px;
   }
 
   .delulu-brand svg {
-    height: 21px !important;
+    height: 19px !important;
     width: auto !important;
   }
 
   .virallive-logo-wordmark {
-    font-size: 0.96rem !important;
+    font-size: 0.9rem !important;
   }
 
   .virallive-logo-domain {
-    font-size: 0.68rem !important;
+    font-size: 0.64rem !important;
   }
 
   .delulu-nav-tabs {
@@ -6077,7 +6077,7 @@ body {
     width: auto;
     overflow-x: visible;
     padding-bottom: 0;
-    gap: 2px;
+    gap: 1px;
   }
 
   .nav-group-divider {
@@ -6085,14 +6085,19 @@ body {
   }
 
   .delulu-nav-tab {
-    padding: 5px 5px;
-    font-size: 0.65rem;
-    gap: 3px;
+    padding: 4px 4px;
+    font-size: 0.59rem;
+    gap: 2px;
+  }
+
+  .delulu-nav-tab svg {
+    width: 12px !important;
+    height: 12px !important;
   }
 
   .btn-get-plus {
-    padding: 0 10px;
-    font-size: 0.72rem;
+    padding: 0 8px;
+    font-size: 0.68rem;
   }
 
   .user-avatar-btn {
@@ -6107,7 +6112,7 @@ body {
   }
 
   .cam-right-studio-sidebar {
-    order: 2;
+    order: 3;
     width: 100%;
     max-width: 100%;
     min-width: 0;
@@ -6119,7 +6124,7 @@ body {
 
   .cam-sidebar-dock,
   .create-sidebar-builder {
-    order: 3;
+    order: 2;
     width: 100%;
     max-width: 100%;
     min-width: 0;
@@ -6164,27 +6169,27 @@ body {
   background: #11121A;
   border-bottom: 1px solid var(--border-dark);
   box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7);
-  padding: 12px 14px 16px;
+  padding: 10px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: calc(100dvh - 110px);
+  gap: 8px;
+  max-height: calc(100dvh - 135px);
   overflow-y: auto;
 }
 
 .mobile-drawer-links {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .mobile-drawer-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 48px;
+  gap: 10px;
+  min-height: 44px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 10px;
   background: #181924;
   border: 1px solid var(--border-dark);
@@ -7805,7 +7810,7 @@ body {
 
 .pro-subtabs-row {
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 8px !important;
   overflow: visible !important;
   white-space: normal !important;
@@ -8182,12 +8187,930 @@ body {
   flex-direction: column !important;
 }
 
+/* En la barra derecha de CAM y TRY ON, colocar Agente IA / Manual / Sheets ARRIBA DEL TODO en Chat IA */
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-chat-grid {
+  display: contents !important;
+}
+
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-chat-simulator-box {
+  order: 1;
+}
+
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-overlay-master-card {
+  order: 2;
+}
+
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-pin-master-bar {
+  order: 3;
+}
+
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-switches-section {
+  order: 4;
+}
+
+.unified-chat-panel-container.is-compact-sidebar.section-mode-all .unified-chat-feed {
+  order: 5;
+}
+
+.chat-content-wrap {
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .unified-chat-message-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .unified-chat-message-row .chat-content-wrap {
+    flex: 1 1 160px;
+  }
+
+  .unified-chat-message-row .chat-actions-col {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
 @media (max-width: 767px) {
   .duo-sources-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* =============================================================
+   CREATE -> WARDROBE (ACORDEONES, MULTI-DOT DETAILS Y CUSTOM ADDITIONS)
+   ============================================================= */
+.create-prompt-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-prompt-cycle {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.builder-custom-textarea {
+  height: 76px;
+  min-height: 68px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-dark);
+  border-radius: 10px;
+  padding: 9px 11px;
+  color: var(--text-white);
+  resize: vertical;
+}
+
+.builder-custom-textarea::placeholder {
+  color: #8b8d9e;
+  opacity: 1;
+}
+
+.builder-accordion-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.builder-accordion-toggle:hover {
+  filter: brightness(1.12);
+}
+
+.builder-section-count {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.builder-accordion-chevron {
+  color: var(--text-muted);
+  transition: transform 0.16s ease, color 0.16s ease;
+  flex-shrink: 0;
+}
+
+.builder-accordion-toggle.is-collapsed .builder-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.builder-chip-pill.has-multi-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-right: 10px;
+}
+
+.builder-chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: rgba(12, 12, 18, 0.9);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.builder-chip-pill.has-multi-dot.active .builder-chip-dot {
+  border-color: #ffffff;
+  background: #ff2e93;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
+}
+
+.btn-create-submit.is-muted,
+.btn-create-submit:disabled {
+  background: #14141d;
+  border: 1px solid var(--border-dark);
+  color: #8b8d9e;
+  box-shadow: none;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+}
+
+.wardrobe-preview-summary {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(20, 20, 29, 0.92);
+  border: 1px solid var(--border-dark);
+  max-width: 440px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.wardrobe-summary-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wardrobe-summary-chip {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 46, 147, 0.16);
+  border: 1px solid rgba(255, 46, 147, 0.45);
+  color: #ffd6eb;
+}
+
+.wardrobe-summary-chip.is-detail {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f3f4f6;
+}
+
+.wardrobe-summary-prompt {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #d1d5db;
+  word-break: break-word;
+}
+
+/* =============================================================
+   CAM -> STYLE GALLERY (45 ESTILOS EN 3 COLUMNAS)
+   ============================================================= */
+.cam-style-catalog-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cam-style-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cam-style-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-dark);
+  color: var(--text-white);
+  font-size: 0.75rem;
+  outline: none;
+}
+
+.cam-style-search-input::placeholder {
+  color: #8b8d9e;
+}
+
+.cam-style-search-input:focus {
+  border-color: var(--accent-pink);
+}
+
+.cam-style-top-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--border-dark);
+  background-color: var(--surface-card);
+  color: var(--text-white);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.cam-style-top-btn:hover {
+  border-color: var(--accent-pink);
+  background-color: rgba(255, 46, 147, 0.12);
+}
+
+.dock-style-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cam-style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  min-width: 0;
+}
+
+.cam-style-thumb-box {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--border-dark);
+  background-color: #14141d;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.cam-style-card:hover .cam-style-thumb-box {
+  border-color: rgba(255, 46, 147, 0.65);
+  transform: translateY(-1px);
+}
+
+.cam-style-card.selected .cam-style-thumb-box {
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 12px var(--accent-pink-glow);
+}
+
+.cam-style-label {
+  width: 100%;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--text-white);
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cam-style-card.selected .cam-style-label {
+  color: var(--accent-pink);
+}
+
+.cam-style-empty-msg {
+  padding: 14px 10px;
+  border-radius: 10px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-dark);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.cam-style-clear-link {
+  background: none;
+  border: none;
+  color: var(--accent-pink);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+@media (max-width: 380px) {
+  .dock-style-cards-grid {
+    gap: 6px;
+  }
+  .cam-style-label {
+    font-size: 0.54rem;
+  }
+}
+
+.cam-vfx-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+/* =============================================================
+   OPTIMIZACION UX ANTI-SCROLL (CAM & DUO)
+   - Monitor Sticky en Escritorio para ver siempre cada cambio en vivo
+   - 3 columnas desde 1101px (laptops 1280px sin caída de barra derecha)
+   - Capas en 2 columnas compactas y DÚO más compacto
+   - HUD flotante "↑ Ver Monitor" cuando el monitor queda arriba en móvil
+   ============================================================= */
+@media (min-width: 1101px) {
+  .cam-workspace-layout {
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+  }
+
+  .cam-stage-hero {
+    position: sticky;
+    top: 58px;
+    align-self: flex-start;
+    justify-content: flex-start;
+    padding: 12px 18px;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .cam-stage-hero .delulu-monitor-container {
+    max-height: calc(100vh - 235px);
+  }
+
+  .cam-stage-hero .delulu-monitor-container.phone-mockup-9-16 {
+    max-height: calc(100vh - 210px);
+  }
+}
+
+@media (min-width: 1101px) and (max-width: 1380px) {
+  .cam-sidebar-dock {
+    width: 300px;
+    min-width: 280px;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .cam-right-studio-sidebar {
+    width: 345px;
+    min-width: 320px;
+    max-width: 360px;
+    padding: 10px;
+    gap: 8px;
+  }
+}
+
+/* Capas en Pantalla en 2 columnas compactas */
+.studio-layers-header-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.studio-layers-rows-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.studio-layers-manager-card {
+  padding: 10px 12px !important;
+  gap: 8px !important;
+}
+
+.studio-layers-rows-grid .studio-layers-row-item {
+  padding: 6px 8px;
+  gap: 6px;
+  border-radius: 9px;
+}
+
+.studio-layers-rows-grid .studio-layers-row-label {
+  font-size: 0.7rem;
+  gap: 5px;
+  min-width: 0;
+}
+
+.studio-layers-rows-grid .studio-layers-row-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-layers-rows-grid .switchy-toggle {
+  width: 34px;
+  height: 19px;
+  flex-shrink: 0;
+}
+
+.studio-layers-rows-grid .switchy-toggle .switchy-thumb {
+  width: 13px;
+  height: 13px;
+}
+
+.studio-layers-rows-grid .switchy-toggle.active-green .switchy-thumb {
+  transform: translateX(14px);
+}
+
+/* Compactar ligeramente DÚO y Chat derecho para reducir scroll vertical */
+.cam-sidebar-dock .duo-panel-card {
+  padding: 10px;
+  gap: 8px;
+}
+
+.cam-sidebar-dock .duo-sources-card,
+.cam-sidebar-dock .duo-section-block {
+  gap: 6px;
+}
+
+.cam-right-studio-sidebar .unified-chat-message-row {
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.cam-right-studio-sidebar .unified-chat-feed {
+  gap: 6px;
+}
+
+/* Chips de filtro de categoría en CAM -> Style */
+.cam-style-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.cam-style-filter-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-dark);
+  background-color: var(--surface-card);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.cam-style-filter-chip:hover {
+  border-color: rgba(255, 46, 147, 0.55);
+  color: var(--text-white);
+}
+
+.cam-style-filter-chip.active {
+  background-color: var(--accent-pink-deep);
+  border-color: var(--accent-pink);
+  color: #FFFFFF;
+}
+
+/* Franja de confirmación bajo el monitor */
+.stage-live-feedback-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(17, 18, 30, 0.94);
+  border: 1px solid rgba(255, 46, 147, 0.45);
+  color: #F8FAFC;
+  font-size: 0.72rem;
+  font-weight: 600;
+  max-width: 100%;
+}
+
+.stage-feedback-badge {
+  background: var(--accent-pink-deep);
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.stage-feedback-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.stage-feedback-close {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* HUD flotante inferior cuando el monitor sale de vista en móvil/tablet */
+.floating-monitor-hud {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(94vw, 560px);
+  z-index: 70;
+  background: rgba(14, 15, 24, 0.96);
+  border: 1px solid var(--accent-pink);
+  border-radius: 999px;
+  padding: 7px 10px 7px 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.floating-hud-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.floating-hud-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.floating-hud-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.floating-hud-exec-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1F2030;
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.floating-hud-top-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, #D81B60 0%, #FF2E93 100%);
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  .studio-layers-rows-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .floating-monitor-hud {
+    padding: 6px 8px 6px 12px;
+  }
+
+  .floating-hud-exec-btn {
+    display: none;
+  }
+}
+
+/* =============================================================
+   DUO -> PERFIL DE INVITADO PERSONALIZABLE
+   ============================================================= */
+.duo-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.duo-profile-actions-row,
+.duo-dialogue-controls-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duo-action-mini-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-dark);
+  background: #171825;
+  color: #E2E8F0;
+  font-size: 0.64rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.14s ease;
+}
+
+.duo-action-mini-pill:hover,
+.duo-action-mini-pill.active {
+  border-color: var(--accent-pink);
+  background: rgba(255, 46, 147, 0.16);
+  color: #FFFFFF;
+}
+
+.duo-profile-editor-card {
+  background: #121320;
+  border: 1px solid rgba(255, 46, 147, 0.45);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.duo-editor-top-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #F472B6;
+  letter-spacing: 0.02em;
+}
+
+.duo-editor-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.duo-guest-avatar.is-preview {
+  width: 36px;
+  height: 36px;
+}
+
+.duo-guest-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.duo-editor-avatar-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.duo-editor-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.duo-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.duo-editor-field span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #94A3B8;
+}
+
+.duo-editor-field input,
+.duo-editor-field textarea,
+.duo-inline-quote-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid var(--border-dark);
+  background: #0D0E16;
+  color: #F8FAFC;
+  font-size: 0.71rem;
+  padding: 6px 8px;
+  outline: none;
+}
+
+.duo-editor-field input:focus,
+.duo-editor-field textarea:focus,
+.duo-inline-quote-textarea:focus {
+  border-color: var(--accent-pink);
+}
+
+.duo-editor-inline-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.duo-swatch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duo-swatch-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+}
+
+.duo-swatch-dot.selected {
+  border-color: #FFFFFF;
+  box-shadow: 0 0 0 2px var(--accent-pink);
+}
+
+.duo-editor-submit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duo-save-profile-btn {
+  flex: 1;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(90deg, #D81B60 0%, #FF2E93 100%);
+  color: #FFFFFF;
+  font-size: 0.71rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.duo-cancel-profile-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-dark);
+  background: #171825;
+  color: #CBD5E1;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.duo-guest-row {
+  cursor: pointer;
+}
+
+.duo-guest-row-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.duo-guest-delete-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  color: #FCA5A5;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.duo-inline-quote-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 
 
+
+
+
+
+
+/* -------------------------------------------------------------
+   CLIPS PREGRABADOS: MULTI-FORMATOS Y PROPORCIONES DE VIDEO
+   ------------------------------------------------------------- */
+.queue-feed-box {
+  margin: 0 auto;
+  width: 100%;
+  transition: aspect-ratio 0.2s ease, max-width 0.2s ease;
+}
+
+.queue-feed-box.aspect-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.queue-feed-box.aspect-9-16 {
+  aspect-ratio: 9 / 16;
+  max-height: 440px;
+  max-width: 260px;
+}
+
+.queue-feed-box.aspect-1-1 {
+  aspect-ratio: 1 / 1;
+  max-height: 360px;
+  max-width: 360px;
+}
+
+.queue-feed-box.aspect-4-5 {
+  aspect-ratio: 4 / 5;
+  max-height: 400px;
+  max-width: 320px;
+}
+
+.queue-feed-box.aspect-4-3 {
+  aspect-ratio: 4 / 3;
+  max-height: 380px;
+}
+
+.queue-feed-box.aspect-21-9 {
+  aspect-ratio: 21 / 9;
+}
+
+.queue-aspect-quick-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding-top: 6px;
+}
+
+.queue-aspect-quick-strip .pill-ctrl-button {
+  font-size: 0.74rem;
+  padding: 5px 10px;
+  min-height: 32px;
+}
+
+@media (max-width: 767px) {
+  .queue-monitor-screens {
+    grid-template-columns: 1fr;
+  }
+
+  .queue-monitor-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .queue-monitor-controls .select-ctrl-pill,
+  .queue-monitor-controls .pill-ctrl-button {
+    max-width: 100%;
+  }
+}

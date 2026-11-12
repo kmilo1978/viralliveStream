@@ -14,6 +14,51 @@ import { Dashicon } from "@/components/Dashicons";
 
 const STORAGE_KEY = "miplataformastream.queueJobs.v1";
 
+type ClipAspectRatio = "16:9" | "9:16" | "1:1" | "4:5" | "4:3" | "21:9";
+type ClipResolution = "480p" | "720p" | "1080p" | "4k";
+type ClipFitMode = "contain" | "cover";
+type ClipContainerFormat = "mp4" | "webm" | "mov";
+
+const CLIP_ASPECT_OPTIONS: Array<{
+  id: ClipAspectRatio;
+  label: string;
+  shortLabel: string;
+  cssClass: string;
+  ratioNum: number;
+  platformHint: string;
+}> = [
+  { id: "16:9", label: "16:9 Panorámico (YouTube / Twitch)", shortLabel: "16:9", cssClass: "aspect-16-9", ratioNum: 16 / 9, platformHint: "YouTube / Twitch" },
+  { id: "9:16", label: "9:16 Vertical (TikTok / Reels / Shorts)", shortLabel: "9:16", cssClass: "aspect-9-16", ratioNum: 9 / 16, platformHint: "TikTok / Reels" },
+  { id: "1:1", label: "1:1 Cuadrado (Instagram Feed / Ads)", shortLabel: "1:1", cssClass: "aspect-1-1", ratioNum: 1, platformHint: "Instagram / Ads" },
+  { id: "4:5", label: "4:5 Retrato Social (Instagram / FB)", shortLabel: "4:5", cssClass: "aspect-4-5", ratioNum: 4 / 5, platformHint: "IG / Facebook" },
+  { id: "4:3", label: "4:3 Clásico (Presentación / Retro)", shortLabel: "4:3", cssClass: "aspect-4-3", ratioNum: 4 / 3, platformHint: "Presentación / TV" },
+  { id: "21:9", label: "21:9 Cine Ultrawide", shortLabel: "21:9", cssClass: "aspect-21-9", ratioNum: 21 / 9, platformHint: "Cine Ultrawide" },
+];
+
+const CLIP_RESOLUTION_BASE: Record<ClipResolution, { label: string; shortSide: number }> = {
+  "480p": { label: "480p (SD Ligero)", shortSide: 480 },
+  "720p": { label: "720p (HD Nativo IA)", shortSide: 720 },
+  "1080p": { label: "1080p (Full HD)", shortSide: 1080 },
+  "4k": { label: "4K (Ultra HD)", shortSide: 2160 },
+};
+
+const CLIP_FORMAT_OPTIONS: Array<{ id: ClipContainerFormat; label: string }> = [
+  { id: "mp4", label: "MP4 (Universal H.264)" },
+  { id: "webm", label: "WebM (Web / VP9)" },
+  { id: "mov", label: "MOV (Edición Pro)" },
+];
+
+function getClipPixelDimensions(aspect: ClipAspectRatio, resolution: ClipResolution): { width: number; height: number } {
+  const shortSide = CLIP_RESOLUTION_BASE[resolution].shortSide;
+  const preset = CLIP_ASPECT_OPTIONS.find((opt) => opt.id === aspect) ?? CLIP_ASPECT_OPTIONS[0];
+  const r = preset.ratioNum;
+  const makeEven = (val: number) => Math.round(val / 2) * 2;
+  if (r >= 1) {
+    return { width: makeEven(shortSide * r), height: shortSide };
+  }
+  return { width: shortSide, height: makeEven(shortSide / r) };
+}
+
 type QueueClipsPanelProps = {
   onLoadCompletedIntoMonitor: (videoUrl: string, fileName: string) => void;
   onRefreshAccount: () => void;
@@ -38,7 +83,10 @@ export function QueueClipsPanel({
   const [inputVideoUrl, setInputVideoUrl] = useState<string | null>(null);
   const [activeOutputUrl, setActiveOutputUrl] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
-  const [dualAspect, setDualAspect] = useState<"16:9" | "9:16">("16:9");
+  const [dualAspect, setDualAspect] = useState<ClipAspectRatio>("16:9");
+  const [dualResolution, setDualResolution] = useState<ClipResolution>("720p");
+  const [dualFitMode, setDualFitMode] = useState<ClipFitMode>("contain");
+  const [exportFormat, setExportFormat] = useState<ClipContainerFormat>("mp4");
   const [dualIsPlaying, setDualIsPlaying] = useState<boolean>(false);
   const [dualLoop, setDualLoop] = useState<boolean>(true);
 
@@ -250,6 +298,9 @@ export function QueueClipsPanel({
 
   const selectedModelMeta =
     QUEUE_VIDEO_MODELS.find((m) => m.id === modelId) ?? QUEUE_VIDEO_MODELS[0];
+  const activeAspectPreset =
+    CLIP_ASPECT_OPTIONS.find((opt) => opt.id === dualAspect) ?? CLIP_ASPECT_OPTIONS[0];
+  const activePixelDims = getClipPixelDimensions(dualAspect, dualResolution);
 
   return (
     <div className="cockpit-grid">
@@ -266,7 +317,10 @@ export function QueueClipsPanel({
               Monitor Dual de Clips Pregrabados (Entrada vs Salida IA)
             </h2>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <span className="tag-pill" title="Dimensiones y formato seleccionados para el clip">
+              {activePixelDims.width}×{activePixelDims.height}px · {dualAspect} · {exportFormat.toUpperCase()}
+            </span>
             <span className={`tag-pill ${submitting ? "active" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <span
                 style={{
@@ -282,10 +336,10 @@ export function QueueClipsPanel({
         </div>
 
         <div className="queue-monitor-screens">
-          {/* Pantalla 1: ENTRADA (Video Original MP4) */}
-          <div className={`queue-feed-box ${dualAspect === "9:16" ? "aspect-9-16" : ""}`}>
+          {/* Pantalla 1: ENTRADA (Video Original) */}
+          <div className={`queue-feed-box ${activeAspectPreset.cssClass}`}>
             <span className="queue-feed-badge" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <Dashicon name="video-alt3" size={13} /> ENTRADA (Clip Original MP4)
+              <Dashicon name="video-alt3" size={13} /> ENTRADA ({dualAspect} · {activePixelDims.width}×{activePixelDims.height})
             </span>
             {inputVideoUrl ? (
               <video
@@ -294,7 +348,7 @@ export function QueueClipsPanel({
                 playsInline
                 loop={dualLoop}
                 controls
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                style={{ width: "100%", height: "100%", objectFit: dualFitMode }}
               />
             ) : (
               <div style={{ textAlign: "center", padding: 20, color: "var(--text-secondary)" }}>
@@ -302,16 +356,16 @@ export function QueueClipsPanel({
                   <Dashicon name="upload" size={28} />
                 </div>
                 <p style={{ margin: 0, fontSize: "0.82rem" }}>
-                  Selecciona un archivo MP4 abajo para previsualizar aquí el clip original
+                  Selecciona un archivo de video (MP4, WebM o MOV) abajo para previsualizar en {dualAspect}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Pantalla 2: SALIDA IA (Video Procesado Decart 720p) */}
-          <div className={`queue-feed-box ${dualAspect === "9:16" ? "aspect-9-16" : ""}`}>
+          {/* Pantalla 2: SALIDA IA (Video Procesado Decart) */}
+          <div className={`queue-feed-box ${activeAspectPreset.cssClass}`}>
             <span className="queue-feed-badge out-ai" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-              <Dashicon name="star-filled" size={13} /> SALIDA IA ({modelId} · Decart 720p)
+              <Dashicon name="star-filled" size={13} /> SALIDA IA ({modelId} · {dualResolution.toUpperCase()} {dualAspect})
             </span>
             {activeOutputUrl ? (
               <video
@@ -320,7 +374,7 @@ export function QueueClipsPanel({
                 playsInline
                 loop={dualLoop}
                 controls
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                style={{ width: "100%", height: "100%", objectFit: dualFitMode }}
               />
             ) : submitting ? (
               <div style={{ textAlign: "center", padding: 20, color: "var(--accent-pink)" }}>
@@ -375,12 +429,69 @@ export function QueueClipsPanel({
 
             <select
               className="select-ctrl-pill"
+              aria-label="Formato o proporción del clip"
               value={dualAspect}
-              onChange={(e) => setDualAspect(e.target.value as "16:9" | "9:16")}
+              onChange={(e) => setDualAspect(e.target.value as ClipAspectRatio)}
+              title="Proporción de pantalla para redes sociales o streaming"
             >
-              <option value="16:9">16:9 Panorámico</option>
-              <option value="9:16">9:16 Vertical (TikTok/Reels)</option>
+              {CLIP_ASPECT_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
+
+            <select
+              className="select-ctrl-pill"
+              aria-label="Resolución del clip"
+              value={dualResolution}
+              onChange={(e) => setDualResolution(e.target.value as ClipResolution)}
+              title="Tamaño / Resolución de salida del clip"
+            >
+              {(Object.keys(CLIP_RESOLUTION_BASE) as ClipResolution[]).map((resKey) => (
+                <option key={resKey} value={resKey}>
+                  {CLIP_RESOLUTION_BASE[resKey].label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="select-ctrl-pill"
+              aria-label="Formato de archivo del clip"
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as ClipContainerFormat)}
+              title="Contenedor / extensión de archivo de descarga"
+            >
+              {CLIP_FORMAT_OPTIONS.map((fmt) => (
+                <option key={fmt.id} value={fmt.id}>
+                  {fmt.label}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              className={`pill-ctrl-button ${dualFitMode === "cover" ? "active-pink" : ""}`}
+              onClick={() => setDualFitMode((prev) => (prev === "contain" ? "cover" : "contain"))}
+              title="Alternar entre ver video completo (Contain) o rellenar todo el recuadro (Cover)"
+            >
+              <span>Encuadre: {dualFitMode === "contain" ? "Completo" : "Rellenar"}</span>
+            </button>
+          </div>
+
+          <div className="queue-aspect-quick-strip" role="group" aria-label="Accesos rápidos de proporción">
+            {CLIP_ASPECT_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`pill-ctrl-button ${dualAspect === opt.id ? "active-pink" : ""}`}
+                onClick={() => setDualAspect(opt.id)}
+                title={`${opt.label} (${getClipPixelDimensions(opt.id, dualResolution).width}×${getClipPixelDimensions(opt.id, dualResolution).height})`}
+              >
+                <span>{opt.shortLabel}</span>
+                <span style={{ opacity: 0.72, fontSize: "0.7rem" }}>· {opt.platformHint}</span>
+              </button>
+            ))}
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -398,13 +509,13 @@ export function QueueClipsPanel({
                 </button>
                 <a
                   href={activeOutputUrl}
-                  download="clip-ia-salida.mp4"
+                  download={`clip-ia-${dualAspect.replace(":", "x")}-${dualResolution}.${exportFormat}`}
                   className="pill-ctrl-button"
                   style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
-                  title="Descargar archivo MP4 a tu computador"
+                  title={`Descargar archivo ${exportFormat.toUpperCase()} (${activePixelDims.width}×${activePixelDims.height})`}
                 >
                   <Dashicon name="download" size={13} />
-                  <span>Descargar MP4</span>
+                  <span>Descargar {exportFormat.toUpperCase()}</span>
                 </a>
               </>
             )}
@@ -493,8 +604,8 @@ export function QueueClipsPanel({
       <section className="studio-card" aria-label="Enviar video a la cola Decart">
         <h2>Configurar y Procesar Clip</h2>
         <p className="muted-copy">
-          Sube un video MP4 o WebM (hasta 200 MB, proporción 16:9 o 9:16) para que Decart lo
-          procese a 720p en segundo plano con máxima calidad.
+          Sube un video MP4, WebM, MOV, M4V o MKV (hasta 200 MB, cualquier proporción: 16:9, 9:16, 1:1, 4:5, 4:3 o 21:9) para que Decart lo
+          procese en segundo plano con máxima calidad.
         </p>
 
         <div className="field-row">
@@ -515,11 +626,11 @@ export function QueueClipsPanel({
         </div>
 
         <div className="field-row">
-          <label htmlFor="q-video">Archivo de video fuente (MP4 / WebM, max 200 MB)</label>
+          <label htmlFor="q-video">Archivo de video fuente (MP4 / WebM / MOV / M4V / MKV, máx 200 MB)</label>
           <input
             id="q-video"
             type="file"
-            accept="video/mp4,video/webm"
+            accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/ogg,.mp4,.webm,.mov,.mkv,.m4v"
             className="input-control"
             onChange={(e) => handleSelectVideoFile(e.target.files?.[0] ?? null)}
           />
