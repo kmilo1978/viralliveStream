@@ -419,6 +419,23 @@ export default function StudioDeluluPage() {
     isGuestSpeaking: true,
   });
   const [realFeelChatEnabled, setRealFeelChatEnabled] = useState<boolean>(true);
+  const [underMonitorChatText, setUnderMonitorChatText] = useState<string>("");
+  const [underMonitorChatPush, setUnderMonitorChatPush] = useState<{ nonce: number; text: string } | null>(null);
+  const underMonitorNonceRef = useRef<number>(1);
+
+  const handleSendUnderMonitorChat = useCallback(
+    (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      const text = underMonitorChatText.trim();
+      if (!text) return;
+      setUnderMonitorChatPush({
+        nonce: underMonitorNonceRef.current++,
+        text,
+      });
+      setUnderMonitorChatText("");
+    },
+    [underMonitorChatText],
+  );
   const [phoneFrameMode, setPhoneFrameMode] = useState<boolean>(false);
   const [phoneMockupMode, setPhoneMockupMode] = useState<boolean>(true);
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(false);
@@ -4193,10 +4210,10 @@ export default function StudioDeluluPage() {
                   pinnedMessageId={pinnedChatMessage?.id}
                   viewerRange={guestSplitConfig.viewerRange}
                   showHearts={true}
-                  showBottomBar={!showPhoneMockupFrame}
+                  showBottomBar={false}
                   showLiveGoal={!showPhoneMockupFrame}
                   streamerName={streamerName}
-                  bottomPadding={showPhoneMockupFrame ? 56 : 12}
+                  bottomPadding={showPhoneMockupFrame ? 56 : 14}
                   maxVisible={showPhoneMockupFrame ? 3 : 4}
                   compactMode={showPhoneMockupFrame}
                   hasPipCamera={
@@ -4205,6 +4222,7 @@ export default function StudioDeluluPage() {
                     selectedBgId !== "bg-none" &&
                     bgPreviewMode === "pip_camera"
                   }
+                  externalMessageToPush={underMonitorChatPush}
                 />
               )}
 
@@ -4433,6 +4451,78 @@ export default function StudioDeluluPage() {
             </div>
             {/* Cierre del envoltorio relativo del monitor */}
             </div>
+
+            {/* CASILLA DE COMENTARIOS DEBAJO DE LA PANTALLA (Para ver los mensajes en pantalla 100% limpios y sin obstáculos) */}
+            {realFeelChatEnabled && (
+              <form
+                className="under-monitor-chat-bar"
+                onSubmit={handleSendUnderMonitorChat}
+                style={{
+                  width: "100%",
+                  maxWidth: effectiveCropMode === "9:16" ? 440 : 680,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 14px",
+                  background: "rgba(18, 18, 28, 0.94)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.14)",
+                  borderRadius: 24,
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.45)",
+                  margin: "8px 0 6px 0",
+                  zIndex: 20,
+                  position: "relative",
+                  boxSizing: "border-box",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: "0.95rem", opacity: 0.75 }}>💬</span>
+                  <input
+                    type="text"
+                    placeholder="Add a comment... (Presiona Enter para enviar en vivo)"
+                    value={underMonitorChatText}
+                    onChange={(e) => setUnderMonitorChatText(e.target.value)}
+                    style={{
+                      flex: 1,
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      color: "#FFFFFF",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                      minWidth: 0,
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!underMonitorChatText.trim()}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    minWidth: 32,
+                    borderRadius: "50%",
+                    background: underMonitorChatText.trim()
+                      ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
+                      : "rgba(255, 255, 255, 0.12)",
+                    border: "none",
+                    color: "#FFFFFF",
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: underMonitorChatText.trim() ? "pointer" : "default",
+                    boxShadow: underMonitorChatText.trim() ? "0 2px 8px rgba(236, 72, 153, 0.45)" : "none",
+                    transition: "all 0.15s ease",
+                    flexShrink: 0,
+                  }}
+                  title="Enviar comentario en vivo"
+                >
+                  ➤
+                </button>
+              </form>
+            )}
 
             {/* Franja de estado compacta para móviles (<= 640px) que libera la vista de cámara */}
             <div className="mobile-stage-status-strip">

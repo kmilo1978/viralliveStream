@@ -1228,3 +1228,23 @@
   4. Migración transparente de `localStorage` para limpiar navegadores que tenían guardada la posición antigua.
 - Pendientes:
   - Subir cambios a `origin/main` en GitHub inmediatamente.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:30
+- Resultado: Aprobado (score 10/10)
+- Resumen: Reubicación de la casilla de comentarios "Add a comment..." debajo de la pantalla del monitor para liberar la visibilidad de los mensajes en el streaming:
+  1. **Pantalla de video 100% despejada**: Se retiró el formulario de entrada del overlay interno del monitor (`showBottomBar = false` en `RealFeelLiveChatOverlay.tsx`). Los comentarios en pantalla ahora cuentan con más altura vertical (`maxHeight: 165px`) y no se ven obstruidos por ninguna caja ni botón de envío.
+  2. **Casilla ubicada debajo del monitor**: Se creó el componente `under-monitor-chat-bar` posicionado exactamente debajo del monitor de transmisión (`margin: 8px 0 6px 0`), con diseño tipo píldora oscura (`rgba(18, 18, 28, 0.94)` + desenfoque de 12px), icono `💬`, campo de texto accesible y botón de envío circular neón `➤`.
+  3. **Envío y sincronización en vivo**: Al escribir y presionar Enter o pulsar el botón `➤`, el mensaje se inyecta de inmediato al feed de comentarios en pantalla mediante la propiedad `externalMessageToPush` con el avatar del streamer.
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> `Form inside monitor count: 0`, `Under-monitor chat bar visible: True`, `Is under-bar strictly below monitor? True`, `New message rendered inside monitor chat feed: True`.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:30
+- Solicitud: Mover la casilla de comentarios "Add a comment..." debajo de la pantalla para poder ver bien los mensajes.
+- Decisiones clave:
+  1. `showBottomBar = false` en el overlay del monitor.
+  2. Implementación de barra de entrada `.under-monitor-chat-bar` situada fuera y debajo del monitor.
+  3. Mayor espacio vertical para el feed de mensajes en el tercio inferior del video.
+- Pendientes:
+  - Commit y push inmediato a `origin/main` en GitHub.

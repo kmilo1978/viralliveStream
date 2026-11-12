@@ -167,7 +167,7 @@ export function RealFeelLiveChatOverlay({
   pinnedMessageId,
   viewerRange = DEFAULT_VIEWER_RANGES[6], // 49K-51K por defecto (50.7K)
   showHearts = true,
-  showBottomBar = true,
+  showBottomBar = false,
   showLiveGoal = true,
   streamerName = "Maddy",
   bottomPadding = 0,
@@ -426,7 +426,7 @@ export function RealFeelLiveChatOverlay({
               justifyContent: "flex-end",
               gap: 4,
               maxWidth: compactMode ? "76%" : "48%",
-              maxHeight: compactMode ? 132 : 124,
+              maxHeight: compactMode ? 132 : 165,
               overflow: "hidden",
               pointerEvents: "auto",
               maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.88) 18%, #000 36%, #000 100%)",
