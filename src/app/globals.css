@@ -9506,3 +9506,17 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* -------------------------------------------------------------
+   CAM: CORRECCIÓN DE SOLAPAMIENTO DE BARRA "ADD A COMMENT"
+   ------------------------------------------------------------- */
+.real-feel-chat-input-form {
+  max-width: 42% !important;
+  width: 100% !important;
+  align-self: flex-start !important;
+  margin-right: auto !important;
+}
+
+.monitor-pip-camera {
+  z-index: 40 !important;
+}

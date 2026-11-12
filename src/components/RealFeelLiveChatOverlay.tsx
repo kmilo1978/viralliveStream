@@ -16,6 +16,7 @@ interface RealFeelLiveChatOverlayProps {
   bottomPadding?: number;
   maxVisible?: number;
   compactMode?: boolean;
+  externalMessageToPush?: { nonce: number; text: string } | null;
 }
 
 type HeartParticle = {
@@ -150,6 +151,7 @@ export function RealFeelLiveChatOverlay({
   bottomPadding = 0,
   maxVisible = 4,
   compactMode = false,
+  externalMessageToPush = null,
 }: RealFeelLiveChatOverlayProps) {
   const [localMessages, setLocalMessages] = useState<UnifiedChatMessage[]>(() =>
     propMessages && propMessages.length > 0
@@ -171,6 +173,23 @@ export function RealFeelLiveChatOverlay({
       setLocalMessages(propMessages.slice(0, 5));
     }
   }, [propMessages]);
+
+  // Empujar comentario rápido desde la barra externa debajo del monitor
+  useEffect(() => {
+    if (!externalMessageToPush || !externalMessageToPush.text.trim()) return;
+    const userMsg: UnifiedChatMessage = {
+      id: `chat-ext-${externalMessageToPush.nonce}`,
+      platform: "tiktok",
+      author: streamerName || "Tú (Streamer)",
+      avatarLetter: (streamerName || "T").charAt(0).toUpperCase(),
+      avatarColor: "#EC4899",
+      isVerified: true,
+      badgeIcon: "👑",
+      message: externalMessageToPush.text.trim(),
+      timestamp: "Ahora",
+    };
+    setLocalMessages((prev) => [...prev.slice(-5), userMsg]);
+  }, [externalMessageToPush, streamerName]);
 
   // Generador de comentarios continuo sincronizado con viewerRange
   useEffect(() => {
@@ -658,7 +677,7 @@ export function RealFeelLiveChatOverlay({
         )}
       </div>
 
-        {/* 3. BARRA INFERIOR: INPUT "ADD A COMMENT..." Y BOTONES DE ACCIÓN */}
+        {/* 3. BARRA INFERIOR: INPUT "ADD A COMMENT..." Y BOTONES DE ACCIÓN (Alineada estrictamente a la izquierda sin tapar la cámara PiP) */}
         {showBottomBar && (
           <form
             className="real-feel-chat-input-form"
@@ -668,6 +687,8 @@ export function RealFeelLiveChatOverlay({
               alignItems: "center",
               gap: 8,
               width: "100%",
+              maxWidth: compactMode ? "74%" : "42%",
+              alignSelf: "flex-start",
               marginTop: 2,
               pointerEvents: "auto",
             }}

@@ -1146,3 +1146,20 @@
   - Removidos `.monitor-local-preview-badges`, `.monitor-bg-badge-overlay` y chips homólogos móviles en `src/app/page.tsx`.
 - Pendientes:
   - Respaldo automático en `origin/main` en ejecución.
+
+
+## Validación completada
+- Fecha: 2026-11-12 12:35
+- Resultado: Aprobado (score 10/10)
+- Resumen: Corregido el solapamiento de la barra de comentarios `Add a comment...` en cabina CAM (`src/components/RealFeelLiveChatOverlay.tsx` y `src/app/globals.css`). La barra se acotó a un ancho máximo estricto del 42% alineada a la izquierda (`alignSelf: flex-start`), con elevación de z-index (40) para la cámara PiP del streamer (`.monitor-pip-camera`), garantizando una separación limpia de más de 144px sin ningún choque visual.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; Verificación Playwright automatizada -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, solapamiento `False`, separación horizontal 144.3px). Subiendo automáticamente a GitHub según regla del usuario.
+
+## Nueva sesión
+- Fecha: 2026-11-12 12:35
+- Solicitud: En CAM la barra de "Add comentario" está encima de la imagen del streamer.
+- Decisiones clave:
+  1. Restricción de ancho en `RealFeelLiveChatOverlay.tsx` (`maxWidth: compactMode ? '74%' : '42%'`) para mantener el input alineado directamente bajo la columna de chat vertical estilo TikTok Live.
+  2. Reglas en `globals.css`: `.real-feel-chat-input-form { max-width: 42% !important; align-self: flex-start !important; }` y `.monitor-pip-camera { z-index: 40 !important; }`.
+  3. Bounding box auditado con Playwright: Formulario [x=331, y=476, w=240, h=45] vs PiP [x=716, y=412, w=180, h=101] -> Overlap: False (144.3px de espacio libre).
+- Pendientes:
+  - Respaldo automático en `origin/main` en ejecución.
