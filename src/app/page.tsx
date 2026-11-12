@@ -446,6 +446,7 @@ export default function StudioDeluluPage() {
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
   const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
   const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(true);
+  const [showPhoneMockupBottomDock, setShowPhoneMockupBottomDock] = useState<boolean>(false);
 
   const effectiveCropMode: CropAspectMode = isMobileViewport ? "9:16" : preprocOpts.cropMode;
   const showPhoneMockupFrame = !isMobileViewport && phoneMockupMode && effectiveCropMode === "9:16";
@@ -3426,16 +3427,29 @@ export default function StudioDeluluPage() {
               </button>
 
               {/* Botón Switch Modo Móvil (solo en escritorio/tablet cuando está en 9:16) */}
-              {!isMobileViewport && effectiveCropMode === "9:16" && (
-                <button
-                  type="button"
-                  className={`multistream-stage-pill ${phoneMockupMode ? "active-pink" : ""}`}
-                  onClick={() => setPhoneMockupMode(!phoneMockupMode)}
-                  title="Alternar chasis de smartphone realista con neón exterior"
-                >
-                  <Dashicon name={phoneMockupMode ? "smartphone" : "desktop"} size={14} />
-                  <span>{phoneMockupMode ? "VISTA MÓVIL" : "ESCENARIO"}</span>
-                </button>
+                            {!isMobileViewport && effectiveCropMode === "9:16" && (
+                <>
+                  <button
+                    type="button"
+                    className={`multistream-stage-pill ${phoneMockupMode ? "active-pink" : ""}`}
+                    onClick={() => setPhoneMockupMode(!phoneMockupMode)}
+                    title="Alternar chasis de smartphone realista con neón exterior"
+                  >
+                    <Dashicon name={phoneMockupMode ? "smartphone" : "desktop"} size={14} />
+                    <span>{phoneMockupMode ? "VISTA MÓVIL" : "ESCENARIO"}</span>
+                  </button>
+                  {phoneMockupMode && (
+                    <button
+                      type="button"
+                      className={`multistream-stage-pill ${showPhoneMockupBottomDock ? "active-pink" : ""}`}
+                      onClick={() => setShowPhoneMockupBottomDock(!showPhoneMockupBottomDock)}
+                      title="Mostrar u ocultar los comandos inferiores duplicados (+Guests, Config, Share) dentro del marco móvil"
+                    >
+                      <Dashicon name="menu-alt" size={14} />
+                      <span>{showPhoneMockupBottomDock ? "COMANDOS MÓVIL: ON" : "COMANDOS MÓVIL: OFF"}</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
@@ -4439,7 +4453,7 @@ export default function StudioDeluluPage() {
               )}
 
               {/* Barra inferior móvil de acciones dentro del marco 9:16 de escritorio */}
-              {showPhoneMockupFrame && (
+              {showPhoneMockupFrame && showPhoneMockupBottomDock && (
                 <div className="phone-bottom-actions-dock">
                   <div className="phone-bottom-tools-row">
                     <button type="button" className="phone-bottom-tool-item" onClick={() => navigateToMainTab("DUO")} title="Abrir cabina Co-Host en Dúo">
@@ -4480,7 +4494,7 @@ export default function StudioDeluluPage() {
                 onSubmit={handleSendUnderMonitorChat}
                 style={{
                   width: "100%",
-                  maxWidth: effectiveCropMode === "9:16" ? 440 : 680,
+                  maxWidth: effectiveCropMode === "9:16" ? 440 : 1360,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,

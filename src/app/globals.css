@@ -502,9 +502,9 @@ button {
 
 .delulu-monitor-container {
   width: 100%;
-  max-width: 920px;
+  max-width: 1360px;
   aspect-ratio: 16/9;
-  max-height: 65vh;
+  max-height: 76vh;
   background-color: var(--video-bg);
   border-radius: 18px;
   border: 1px solid var(--border-dark);
@@ -1526,7 +1526,7 @@ button {
    ------------------------------------------------------------- */
 .tryon-dock-panel {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(14, 14, 20, 0.95);
   border: 1px solid rgba(255, 46, 147, 0.35);
   border-radius: 16px;
@@ -1692,7 +1692,7 @@ button {
    ------------------------------------------------------------- */
 .delulu-monitor-container.aspect-16-9 {
   aspect-ratio: 16 / 9;
-  max-width: 880px;
+  max-width: 1360px;
 }
 
 .delulu-monitor-container.aspect-9-16 {
@@ -1702,17 +1702,17 @@ button {
 
 .delulu-monitor-container.aspect-1-1 {
   aspect-ratio: 1 / 1;
-  max-width: 540px;
+  max-width: 720px;
 }
 
 .delulu-monitor-container.aspect-4-3 {
   aspect-ratio: 4 / 3;
-  max-width: 720px;
+  max-width: 980px;
 }
 
 .delulu-monitor-container.aspect-zoom {
   aspect-ratio: 16 / 9;
-  max-width: 880px;
+  max-width: 1360px;
 }
 
 /* -------------------------------------------------------------
@@ -1720,7 +1720,7 @@ button {
    ------------------------------------------------------------- */
 .action-deck-panel {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(14, 14, 20, 0.95);
   border: 1px solid var(--border-dark);
   border-radius: 16px;
@@ -2021,7 +2021,7 @@ button {
    ------------------------------------------------------------- */
 .bg-dock-panel {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(14, 14, 20, 0.95);
   border: 1px solid rgba(59, 130, 246, 0.35);
   border-radius: 16px;
@@ -2346,7 +2346,7 @@ button {
    ------------------------------------------------------------- */
 .banner-dock-panel {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(14, 14, 20, 0.95);
   border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 16px;
@@ -2673,7 +2673,7 @@ button {
    ============================================================= */
 .teleprompter-dock-panel {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(14, 14, 20, 0.95);
   border: 1px solid rgba(139, 92, 246, 0.35);
   border-radius: 16px;
@@ -6293,7 +6293,7 @@ body {
   justify-content: center;
   margin-bottom: 10px;
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
 }
 
 .cam-stage-quick-bar {
@@ -7019,7 +7019,7 @@ body {
    ============================================================= */
 .tryon-stage-quick-strip {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(17, 18, 28, 0.96);
   border: 1px solid rgba(236, 72, 153, 0.35);
   border-radius: 12px;
@@ -7039,7 +7039,7 @@ body {
 
 .duo-stage-quick-bar {
   width: 100%;
-  max-width: 880px;
+  max-width: 1360px;
   background: rgba(17, 18, 28, 0.96);
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 12px;
@@ -9582,4 +9582,22 @@ body {
 .delulu-monitor-container.aspect-9-16:has(.monitor-pip-camera) .real-feel-hearts-col,
 .delulu-monitor-container.in-phone-mockup:has(.monitor-pip-camera) .real-feel-hearts-col {
   margin-bottom: 154px !important;
+}
+
+
+/* Ampliación de Monitor para Pantallas Ultra-Wide y 2K/4K */
+@media (min-width: 1600px) {
+  .delulu-monitor-container,
+  .delulu-monitor-container.aspect-16-9,
+  .delulu-monitor-container.aspect-zoom,
+  .stage-top-pills-row,
+  .action-deck-panel,
+  .tryon-dock-panel,
+  .bg-dock-panel,
+  .banner-dock-panel,
+  .teleprompter-dock-panel,
+  .tryon-stage-quick-strip,
+  .duo-stage-quick-bar {
+    max-width: 1480px;
+  }
 }
