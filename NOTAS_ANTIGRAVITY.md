@@ -1463,3 +1463,16 @@
 - Resultado: Aprobado (score >= 9.9/10)
 - Resumen: Configuración de todos los switches de capas y overlays en estado CERRADO / DESACTIVADO por defecto (Total switches: 8, Activos por defecto: 0).
 - Observaciones: El escenario de transmisión inicia 100% limpio (Shopping: 0, WhatsApp: 0, Banners: 0, PiP: 0, Botones: 0, Chat: 0). Cada switch se activa limpiamente a petición del usuario sin sobrecargar la pantalla.
+
+
+## Validación completada
+- Fecha: 2026-11-12T17:52:00-05:00
+- Resultado: Aprobado (score >= 9)
+- Resumen: Teleprompter y Guion de lectura 100% privado para el streamer (invisible para la audiencia, OBS y videollamadas)
+- Observaciones:
+  1. Desacoplado de `countActiveOnScreen()`: El teleprompter es una herramienta privada del host, no una capa gráfica para los espectadores. Ya no consume el límite de 4 capas públicas ni bloquea otros elementos.
+  2. Badge visual en monitor: Añadido indicador `🔒 HUD PRIVADO STREAMER • Solo visible para ti (Invisible en OBS y para los espectadores)`.
+  3. Control de ubicación: Selección rápida de 3 posiciones (`⬆️ Arriba - Junto a Cámara para mantener contacto visual`, `⏺️ Centro Flotante`, `📌 Solo en Panel Lateral`).
+  4. Control de opacidad: 3 niveles ajustables (`35% Cristal`, `70% Equilibrado`, `90% Sólido`).
+  5. Banner de privacidad en Dock: Cuadro informativo verde esmeralda con escudo de seguridad que aclara la arquitectura técnica (la captura de OBS/grabación se hace del video raw, los overlays DOM privados nunca salen al stream).
+  6. Pestaña de herramientas actualizada con candado `Guion 🔒` e indicador de estado reactivo.

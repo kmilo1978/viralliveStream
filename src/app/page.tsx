@@ -375,7 +375,7 @@ export default function StudioDeluluPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
-  // Teleprompter / Guion en Pantalla (Estilo OneStream Live)
+  // Teleprompter / Guion en Pantalla (Estilo OneStream Live - HUD Privado Exclusivo del Streamer)
   const [teleprompterActive, setTeleprompterActive] = useState<boolean>(false);
   const [teleprompterScript, setTeleprompterScript] = useState<string>(DEFAULT_TELEPROMPTER_SCRIPT);
   const [teleprompterSpeed, setTeleprompterSpeed] = useState<number>(2);
@@ -383,6 +383,8 @@ export default function StudioDeluluPage() {
   const [teleprompterPlaying, setTeleprompterPlaying] = useState<boolean>(true);
   const [teleprompterScrollY, setTeleprompterScrollY] = useState<number>(0);
   const [teleprompterMirror, setTeleprompterMirror] = useState<boolean>(false);
+  const [teleprompterPosition, setTeleprompterPosition] = useState<"top" | "center" | "dock">("top");
+  const [teleprompterOpacity, setTeleprompterOpacity] = useState<number>(0.75);
 
   // Multistreaming a 45+ Plataformas (Estilo OneStream Live)
   const MULTISTREAM_STORAGE_KEY = "miplataformastream.multistreamDestinations.v1";
@@ -1769,12 +1771,12 @@ export default function StudioDeluluPage() {
     } catch {}
   }, []);
 
-  // Contador de elementos activos en pantalla para prevenir sobrecarga visual (Máximo 3)
+  // Contador de elementos públicos activos en pantalla para prevenir sobrecarga visual de la audiencia (Máximo 3)
+  // Nota: El Teleprompter NO suma aquí porque es un HUD privado exclusivo del streamer (la audiencia no lo ve)
   const countActiveOnScreen = useCallback(() => {
     let count = 0;
     if (activeProductId && shoppableProducts.some((p) => p.id === activeProductId && p.enabled)) count++;
     if (whatsappConfig.showOnScreen) count++;
-    if (teleprompterActive) count++;
     if (scheduledOverlays.some((o) => o.enabled)) count++;
     if (selectedBgId && selectedBgId !== "bg-none" && bgPreviewEnabled) count++;
     if (screenButtonsVisible && actionButtons.some((b) => b.placement && b.placement !== "deck")) count++;
@@ -1787,7 +1789,6 @@ export default function StudioDeluluPage() {
     screenButtonsVisible,
     selectedBgId,
     shoppableProducts,
-    teleprompterActive,
     whatsappConfig.showOnScreen,
   ]);
 
@@ -2270,11 +2271,10 @@ export default function StudioDeluluPage() {
       setTeleprompterActive(false);
       setStreamInfo("Teleprompter ocultado");
     } else {
-      if (!requestEnableOnScreen()) return;
       setTeleprompterActive(true);
-      setStreamInfo("Teleprompter activado");
+      setStreamInfo("Teleprompter activado (🔒 HUD Privado sólo visible para ti)");
     }
-  }, [requestEnableOnScreen, teleprompterActive]);
+  }, [teleprompterActive]);
 
   const handleToggleButtonsMaster = useCallback(() => {
     if (screenButtonsVisible) {
@@ -4026,9 +4026,22 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
-              {/* TELEPROMPTER EN PANTALLA (ESTILO ONESTREAM LIVE) */}
-              {teleprompterActive && (
-                <div className={`teleprompter-stage-overlay ${teleprompterMirror ? "mirror-mode" : ""}`}>
+              {/* TELEPROMPTER EN PANTALLA (HUD PRIVADO EXCLUSIVO DEL STREAMER - INVISIBLE PARA LA AUDIENCIA Y OBS) */}
+              {teleprompterActive && teleprompterPosition !== "dock" && (
+                <div
+                  className={`teleprompter-stage-overlay pos-${teleprompterPosition} ${teleprompterMirror ? "mirror-mode" : ""}`}
+                  style={{ backgroundColor: `rgba(0, 0, 0, ${teleprompterOpacity})` }}
+                >
+                  <div className="teleprompter-private-badge">
+                    <span className="teleprompter-private-badge-tag">
+                      <Dashicon name="lock" size={11} color="#10B981" />
+                      <span>HUD PRIVADO STREAMER</span>
+                    </span>
+                    <span className="teleprompter-private-badge-desc">
+                      Solo visible para ti • Invisible en OBS y para los espectadores
+                    </span>
+                  </div>
+
                   <button
                     type="button"
                     className="teleprompter-nav-arrow arrow-prev"
@@ -5495,11 +5508,19 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
 
-                {/* Switch Prompter */}
-                <div className="studio-layers-row-item" title="Alternar teleprompter / guion en pantalla">
+                {/* Switch Prompter (Herramienta Privada del Streamer) */}
+                <div className="studio-layers-row-item prompter-private-row" title="Alternar teleprompter / guion de lectura (Herramienta Privada del Streamer: Solo visible para ti)">
                   <div className="studio-layers-row-label">
-                    <Dashicon name="media-text" size={14} />
-                    <span>Teleprompter / Guion</span>
+                    <Dashicon name="lock" size={14} color="#10B981" />
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>Teleprompter / Guion</span>
+                        <span className="teleprompter-private-chip">🔒 Solo tú lo ves</span>
+                      </div>
+                      <span style={{ fontSize: "0.64rem", color: "#64748B", display: "block" }}>
+                        Invisible para la audiencia y OBS
+                      </span>
+                    </div>
                   </div>
                   <div
                     className={`switchy-toggle ${teleprompterActive ? "active-green" : ""}`}
@@ -5620,11 +5641,13 @@ export default function StudioDeluluPage() {
                   type="button"
                   className={`studio-tools-nav-btn ${activeStudioTab === "teleprompter" ? "active" : ""}`}
                   onClick={() => setActiveStudioTab("teleprompter")}
-                  title="Teleprompter y Guion en vivo"
+                  title="Teleprompter y Guion de lectura (Privado Streamer)"
                 >
-                  <Dashicon name="media-text" size={16} />
-                  <span className="tool-label">Guion</span>
-                  <span className="tool-counter">{teleprompterActive ? "ON" : "OFF"}</span>
+                  <Dashicon name="lock" size={16} color={teleprompterActive ? "#10B981" : undefined} />
+                  <span className="tool-label">Guion 🔒</span>
+                  <span className="tool-counter" style={{ color: teleprompterActive ? "#10B981" : undefined }}>
+                    {teleprompterActive ? "ON" : "OFF"}
+                  </span>
                 </button>
 
                 <button
@@ -6376,11 +6399,11 @@ export default function StudioDeluluPage() {
                 <div className="studio-dock-card-header">
                   <div className="studio-dock-header-info">
                     <h3 className="studio-dock-header-title">
-                      <Dashicon name="media-text" size={16} />
-                      <span>Teleprompter</span>
+                      <Dashicon name="lock" size={16} color="#10B981" />
+                      <span>Teleprompter / Guion Privado</span>
                     </h3>
                     <p className="studio-dock-header-subtitle">
-                      Guion de lectura en directo sólo visible para ti
+                      HUD de lectura exclusivo para el streamer (invisible para la audiencia y OBS)
                     </p>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -6390,96 +6413,159 @@ export default function StudioDeluluPage() {
                     <div
                       className={`switchy-toggle ${teleprompterActive ? "active-green" : ""}`}
                       onClick={handleTogglePrompterMaster}
-                      title="Activar / Desactivar Teleprompter en pantalla"
+                      title="Activar / Desactivar Teleprompter en pantalla (Solo tú lo ves)"
                     >
                       <div className="switchy-thumb" />
                     </div>
                   </div>
                 </div>
 
-              {/* Controles de Teleprompter */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Velocidad:</label>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {[1, 2, 3, 5].map((spd) => (
-                      <button
-                        key={spd}
-                        type="button"
-                        className={`pill-ctrl-button ${teleprompterSpeed === spd ? "active-pink" : ""}`}
-                        style={{ padding: "2px 8px", fontSize: "0.68rem" }}
-                        onClick={() => setTeleprompterSpeed(spd)}
-                      >
-                        {spd}x
-                      </button>
-                    ))}
+                {/* Banner de Privacidad Garantizada para el Streamer */}
+                <div className="teleprompter-privacy-banner">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Dashicon name="shield" size={16} color="#10B981" />
+                    <strong style={{ color: "#34D399", fontSize: "0.78rem" }}>
+                      100% Privado para el Streamer
+                    </strong>
+                    <span className="teleprompter-private-chip">🔒 Exclusivo Host</span>
+                  </div>
+                  <p style={{ margin: "5px 0 0 0", fontSize: "0.72rem", color: "#94A3B8", lineHeight: 1.45 }}>
+                    Este guion solo lo ves tú en esta pantalla de control. <strong>OBS Virtual Camera, Google Meet, Zoom, TikTok y YouTube NO reciben este texto</strong>. La audiencia ve únicamente tu cámara y los gráficos públicos.
+                  </p>
+                </div>
+
+                {/* Controles de Teleprompter */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                      Ubicación del HUD:
+                    </label>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {[
+                        { id: "top", label: "⬆️ Arriba (Junto a Cámara)", tip: "Ideal para mantener contacto visual" },
+                        { id: "center", label: "⏺️ Centro Flotante", tip: "Posición centrada clásica" },
+                        { id: "dock", label: "📌 Solo Panel Lateral", tip: "No se muestra sobre la imagen de la cámara" },
+                      ].map((pos) => (
+                        <button
+                          key={pos.id}
+                          type="button"
+                          className={`pill-ctrl-button ${teleprompterPosition === pos.id ? "active-pink" : ""}`}
+                          style={{ padding: "4px 8px", fontSize: "0.68rem" }}
+                          onClick={() => setTeleprompterPosition(pos.id as any)}
+                          title={pos.tip}
+                        >
+                          {pos.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                      Opacidad de Lectura:
+                    </label>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {[
+                        { val: 0.35, lbl: "35% Cristal" },
+                        { val: 0.7, lbl: "70% Equilibrado" },
+                        { val: 0.9, lbl: "90% Sólido" },
+                      ].map((op) => (
+                        <button
+                          key={op.val}
+                          type="button"
+                          className={`pill-ctrl-button ${teleprompterOpacity === op.val ? "active-pink" : ""}`}
+                          style={{ padding: "4px 8px", fontSize: "0.68rem" }}
+                          onClick={() => setTeleprompterOpacity(op.val)}
+                        >
+                          {op.lbl}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Tamaño Letra:</label>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {[
-                      { size: 16, lbl: "S" },
-                      { size: 20, lbl: "M" },
-                      { size: 26, lbl: "L" },
-                      { size: 32, lbl: "XL" },
-                    ].map((sz) => (
-                      <button
-                        key={sz.size}
-                        type="button"
-                        className={`pill-ctrl-button ${teleprompterFontSize === sz.size ? "active-pink" : ""}`}
-                        style={{ padding: "2px 8px", fontSize: "0.68rem" }}
-                        onClick={() => setTeleprompterFontSize(sz.size)}
-                      >
-                        {sz.lbl}
-                      </button>
-                    ))}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Velocidad:</label>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {[1, 2, 3, 5].map((spd) => (
+                        <button
+                          key={spd}
+                          type="button"
+                          className={`pill-ctrl-button ${teleprompterSpeed === spd ? "active-pink" : ""}`}
+                          style={{ padding: "2px 8px", fontSize: "0.68rem" }}
+                          onClick={() => setTeleprompterSpeed(spd)}
+                        >
+                          {spd}x
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Tamaño Letra:</label>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {[
+                        { size: 16, lbl: "S" },
+                        { size: 20, lbl: "M" },
+                        { size: 26, lbl: "L" },
+                        { size: 32, lbl: "XL" },
+                      ].map((sz) => (
+                        <button
+                          key={sz.size}
+                          type="button"
+                          className={`pill-ctrl-button ${teleprompterFontSize === sz.size ? "active-pink" : ""}`}
+                          style={{ padding: "2px 8px", fontSize: "0.68rem" }}
+                          onClick={() => setTeleprompterFontSize(sz.size)}
+                        >
+                          {sz.lbl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Modo Espejo (Prompter Vidrio):</label>
+                    <button
+                      type="button"
+                      className={`pill-ctrl-button ${teleprompterMirror ? "active-pink" : ""}`}
+                      style={{ padding: "2px 8px", fontSize: "0.68rem", display: "inline-flex", alignItems: "center", gap: 4 }}
+                      onClick={() => setTeleprompterMirror((m) => !m)}
+                    >
+                      <Dashicon name="image-flip-horizontal" size={12} />
+                      <span>{teleprompterMirror ? "Espejo Activo" : "Normal"}</span>
+                    </button>
                   </div>
                 </div>
 
+                {/* Textarea del Guion */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <label style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Modo Espejo (Prompter Vidrio):</label>
-                  <button
-                    type="button"
-                    className={`pill-ctrl-button ${teleprompterMirror ? "active-pink" : ""}`}
-                    style={{ padding: "2px 8px", fontSize: "0.68rem", display: "inline-flex", alignItems: "center", gap: 4 }}
-                    onClick={() => setTeleprompterMirror((m) => !m)}
-                  >
-                    <Dashicon name="image-flip-horizontal" size={12} />
-                    <span>{teleprompterMirror ? "Espejo Activo" : "Normal"}</span>
-                  </button>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-white)" }}>
+                      Script Content (Contenido del Guion):
+                    </span>
+                    <button
+                      type="button"
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "var(--accent-pink)",
+                        fontSize: "0.68rem",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setTeleprompterScript(DEFAULT_TELEPROMPTER_SCRIPT)}
+                    >
+                      Restablecer texto por defecto
+                    </button>
+                  </div>
+                  <textarea
+                    className="script-editor-textarea"
+                    value={teleprompterScript}
+                    onChange={(e) => setTeleprompterScript(e.target.value)}
+                    placeholder="Escribe o pega aquí el guion que leerás durante la transmisión..."
+                  />
                 </div>
               </div>
-
-              {/* Textarea del Guion */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-white)" }}>
-                    Script Content (Contenido del Guion):
-                  </span>
-                  <button
-                    type="button"
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      color: "var(--accent-pink)",
-                      fontSize: "0.68rem",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => setTeleprompterScript(DEFAULT_TELEPROMPTER_SCRIPT)}
-                  >
-                    Restablecer texto por defecto
-                  </button>
-                </div>
-                <textarea
-                  className="script-editor-textarea"
-                  value={teleprompterScript}
-                  onChange={(e) => setTeleprompterScript(e.target.value)}
-                  placeholder="Escribe o pega aquí el guion que leerás durante la transmisión..."
-                />
-              </div>
-            </div>
             )}
 
             {(isDockStackedView || activeStudioTab === "deck") && (
