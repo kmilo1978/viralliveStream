@@ -1374,3 +1374,17 @@
   2. Mantener PRO exclusivamente para la infraestructura de transmisión en vivo.
 - Pendientes:
   - Commit y push inmediato a `origin/main` en GitHub.
+
+## Validación completada - Auditoría de Línea de Diseño e Iconos SVG en Todo el Sitio (CREATE, Cabina y Chat)
+- Fecha: 2026-11-12 19:43
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Auditoría integral de la línea de diseño e iconografía en toda la plataforma:
+  1. **CREATE - Selector de Motores de IA**: Erradicados los emojis sueltos. Ahora se utilizan iconos vectoriales SVG con Dashicons estrictos (welcome-learn-more para Gemini 2.5 en #93C5FD, admin-generic para ChatGPT 4o en #6EE7B7, y admin-tools para API Key en #C084FC).
+  2. **CREATE - Barra Cápsula de Subpestañas (Estilo Delulu)**: Reestructurada a rejilla de 4 columnas perfectas (grid-template-columns: repeat(4, 1fr)) en un contenedor cápsula con bordes redondeados (9999px) y píldora activa con gradiente neón (#FF2E93 a #EC4899), conteniendo los 4 Dashicons oficiales: Personajes (admin-users), Wardrobe (products), Accesorios (art) y Mis Skins (star-filled).
+  3. **CREATE - Acciones y Acordeones**: Los botones de acción de prompts ahora usan Dashicons vectoriales (dismiss para limpiar y controls-repeat para aleatorizar/reciclar). En la previsualización, el botón para aplicar a CAM utiliza el icono camera, guardar en skins star-filled, try-on products, y el botón de eliminar skins en la colección usa trash.
+  4. **Barra Sub-Monitor de Comentarios**: Reemplazado el emoji de chat por Dashicon format-chat y el carácter de flecha por un vector SVG nítido de avión de papel.
+  5. **Unified Live Chat - Botones de Género**: Sustituidos los emojis de género por selectores con Dashicons admin-users respetando la consistencia del sistema de diseño.
+- Observaciones:
+  - npx tsc --noEmit -> 0 errores (TSC_OK).
+  - Playwright automatizado verificado en CREATE, Wardrobe, Mis Skins y CAM con 0 inconsistencias visuales.
+  - Sincronizado en GitHub en rama main.

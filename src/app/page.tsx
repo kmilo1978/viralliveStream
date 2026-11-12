@@ -2759,14 +2759,14 @@ export default function StudioDeluluPage() {
               disabled={streamBusy}
               onClick={isConnectedLive ? applyLiveChanges : isLive ? applyLiveChanges : startRealtime}
             >
-              {isConnectedLive ? "Aplicar" : "⚡ Execute"}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Dashicon name="controls-play" size={12} color="#FFFFFF" /> <span>{isConnectedLive ? "Aplicar" : "Execute"}</span></span>
             </button>
             <button
               type="button"
               className="floating-hud-top-btn"
               onClick={() => stageHeroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
             >
-              ↑ Ver Monitor
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Dashicon name="visibility" size={12} /> <span>Ver Monitor</span></span>
             </button>
           </div>
         </div>
@@ -4498,7 +4498,7 @@ export default function StudioDeluluPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: "0.95rem", opacity: 0.75 }}>💬</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", opacity: 0.8 }}><Dashicon name="format-chat" size={16} color="rgba(255,255,255,0.8)" /></span>
                   <input
                     type="text"
                     placeholder="Add a comment... (Presiona Enter para enviar en vivo)"
@@ -4540,7 +4540,7 @@ export default function StudioDeluluPage() {
                   }}
                   title="Enviar comentario en vivo"
                 >
-                  ➤
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
                 </button>
               </form>
             )}
@@ -5395,7 +5395,7 @@ export default function StudioDeluluPage() {
                             }}
                             title={`Texto a copiar: ${item.copyableText || item.customText}`}
                           >
-                            📝 {item.copyableText || item.customText}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Dashicon name="edit" size={11} /> <span>{item.copyableText || item.customText}</span></span>
                           </span>
                           <button
                             type="button"
@@ -5423,7 +5423,7 @@ export default function StudioDeluluPage() {
                             }}
                             title={`URL Ejecutable: ${item.targetUrl}`}
                           >
-                            🔗 {item.targetUrl.replace(/^https?:\/\//, "")}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Dashicon name="networking" size={11} color="var(--accent-pink)" /> <span>{item.targetUrl.replace(/^https?:\/\//, "")}</span></span>
                           </span>
                           <button
                             type="button"
@@ -5432,7 +5432,7 @@ export default function StudioDeluluPage() {
                             onClick={() => handleExecuteBannerUrl(item)}
                             title="Probar y abrir enlace ejecutable en nueva pestaña"
                           >
-                            Abrir ↗
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Dashicon name="external" size={11} /> <span>Abrir</span></span>
                           </button>
                         </div>
                       )}
@@ -5878,7 +5878,7 @@ export default function StudioDeluluPage() {
                   }}
                   title="Configurar clave API personalizada"
                 >
-                  {showAiKeyInput ? "Ocultar Key" : "⚙️ API Key"}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Dashicon name="admin-tools" size={12} color="#C084FC" /> <span>{showAiKeyInput ? "Ocultar Key" : "API Key"}</span></span>
                 </button>
               </div>
 
@@ -5912,7 +5912,7 @@ export default function StudioDeluluPage() {
                     setCreateEngineName("Google Gemini (Imagen 3)");
                   }}
                 >
-                  <span>✨ Gemini 2.5</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Dashicon name="welcome-learn-more" size={14} color="#93C5FD" /> <span>Gemini 2.5</span></span>
                 </button>
                 <button
                   type="button"
@@ -5943,7 +5943,7 @@ export default function StudioDeluluPage() {
                     setCreateEngineName("OpenAI ChatGPT (DALL-E 3)");
                   }}
                 >
-                  <span>🤖 ChatGPT 4o</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Dashicon name="admin-generic" size={14} color="#6EE7B7" /> <span>ChatGPT 4o</span></span>
                 </button>
               </div>
 
@@ -6222,8 +6222,9 @@ export default function StudioDeluluPage() {
                               onClick={() => handleClearDraft(createCategory)}
                               title={draftCfg.clearTitle}
                               aria-label={draftCfg.clearTitle}
+                              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                             >
-                              ×
+                              <Dashicon name="dismiss" size={12} />
                             </button>
                           )}
                           <button
@@ -6232,8 +6233,9 @@ export default function StudioDeluluPage() {
                             onClick={() => handleRandomizeDraft(createCategory)}
                             title={draftCfg.randomTitle}
                             aria-label={draftCfg.randomTitle}
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                           >
-                            ↻
+                            <Dashicon name="controls-repeat" size={12} />
                           </button>
                         </div>
                       </div>
@@ -6344,8 +6346,9 @@ export default function StudioDeluluPage() {
                       className="btn-prompt-icon"
                       onClick={() => setCreatePrompt("")}
                       title="Limpiar descripción"
+                      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                     >
-                      ↺
+                      <Dashicon name="dismiss" size={12} />
                     </button>
                   </div>
                   <textarea
@@ -6635,7 +6638,7 @@ export default function StudioDeluluPage() {
                           <button
                             type="button"
                             className="btn"
-                            style={{ padding: "6px 8px", minHeight: 32, color: "#EF4444" }}
+                            style={{ padding: "6px 8px", minHeight: 32, color: "#EF4444", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                             onClick={() => {
                               const updated = savedSkins.filter((s) => s.id !== skin.id);
                               setSavedSkins(updated);
@@ -6645,7 +6648,7 @@ export default function StudioDeluluPage() {
                             }}
                             title="Eliminar skin"
                           >
-                            ✕
+                            <Dashicon name="trash" size={14} color="#EF4444" />
                           </button>
                         </div>
                       </div>
@@ -6685,7 +6688,7 @@ export default function StudioDeluluPage() {
                     fontWeight: 700,
                   }}
                 >
-                  <span>{createEngine === "gemini" ? "✨" : "🤖"}</span>
+                  <Dashicon name={createEngine === "gemini" ? "welcome-learn-more" : "admin-generic"} size={13} color={createEngine === "gemini" ? "#93C5FD" : "#6EE7B7"} />
                   <span>{createEngineName}</span>
                 </div>
 

@@ -1537,7 +1537,7 @@ function StandaloneChatPanelView({
                           fontWeight: 700,
                         }}
                       >
-                        {simulatedGender === "female" ? "👩 Mujer" : "👨 Hombre"}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Dashicon name="admin-users" size={12} color={simulatedGender === "female" ? "#F472B6" : "#60A5FA"} /> <span>{simulatedGender === "female" ? "Mujer" : "Hombre"}</span></span>
                       </span>
                     </div>
 
@@ -1546,18 +1546,20 @@ function StandaloneChatPanelView({
                       <button
                         type="button"
                         className={`pill-ctrl-button ${simulatedGender === "female" ? "active-pink" : ""}`}
-                        style={{ padding: "3px 8px", fontSize: "0.68rem", fontWeight: 700 }}
+                        style={{ padding: "3px 8px", fontSize: "0.68rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}
                         onClick={() => handleSelectGender("female")}
                       >
-                        👩 Mujer
+                        <Dashicon name="admin-users" size={11} />
+                        <span>Mujer</span>
                       </button>
                       <button
                         type="button"
                         className={`pill-ctrl-button ${simulatedGender === "male" ? "active-cyan" : ""}`}
-                        style={{ padding: "3px 8px", fontSize: "0.68rem", fontWeight: 700 }}
+                        style={{ padding: "3px 8px", fontSize: "0.68rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}
                         onClick={() => handleSelectGender("male")}
                       >
-                        👨 Hombre
+                        <Dashicon name="admin-users" size={11} />
+                        <span>Hombre</span>
                       </button>
                     </div>
                   </div>
@@ -1901,7 +1903,7 @@ function StandaloneChatPanelView({
                               color: item.gender === "female" ? "#F472B6" : "#60A5FA",
                             }}
                           >
-                            {item.gender === "female" ? "👩" : "👨"}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Dashicon name="admin-users" size={10} color={item.gender === "female" ? "#F472B6" : "#60A5FA"} /> <span>{item.gender === "female" ? "Mujer" : "Hombre"}</span></span>
                           </span>
                           {item.isDonation && (
                             <span className="donation-amount-badge" style={{ fontSize: "0.65rem", padding: "1px 4px", display: "inline-flex", alignItems: "center", gap: 3 }}>

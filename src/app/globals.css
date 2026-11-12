@@ -1052,12 +1052,12 @@ button {
 
 .create-subtabs-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  background-color: var(--surface-inset);
+  background-color: #0E121E;
   padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .create-subtab-icon-btn {
@@ -1065,17 +1065,23 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9999px;
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.create-subtab-icon-btn.active {
-  background-color: var(--accent-pink-deep);
+.create-subtab-icon-btn:hover {
   color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.create-subtab-icon-btn.active {
+  background: linear-gradient(135deg, #FF2E93 0%, #EC4899 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(255, 46, 147, 0.35);
 }
 
 .builder-accordion-group {

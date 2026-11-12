@@ -19,7 +19,7 @@ function generateVisualAssetSvg(
 ): string {
   const pLower = prompt.toLowerCase();
   const engineColor = engine === "gemini" ? "#4285F4" : "#10A37F";
-  const engineBadge = engine === "gemini" ? "✨ Google Gemini (Imagen 3)" : "🤖 OpenAI ChatGPT (DALL-E 3)";
+  const engineBadge = engine === "gemini" ? "Google Gemini (Imagen 3)" : "OpenAI ChatGPT (DALL-E 3)";
 
   // Paletas de color contextuales según las palabras clave del usuario
   let primaryColor = "#EC4899";
