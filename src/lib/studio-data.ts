@@ -865,9 +865,9 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     color: "#00F0FF",
     actionType: "prompt",
     payload: "Magical glowing particles, sparkling neon aura, fantasy lighting",
-    description: "Botón interactivo ubicado en pantalla con imagen PNG",
+    description: "Efecto de destello mágico y partículas brillantes",
     size: "md",
-    placement: "screen-bottom-left",
+    placement: "deck",
   },
   {
     id: "act-anime-style",

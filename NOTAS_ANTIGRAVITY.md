@@ -1206,3 +1206,25 @@
   3. Separación vertical garantizada de 57.9px entre el botón de likes y la cámara PiP vía prop `hasPipCamera` y CSS.
 - Pendientes:
   - Commit y push inmediato a GitHub `origin/main` según la regla del usuario.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:25
+- Resultado: Aprobado (score 10/10)
+- Resumen: Eliminación definitiva del botón/efecto preseleccionado "Destello Mágico" que aparecía flotando sobre el monitor en la esquina inferior izquierda:
+  1. **Ubicación en Stream Deck**: En `src/lib/studio-data.ts`, se cambió el parámetro `placement` del botón `act-screen-magic` ("Destello Mágico") de `"screen-bottom-left"` a `"deck"`, trasladándolo a la botonera de control inferior y retirándolo de la pantalla.
+  2. **Interruptor Maestro Desactivado por Defecto**: `screenButtonsVisible` ahora se inicializa en `false` en `src/app/page.tsx`, asegurando que ningún botón flotante invada la escena de streaming a menos que el usuario lo active manualmente.
+  3. **Protección Estricta en Cabina (CAM, TRY ON, DUO)**: Se agregó la condición `!isCockpitTab` en el renderizado de botones flotantes de pantalla, garantizando que el monitor permanezca 100% limpio en todos los modos principales de cámara.
+  4. **Sanitización Automática de Caché**: Se añadió una migración en `useEffect` sobre `localStorage` que reubica automáticamente a `"deck"` cualquier botón con id o etiqueta "Destello Mágico" previamente guardado en el navegador del usuario.
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> `Destello Magico in monitor: False`, `Floating buttons count on monitor: 0`; Capturas de validación generadas y aprobadas.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:25
+- Solicitud: Eliminar el efecto preseleccionado "Destello Mágico" que continuaba mostrándose sobre el monitor.
+- Decisiones clave:
+  1. Reubicar `act-screen-magic` de la pantalla (`placement: "deck"`).
+  2. Inicializar `screenButtonsVisible` en `false`.
+  3. Bloqueo de botones flotantes en `CAM`, `TRY_ON` y `DUO` (`!isCockpitTab`).
+  4. Migración transparente de `localStorage` para limpiar navegadores que tenían guardada la posición antigua.
+- Pendientes:
+  - Subir cambios a `origin/main` en GitHub inmediatamente.

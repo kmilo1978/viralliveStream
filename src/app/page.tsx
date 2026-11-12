@@ -428,7 +428,7 @@ export default function StudioDeluluPage() {
   // Previsualización de Fondos en el momento sin gastar créditos
   const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(true);
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
-  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(true);
+  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
   const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(true);
 
   const effectiveCropMode: CropAspectMode = isMobileViewport ? "9:16" : preprocOpts.cropMode;
@@ -1815,14 +1815,23 @@ export default function StudioDeluluPage() {
     [persistVirtualBackgrounds, selectedBgId, virtualBackgrounds],
   );
 
-  // Cargar botones personalizados guardados
+  // Cargar botones personalizados guardados (migrando cualquier botón con placement en pantalla a "deck")
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(BUTTONS_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as CustomActionButton[];
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setActionButtons(parsed);
+          const sanitized = parsed.map((b) =>
+            b.id === "act-screen-magic" || b.label === "Destello Mágico" || b.placement === "screen-bottom-left"
+              ? { ...b, placement: "deck" as const }
+              : b
+          );
+          setActionButtons(sanitized);
+          try {
+            window.localStorage.setItem(BUTTONS_STORAGE_KEY, JSON.stringify(sanitized));
+          } catch {}
+          return;
         }
       }
     } catch {}
@@ -3679,8 +3688,8 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
-              {/* BOTONES INTERACTIVOS FLOTANTES UBICADOS EN PANTALLA */}
-              {screenButtonsVisible && actionButtons
+              {/* BOTONES INTERACTIVOS FLOTANTES UBICADOS EN PANTALLA (ocultos en CAM, TRY ON y DUO para escena 100% limpia) */}
+              {screenButtonsVisible && !isCockpitTab && actionButtons
                 .filter((btn) => btn.placement && btn.placement !== "deck")
                 .map((btn) => {
                   const btnSize = btn.size || "md";
