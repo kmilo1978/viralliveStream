@@ -2957,94 +2957,80 @@ button {
    ============================================================= */
 
 .shoppable-product-card-stage {
-
   position: absolute;
-
   z-index: 55;
-
-  background: #FFFFFF;
-
-  color: #111827;
-
+  background: rgba(18, 18, 28, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #FFFFFF;
   border-radius: 18px;
-
   padding: 12px 16px;
-
   display: flex;
-
   align-items: center;
-
-  gap: 16px;
-
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  border: 2px solid rgba(255, 255, 255, 0.95);
-
+  gap: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(236, 72, 153, 0.25);
+  border: 1.5px solid rgba(236, 72, 153, 0.45);
   max-width: 440px;
-
   width: calc(100% - 40px);
-
   user-select: none;
-
   animation: slideUpFade 0.3s ease-out;
-
   cursor: pointer;
-
-  transition: transform 0.2s ease;
-
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .shoppable-product-card-stage:hover {
-
   transform: translateY(-2px);
-
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 26px rgba(236, 72, 153, 0.35);
 }
 
 .shoppable-product-card-stage.pos-bottom-center {
-
   bottom: 20px;
-
   left: 50%;
-
   transform: translateX(-50%);
-
 }
 
 .shoppable-product-card-stage.pos-bottom-center:hover {
-
   transform: translateX(-50%) translateY(-2px);
-
 }
 
 .shoppable-product-card-stage.pos-bottom-left {
-
   bottom: 20px;
-
   left: 20px;
-
 }
 
 .shoppable-product-card-stage.pos-bottom-right {
-
   bottom: 20px;
-
   right: 20px;
-
 }
 
-
+.shoppable-live-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(236, 72, 153, 0.2);
+  border: 1px solid rgba(236, 72, 153, 0.45);
+  color: #F472B6;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  width: fit-content;
+}
 
 .shoppable-card-thumb-wrap {
   position: relative;
-  width: 72px;
-  height: 72px;
-  min-width: 72px;
-  max-width: 72px;
-  min-height: 72px;
-  max-height: 72px;
+  width: 68px;
+  height: 68px;
+  min-width: 68px;
+  max-width: 68px;
+  min-height: 68px;
+  max-height: 68px;
   border-radius: 14px;
   padding: 3px;
-  background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+  background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -3056,7 +3042,7 @@ button {
   height: 100%;
   border-radius: 11px;
   overflow: hidden;
-  background: #F3F4F6;
+  background: #1E1E2E;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3071,179 +3057,98 @@ button {
   display: block;
 }
 
-
-
 .shoppable-card-details {
-
   display: flex;
-
   flex-direction: column;
-
   flex: 1;
-
   min-width: 0;
-
 }
 
 .shoppable-card-title {
-
-  font-size: 1.15rem;
-
+  font-size: 1.05rem;
   font-weight: 800;
-
-  color: #111827;
-
+  color: #FFFFFF;
   line-height: 1.2;
-
   margin-bottom: 2px;
-
   white-space: nowrap;
-
   overflow: hidden;
-
   text-overflow: ellipsis;
-
 }
 
 .shoppable-card-sub {
-
-  font-size: 0.82rem;
-
-  color: #6B7280;
-
-  margin-bottom: 6px;
-
+  font-size: 0.76rem;
+  color: #94A3B8;
+  margin-bottom: 4px;
   white-space: nowrap;
-
   overflow: hidden;
-
   text-overflow: ellipsis;
-
 }
 
 .shoppable-card-price-row {
-
   display: flex;
-
   align-items: baseline;
-
   gap: 8px;
-
 }
 
 .shoppable-card-price-current {
-
-  font-size: 1.35rem;
-
+  font-size: 1.25rem;
   font-weight: 900;
-
-  color: #4338CA;
-
+  color: #10B981;
   letter-spacing: -0.5px;
-
 }
 
 .shoppable-card-price-compare {
-
-  font-size: 0.88rem;
-
+  font-size: 0.82rem;
   font-weight: 600;
-
-  color: #9CA3AF;
-
+  color: #94A3B8;
   text-decoration: line-through;
-
 }
 
-
-
 .shoppable-card-qr-box {
-
-  width: 82px;
-
-  height: 82px;
-
+  width: 76px;
+  height: 76px;
   flex-shrink: 0;
-
   background: #FFFFFF;
-
-  border: 1px solid #E5E7EB;
-
+  border: 2px solid #10B981;
   border-radius: 10px;
-
-  padding: 3px;
-
+  padding: 4px;
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: center;
-
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 .shoppable-card-qr-box img {
-
   width: 100%;
-
   height: 100%;
-
   object-fit: contain;
-
 }
 
-
-
 .shoppable-close-btn {
-
   position: absolute;
-
   top: -8px;
-
   right: -8px;
-
-  width: 26px;
-
-  height: 26px;
-
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-
-  background: #1F2937;
-
+  background: #1E1E2E;
   color: #FFFFFF;
-
-  border: 2px solid #FFFFFF;
-
-  font-size: 14px;
-
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  font-size: 13px;
   font-weight: 900;
-
   cursor: pointer;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-
   transition: all 0.15s ease;
-
 }
 
 .shoppable-close-btn:hover {
-
-  background: #EF4444;
-
+  background: #EC4899;
+  border-color: #EC4899;
   transform: scale(1.1);
-
 }
-
-
 
 .stage-hud-viewers-pill {
 
@@ -5729,51 +5634,115 @@ button {
   outline: 2px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Tarjeta Live Shopping compacta dentro del Marco Smartphone (sin tapar chat ni dock inferior) */
+/* Tarjeta Live Shopping optimizada dentro del Marco Smartphone (Estilo TikTok Shop Pin con QR) */
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-bottom-center,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-bottom-left,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-bottom-right {
-  bottom: 126px !important;
-  right: 10px !important;
-  left: auto !important;
+  bottom: 242px !important;
+  left: 10px !important;
+  right: auto !important;
   transform: none !important;
-  max-width: 146px !important;
-  width: auto !important;
-  padding: 6px 8px !important;
-  gap: 6px !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55) !important;
+  max-width: 250px !important;
+  width: calc(100% - 92px) !important;
+  padding: 8px 10px !important;
+  gap: 8px !important;
+  background: rgba(14, 14, 24, 0.94) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.5) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.75), 0 0 14px rgba(236, 72, 153, 0.22) !important;
+  color: #FFFFFF !important;
+  z-index: 70 !important;
 }
 
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-thumb-wrap,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-thumb-inner {
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
   border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  flex: 0 0 44px !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-live-tag {
+  font-size: 0.54rem !important;
+  padding: 1px 5px !important;
+  margin-bottom: 2px !important;
 }
 
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-title {
-  font-size: 0.64rem !important;
-  line-height: 1.15 !important;
-  max-width: 78px !important;
+  font-size: 0.72rem !important;
+  line-height: 1.2 !important;
+  max-width: 100px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
 }
 
-.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-sub,
-.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-qr-box {
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-sub {
   display: none !important;
 }
 
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-price-row {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 4px !important;
+}
+
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-price-current {
-  font-size: 0.7rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+  color: #10B981 !important;
 }
 
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-price-compare {
-  font-size: 0.56rem !important;
+  font-size: 0.6rem !important;
+  color: #94A3B8 !important;
+  text-decoration: line-through !important;
+  display: inline-block !important;
+}
+
+/* MOSTRAR EL QR CODE EN MÓVIL CON ALTO CONTRASTE Y TAMAÑO PERFECTO */
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-qr-box {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  background: #FFFFFF !important;
+  border-radius: 8px !important;
+  padding: 2px !important;
+  border: 1.5px solid #10B981 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+  flex-shrink: 0 !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-qr-box img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-close-btn {
+  top: -6px !important;
+  right: -6px !important;
+  width: 18px !important;
+  height: 18px !important;
+  background: #1E1E2E !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* Botón discreto de pin en comentarios TikTok (se aclara al hacer hover) */
@@ -6838,63 +6807,74 @@ body {
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-center,
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-left,
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-right {
-    bottom: 8px !important;
-    right: 32px !important;
-    left: auto !important;
+    bottom: 242px !important;
+    left: 10px !important;
+    right: auto !important;
     transform: none !important;
-    max-width: 106px !important;
-    width: auto !important;
-    padding: 4px 6px !important;
-    gap: 6px !important;
-    border-radius: 9px !important;
+    max-width: 240px !important;
+    width: calc(100% - 90px) !important;
+    padding: 6px 8px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+    background: rgba(14, 14, 24, 0.94) !important;
+    border: 1.5px solid rgba(236, 72, 153, 0.5) !important;
     align-items: center !important;
+    color: #FFFFFF !important;
   }
 
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-thumb-wrap,
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-thumb-inner {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    max-width: 28px !important;
-    min-height: 0 !important;
-    max-height: 28px !important;
-    flex: 0 0 28px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    flex: 0 0 38px !important;
     padding: 0 !important;
     overflow: hidden !important;
-    border-radius: 6px !important;
-    align-self: center !important;
-  }
-
-  .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-thumb-inner img {
-    width: 28px !important;
-    height: 28px !important;
-    object-fit: cover !important;
+    border-radius: 8px !important;
   }
 
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-title {
-    font-size: 0.58rem !important;
-    max-width: 66px !important;
+    font-size: 0.68rem !important;
+    max-width: 90px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    color: #FFFFFF !important;
   }
 
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-price-current {
-    font-size: 0.62rem !important;
+    font-size: 0.76rem !important;
+    color: #10B981 !important;
+    font-weight: 900 !important;
   }
 
-  .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-sub,
-  .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-qr-box,
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-price-compare {
-    display: none !important;
+    font-size: 0.58rem !important;
+    color: #94A3B8 !important;
+    text-decoration: line-through !important;
+    display: inline-block !important;
   }
 
-  .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage button {
+  .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-qr-box {
+    display: flex !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    background: #FFFFFF !important;
+    border-radius: 6px !important;
+    padding: 2px !important;
+    border: 1.5px solid #10B981 !important;
+  }
+
+  .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-close-btn {
     width: 16px !important;
     height: 16px !important;
     font-size: 0.58rem !important;
-    top: -6px !important;
-    right: -6px !important;
+    top: -5px !important;
+    right: -5px !important;
+    background: #1E1E2E !important;
+    color: #FFF !important;
   }
 
   /* En versión móvil el monitor siempre se muestra en formato vertical exclusivo 9:16 */

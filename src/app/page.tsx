@@ -4420,6 +4420,12 @@ export default function StudioDeluluPage() {
                   </div>
 
                   <div className="shoppable-card-details">
+                    <div className="shoppable-live-badge-row">
+                      <span className="shoppable-live-tag">
+                        <Dashicon name="cart" size={10} />
+                        <span>SHOP QR EN VIVO</span>
+                      </span>
+                    </div>
                     <div className="shoppable-card-title">{activeProduct.title}</div>
                     {activeProduct.subtitle && (
                       <div className="shoppable-card-sub">{activeProduct.subtitle}</div>

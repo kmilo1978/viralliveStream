@@ -1415,3 +1415,13 @@
 - Resultado: Aprobado (score 10/10)
 - Resumen: Verificación y documentación de compatibilidad total de la señal en vivo de CAM hacia Zoom, Google Meet, Microsoft Teams, WhatsApp Desktop/Web y Discord mediante OBS Virtual Camera y la ruta limpia `/obs-stage`. Se actualizó el modal de ayuda con la guía paso a paso específica para cada aplicación.
 - Observaciones: Verificado mediante Playwright, modal renderizado correctamente, TypeScript 0 errores.
+
+## Validación completada - Rediseño y Optimización de Shop QR en Móvil y Smartphone Mockup (9:16)
+- Fecha: 2026-11-12T15:28:00-05:00
+- Resultado: Aprobado (score 10/10)
+- Resumen: Rediseño completo de la tarjeta de producto "Shop QR" (Live Shopping) para pantalla vertical 9:16 móvil y escritorio:
+  1. Se eliminó el bloque blanco tosco con colisiones en la esquina derecha sobre los corazones y la cámara PiP.
+  2. Se reubicó en el lateral izquierdo (`left: 10px; bottom: 242px;`), dejando libre todo el carril derecho para las reacciones animadas y corazones.
+  3. Se diseñó con estética oscura de cristal esmerilado (Dark Frosted Glassmorphism con borde rosa neón y precio verde esmeralda #10B981) idéntica a los Live Product Pins de TikTok Shop.
+  4. Se restauró y optimizó la visibilidad del código QR escaneable en móvil con un contenedor blanco de alto contraste (`44x44px`), permitiendo que la audiencia escanee el producto directamente en pantalla.
+- Observaciones: Verificado mediante Playwright, captura guardada en `verified_shop_qr_phone_close.png`, TypeScript 0 errores.
