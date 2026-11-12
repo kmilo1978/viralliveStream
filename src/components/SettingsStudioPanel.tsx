@@ -607,13 +607,15 @@ export function SettingsStudioPanel({
                       setSelectedRtmpPlatform(plat);
                       if (plat === "youtube") setRtmpServerUrl("rtmp://a.rtmp.youtube.com/live2");
                       if (plat === "tiktok") setRtmpServerUrl("rtmp://live-push.tiktok.com/live/");
+                      if (plat === "instagram") setRtmpServerUrl("rtmps://live-upload.instagram.com:443/rtmp/");
                       if (plat === "facebook") setRtmpServerUrl("rtmps://live-api-s.facebook.com:443/rtmp/");
                       if (plat === "twitch") setRtmpServerUrl("rtmp://live.twitch.tv/app/");
                     }}
                     style={{ width: "100%", background: "#0D0E15", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: 8, padding: "8px 10px", color: "#FFFFFF", fontSize: "0.78rem" }}
                   >
                     <option value="youtube">YouTube Live</option>
-                    <option value="tiktok">TikTok Live</option>
+                    <option value="tiktok">TikTok Live *</option>
+                    <option value="instagram">Instagram Live *</option>
                     <option value="facebook">Facebook Live</option>
                     <option value="twitch">Twitch</option>
                     <option value="custom">Custom RTMP</option>
@@ -656,6 +658,9 @@ export function SettingsStudioPanel({
                     </button>
                   </div>
                 </div>
+              </div>
+              <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(245, 158, 11, 0.08)", border: "1px dashed rgba(245, 158, 11, 0.4)", fontSize: "0.72rem", color: "#FDE68A", lineHeight: 1.45 }}>
+                <strong>Modo V1 Actual: Cabina + OBS Studio.</strong> En V1 la transmisión en vivo sale conectando esta Cabina a OBS Studio (<code>obs-stage</code> / Cámara Virtual). El envío RTMP MultiStream directo en nube se ejecutará en <strong>V2 SaaS</strong>. · <strong>* TikTok / Instagram Live</strong> solo se habilitan si tu cuenta cuenta con acceso RTMP oficial (TikTok LIVE Studio / +1.000 seguidores; Instagram Cuenta Profesional / Live Producer).
               </div>
             </div>
           </div>

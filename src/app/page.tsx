@@ -7498,7 +7498,23 @@ export default function StudioDeluluPage() {
               </button>
             </div>
 
-            {/* Total viewers badge */}
+            {/* Aviso honesto Modo V1 (Cabina + OBS) vs V2 SaaS */}
+            <div
+              style={{
+                backgroundColor: "#FFFBEB",
+                border: "1px solid #FDE68A",
+                borderRadius: 12,
+                padding: "10px 12px",
+                marginBottom: 12,
+                fontSize: "0.74rem",
+                lineHeight: 1.45,
+                color: "#78350F",
+              }}
+            >
+              <strong>Modo V1 Actual: Cabina + OBS Studio.</strong> Hoy transmites en directo conectando esta Cabina a <strong>OBS</strong> (<code>/obs-stage</code> o Cámara Virtual). La retransmisión MultiStream directa en nube sin OBS se ejecutará en la <strong>Versión 2 SaaS</strong>.
+            </div>
+
+            {/* Resumen de destinos configurados */}
             <div
               style={{
                 backgroundColor: "#F0FDF4",
@@ -7513,16 +7529,24 @@ export default function StudioDeluluPage() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.78rem", color: "#166534", fontWeight: 700 }}>
                 <span className="multistream-dot-live" />
-                <span>{activeDestinations.length} Plataformas Activas en Vivo</span>
+                <span>{activeDestinations.length} Destinos Configurados (Hoja de ruta V2)</span>
               </div>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.82rem", fontWeight: 900, color: "#15803D" }}>
-                <Dashicon name="visibility" size={14} /> {(totalMultistreamViewers / 1000).toFixed(1)}K Viewers Total
+                <Dashicon name="desktop" size={14} /> Cabina + OBS en V1
               </span>
             </div>
 
             {/* Lista de Destinos (Estilo Imagen 1 de OneStream Live) */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {multistreamDestinations.map((dest) => (
+              {multistreamDestinations.map((dest) => {
+                const isConditionalPlatform = dest.platform === "tiktok" || dest.platform === "instagram";
+                const conditionalHint =
+                  dest.platform === "tiktok"
+                    ? "* Solo cuentas con LIVE Studio / Stream Key aprobada (+1.000 seg.)"
+                    : dest.platform === "instagram"
+                    ? "* Solo cuentas Profesionales (Creador/Empresa) con Live Producer"
+                    : null;
+                return (
                 <div key={dest.id} style={{ display: "flex", flexDirection: "column" }}>
                   <div className="multistream-card-row">
                     <div className="multistream-dest-left">
@@ -7531,10 +7555,18 @@ export default function StudioDeluluPage() {
                         <img src={dest.iconSvg} alt={dest.name} />
                       </div>
                       <div>
-                        <div className="multistream-dest-name">{dest.name}</div>
-                        <div style={{ fontSize: "0.68rem", color: dest.enabled ? "#16A34A" : "#9CA3AF", fontWeight: 600 }}>
-                          {dest.enabled ? `● En Línea · ${dest.viewers?.toLocaleString() || 0} espectadores` : "Inactivo"}
+                        <div className="multistream-dest-name">
+                          {dest.name}
+                          {isConditionalPlatform ? " *" : ""}
                         </div>
+                        <div style={{ fontSize: "0.68rem", color: dest.enabled ? "#16A34A" : "#9CA3AF", fontWeight: 600 }}>
+                          {dest.enabled ? `● Guardado para OBS / V2 SaaS` : "Inactivo"}
+                        </div>
+                        {conditionalHint && (
+                          <div style={{ fontSize: "0.65rem", color: "#B45309", fontWeight: 600, marginTop: 2 }}>
+                            {conditionalHint}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -7629,7 +7661,23 @@ export default function StudioDeluluPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
+            </div>
+
+            <div
+              style={{
+                marginTop: 10,
+                padding: "8px 10px",
+                borderRadius: 10,
+                backgroundColor: "#F9FAFB",
+                border: "1px dashed #D1D5DB",
+                fontSize: "0.68rem",
+                lineHeight: 1.45,
+                color: "#4B5563",
+              }}
+            >
+              <strong>* Condicionales de TikTok Live e Instagram Live:</strong> estas dos redes únicamente se habilitan si tu cuenta cumple los requisitos oficiales y te entrega clave RTMP activa (TikTok LIVE Studio / +1.000 seguidores; Instagram Cuenta Profesional / Live Producer).
             </div>
 
             {/* Ver catálogo completo de 45+ plataformas */}

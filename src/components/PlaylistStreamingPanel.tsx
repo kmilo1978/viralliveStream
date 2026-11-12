@@ -45,9 +45,9 @@ const PLAYLIST_PLATFORM_OPTIONS: Array<{
   social?: SocialNetworkName;
   color: string;
 }> = [
-  { id: "tiktok", label: "TikTok Live", social: "tiktok", color: "#FE2C55" },
+  { id: "tiktok", label: "TikTok Live *", social: "tiktok", color: "#FE2C55" },
   { id: "youtube", label: "YouTube Live", social: "youtube", color: "#EF4444" },
-  { id: "instagram", label: "Instagram Live", social: "instagram", color: "#EC4899" },
+  { id: "instagram", label: "Instagram Live *", social: "instagram", color: "#EC4899" },
   { id: "facebook", label: "Facebook Live", social: "facebook", color: "#3B82F6" },
   { id: "twitch", label: "Twitch", social: "twitch", color: "#A855F7" },
   { id: "twitter-x", label: "X Live", social: "twitter-x", color: "#E2E8F0" },
@@ -427,6 +427,27 @@ export function PlaylistStreamingPanel({
               />
             </div>
           )}
+
+          <div
+            className="playlist-conditions-note"
+            style={{
+              marginTop: 8,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(245, 158, 11, 0.08)",
+              border: "1px dashed rgba(245, 158, 11, 0.4)",
+              fontSize: "0.7rem",
+              lineHeight: 1.45,
+              color: "#FDE68A",
+            }}
+          >
+            <div>
+              <strong>* Condiciones TikTok Live e Instagram Live:</strong> Solo se habilitan en cuentas elegibles con clave RTMP oficial (TikTok LIVE Studio / +1.000 seguidores; Instagram Cuenta Profesional mediante Live Producer).
+            </div>
+            <div style={{ marginTop: 4, color: "#CBD5E1" }}>
+              <strong>Modo V1 (Cabina + OBS):</strong> Hoy carga tus videos en la Cabina para transmitir por OBS Studio. El envío directo <strong>MultiLive / 24-7 en nube</strong> se ejecutará en <strong>V2 SaaS</strong>.
+            </div>
+          </div>
         </div>
 
         {/* TARJETA B: PROGRAMAR HORAS Y PRELANZAMIENTO */}

@@ -1089,3 +1089,23 @@
 - Fecha: 2026-11-12 11:49
 - Regla: **Actualizar siempre GitHub (`origin/main`) automáticamente después de cada cambio de código verificado** (`tsc --noEmit` + Playwright OK), asegurando que nunca queden cambios aprobados solo en local.
 - Repositorio sincronizado: `https://github.com/kmilo1978/viralliveStream.git` (`main`).
+
+
+## Roadmap Ejecución Versión 2 (V2 SaaS) & Alcance V1 (Cabina + OBS)
+- Fecha: 2026-11-12 11:55
+- Decisión estratégica del usuario:
+  - **Versión 1 (Actual - Estudio Local):** Opera exclusivamente como **Cabina + OBS Studio** (`/obs-stage`, `/obs-overlay`, Cámara Virtual, OBS WebSocket v5) sin servidores RTMP ni FFmpeg local complejo.
+  - **Condicionales `*` visibles en TikTok Live e Instagram Live:**
+    - `TikTok Live *`: únicamente habilitado si la cuenta cumple los requisitos oficiales y dispone de acceso LIVE Studio / clave RTMP aprobada (generalmente +1.000 seguidores).
+    - `Instagram Live *`: únicamente habilitado para cuentas Profesionales (Creador o Empresa) mediante clave RTMP de Live Producer generada por sesión.
+  - **Desarrollos asignados para ejecutar en Versión 2 (V2 SaaS):**
+    1. **Motor MultiStream Nube real (`WebRTC -> RTMP Multi-destino`)**: servidor media con **LiveKit / MediaMTX + FFmpeg (`-f tee`)** que reciba 1 sola subida desde el navegador del cliente y la replique en simultáneo a YouTube, Facebook, Twitch, Kick, TikTok`*` e Instagram`*`.
+    2. **Worker 24/7 para Playlist Streaming en Nube**: subida de videos pregrabados a almacenamiento nube (S3/R2) + ejecución automática por fecha/hora y prelanzamientos aunque el usuario apague su PC.
+    3. **Integraciones externas de clientes con Composio.dev**: OAuth en 1 clic para conectar YouTube, clips de TikTok, Instagram Business, Google Sheets real (catálogo/pedidos/guiones), Google Calendar y CRM/Shopify.
+    4. **Validación guiada de condicionales `*` de TikTok e Instagram** dentro del onboarding de conexiones de V2 SaaS.
+
+## Validación completada
+- Fecha: 2026-11-12 11:55
+- Resultado: Aprobado (score 10/10)
+- Resumen: Agregados indicadores `*` y notas transparentes de requisitos de **TikTok Live** e **Instagram Live**, junto con la aclaración de modo **V1 (Cabina + OBS)** y proyección de envío directo a **V2 SaaS** en el modal **Multistream** (`src/app/page.tsx`), **Playlist Streaming** (`src/components/PlaylistStreamingPanel.tsx`) y **Configuración Go Live / RTMP** (`src/components/SettingsStudioPanel.tsx`).
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow). Listo para commit y push automático a GitHub.
