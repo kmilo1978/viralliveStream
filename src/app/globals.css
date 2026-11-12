@@ -2798,12 +2798,124 @@ button {
   font-size: 0.85rem;
   line-height: 1.5;
   resize: vertical;
+  transition: height 0.2s ease;
 }
 
 .script-editor-textarea:focus {
   outline: none;
   border-color: var(--accent-pink);
   box-shadow: 0 0 12px var(--accent-pink-glow);
+}
+
+.script-editor-textarea.expanded {
+  height: 280px;
+  min-height: 240px;
+  max-height: 520px;
+}
+
+.script-mode-pill-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.script-mode-opt-btn {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.script-mode-opt-btn.active {
+  background: rgba(139, 92, 246, 0.35);
+  color: #DDD6FE;
+  border: 1px solid rgba(139, 92, 246, 0.5);
+}
+
+.script-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #E2E8F0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.script-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+}
+
+.script-action-btn.active-pink {
+  background: rgba(236, 72, 153, 0.25);
+  border-color: var(--accent-pink);
+  color: #F472B6;
+}
+
+.script-action-btn.text-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #EF4444;
+  color: #FCA5A5;
+}
+
+.script-action-btn.text-muted {
+  color: #94A3B8;
+  border-color: transparent;
+  background: transparent;
+}
+
+.script-action-btn.text-muted:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.script-live-metrics-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 6px;
+}
+
+.script-metric-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.64rem;
+  color: #94A3B8;
+}
+
+.script-metric-badge strong {
+  color: #FFFFFF;
+}
+
+.script-metric-badge.time-badge {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34D399;
+}
+
+.script-metric-badge.time-badge strong {
+  color: #6EE7B7;
 }
 
 /* =============================================================

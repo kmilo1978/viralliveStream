@@ -1476,3 +1476,16 @@
   4. Control de opacidad: 3 niveles ajustables (`35% Cristal`, `70% Equilibrado`, `90% Sólido`).
   5. Banner de privacidad en Dock: Cuadro informativo verde esmeralda con escudo de seguridad que aclara la arquitectura técnica (la captura de OBS/grabación se hace del video raw, los overlays DOM privados nunca salen al stream).
   6. Pestaña de herramientas actualizada con candado `Guion 🔒` e indicador de estado reactivo.
+
+
+## Validación completada
+- Fecha: 2026-11-12T18:10:00-05:00
+- Resultado: Aprobado (score >= 9)
+- Resumen: Importación de archivos .TXT, .PDF y gestión de guiones largos en el Teleprompter de CAM
+- Observaciones:
+  1. Importación .TXT: Carga instantánea de archivos de texto (.txt, .md) mediante FileReader con decodificación UTF-8, preservación de párrafos y conteo automático de métricas.
+  2. Importación .PDF: Endpoint API nativo `/api/parse-pdf` que procesa documentos PDF, extrayendo texto limpio página por página, calculando número de páginas, palabras, caracteres y tiempo estimado de lectura.
+  3. Pegado de texto largo: Botón de un solo clic para pegar textos extensos directamente desde el portapapeles del sistema (Word, Google Docs, Notion, ChatGPT, WhatsApp).
+  4. Modo de inserción: Selector de modo `Reemplazar Todo` o `+ Añadir al final` para concatenar múltiples notas o guiones.
+  5. Editor ampliable: Botón para alternar entre modo compacto (110px) y modo amplio (280px a 520px) con scroll suave para guiones extensos de 15, 30 o 60 minutos.
+  6. Barra de métricas en vivo: Indicadores en tiempo real de palabras, caracteres, párrafos y tiempo estimado de locución (a ~130 palabras por minuto).

@@ -386,6 +386,13 @@ export default function StudioDeluluPage() {
   const [teleprompterPosition, setTeleprompterPosition] = useState<"top" | "center" | "dock">("top");
   const [teleprompterOpacity, setTeleprompterOpacity] = useState<number>(0.75);
 
+  // Importación de archivos (.TXT, .PDF) y gestión de guiones largos
+  const [isScriptEditorExpanded, setIsScriptEditorExpanded] = useState<boolean>(false);
+  const [scriptInsertMode, setScriptInsertMode] = useState<"replace" | "append">("replace");
+  const [isParsingPdf, setIsParsingPdf] = useState<boolean>(false);
+  const txtFileInputRef = useRef<HTMLInputElement | null>(null);
+  const pdfFileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Multistreaming a 45+ Plataformas (Estilo OneStream Live)
   const MULTISTREAM_STORAGE_KEY = "miplataformastream.multistreamDestinations.v1";
   const [multistreamDestinations, setMultistreamDestinations] = useState<MultistreamDestination[]>(DEFAULT_MULTISTREAM_DESTINATIONS);
@@ -2275,6 +2282,102 @@ export default function StudioDeluluPage() {
       setStreamInfo("Teleprompter activado (🔒 HUD Privado sólo visible para ti)");
     }
   }, [teleprompterActive]);
+
+  // Métricas reactivas del guion (palabras, caracteres, párrafos y tiempo estimado de lectura en vivo)
+  const scriptMetrics = useMemo(() => {
+    const text = teleprompterScript.trim();
+    if (!text) {
+      return { words: 0, chars: 0, paragraphs: 0, readTimeMinutes: 0 };
+    }
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const chars = teleprompterScript.length;
+    const paragraphs = text.split(/\n+/).filter((p) => p.trim().length > 0).length;
+    const readTimeMinutes = Math.max(1, Math.round(words / 130)); // ~130 palabras por minuto al hablar en vivo
+    return { words, chars, paragraphs, readTimeMinutes };
+  }, [teleprompterScript]);
+
+  const handleUploadTxt = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = (event.target?.result as string) || "";
+        if (scriptInsertMode === "append" && teleprompterScript.trim()) {
+          setTeleprompterScript((prev) => prev + "\n\n" + content);
+        } else {
+          setTeleprompterScript(content);
+        }
+        const words = content.trim().split(/\s+/).filter(Boolean).length;
+        const readTime = Math.max(1, Math.round(words / 130));
+        setStreamInfo(`✓ Archivo .TXT cargado: ${file.name} (${words} palabras, ~${readTime} min de lectura)`);
+      };
+      reader.readAsText(file, "UTF-8");
+      e.target.value = "";
+    },
+    [scriptInsertMode, teleprompterScript]
+  );
+
+  const handleUploadPdf = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setIsParsingPdf(true);
+      setStreamInfo(`⏳ Extrayendo texto de ${file.name}...`);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/parse-pdf", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success && data.text) {
+          if (scriptInsertMode === "append" && teleprompterScript.trim()) {
+            setTeleprompterScript((prev) => prev + "\n\n" + data.text);
+          } else {
+            setTeleprompterScript(data.text);
+          }
+          setStreamInfo(
+            `✓ PDF importado: ${data.filename} (${data.numPages} págs, ${data.wordCount} palabras, ~${data.readingTimeMinutes} min de lectura)`
+          );
+        } else {
+          setStreamInfo(`⚠️ ${data.error || "No se pudo extraer texto del PDF"}`);
+        }
+      } catch {
+        setStreamInfo("⚠️ Error al conectar con el servidor para procesar el PDF");
+      } finally {
+        setIsParsingPdf(false);
+        e.target.value = "";
+      }
+    },
+    [scriptInsertMode, teleprompterScript]
+  );
+
+  const handlePasteClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        setStreamInfo("⚠️ El portapapeles está vacío o no contiene texto legible");
+        return;
+      }
+      if (scriptInsertMode === "append" && teleprompterScript.trim()) {
+        setTeleprompterScript((prev) => prev + "\n\n" + text);
+      } else {
+        setTeleprompterScript(text);
+      }
+      const words = text.trim().split(/\s+/).filter(Boolean).length;
+      const readTime = Math.max(1, Math.round(words / 130));
+      setStreamInfo(`✓ Texto largo pegado del portapapeles (${words} palabras, ~${readTime} min de lectura)`);
+    } catch {
+      setStreamInfo("⚠️ No se pudo acceder al portapapeles. Usa Ctrl+V directamente en el área de texto.");
+    }
+  }, [scriptInsertMode, teleprompterScript]);
+
+  const handleClearScript = useCallback(() => {
+    setTeleprompterScript("");
+    setStreamInfo("Guion vaciado. Escribe, pega o importa tu nuevo texto.");
+  }, []);
 
   const handleToggleButtonsMaster = useCallback(() => {
     if (screenButtonsVisible) {
@@ -6538,32 +6641,142 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
 
-                {/* Textarea del Guion */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-white)" }}>
-                      Script Content (Contenido del Guion):
-                    </span>
-                    <button
-                      type="button"
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "var(--accent-pink)",
-                        fontSize: "0.68rem",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setTeleprompterScript(DEFAULT_TELEPROMPTER_SCRIPT)}
-                    >
-                      Restablecer texto por defecto
-                    </button>
+                {/* Inputs ocultos para carga de archivos .txt y .pdf */}
+                <input
+                  ref={txtFileInputRef}
+                  type="file"
+                  accept=".txt,.text,.md"
+                  style={{ display: "none" }}
+                  onChange={handleUploadTxt}
+                />
+                <input
+                  ref={pdfFileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  style={{ display: "none" }}
+                  onChange={handleUploadPdf}
+                />
+
+                {/* Barra de herramientas para importar .txt, .pdf, pegar y gestionar textos largos */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-white)" }}>
+                        Script Content (Guion de Transmisión):
+                      </span>
+                      {/* Modo de inserción: Reemplazar o Añadir al final */}
+                      <div className="script-mode-pill-toggle">
+                        <button
+                          type="button"
+                          className={`script-mode-opt-btn ${scriptInsertMode === "replace" ? "active" : ""}`}
+                          onClick={() => setScriptInsertMode("replace")}
+                          title="Al importar o pegar, reemplaza todo el guion actual"
+                        >
+                          Reemplazar
+                        </button>
+                        <button
+                          type="button"
+                          className={`script-mode-opt-btn ${scriptInsertMode === "append" ? "active" : ""}`}
+                          onClick={() => setScriptInsertMode("append")}
+                          title="Al importar o pegar, añade el texto al final del guion actual"
+                        >
+                          + Añadir al final
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      {/* Botón Importar TXT */}
+                      <button
+                        type="button"
+                        className="script-action-btn"
+                        onClick={() => txtFileInputRef.current?.click()}
+                        title="Cargar guion desde un archivo de texto (.txt, .md)"
+                      >
+                        <Dashicon name="media-text" size={12} color="#60A5FA" />
+                        <span>Subir .TXT</span>
+                      </button>
+
+                      {/* Botón Importar PDF */}
+                      <button
+                        type="button"
+                        className="script-action-btn"
+                        onClick={() => pdfFileInputRef.current?.click()}
+                        disabled={isParsingPdf}
+                        title="Extraer texto de un documento PDF (.pdf)"
+                        style={isParsingPdf ? { opacity: 0.6, cursor: "wait" } : {}}
+                      >
+                        <Dashicon name="upload" size={12} color="#F87171" />
+                        <span>{isParsingPdf ? "Extrayendo..." : "Subir .PDF"}</span>
+                      </button>
+
+                      {/* Botón Pegar Portapapeles (para textos muy largos de Word/Docs/Notion) */}
+                      <button
+                        type="button"
+                        className="script-action-btn"
+                        onClick={handlePasteClipboard}
+                        title="Pegar texto largo copiado desde Word, Docs, ChatGPT o Notion"
+                      >
+                        <Dashicon name="clipboard" size={12} color="#34D399" />
+                        <span>Pegar Texto Largo</span>
+                      </button>
+
+                      {/* Botón Expandir / Reducir editor */}
+                      <button
+                        type="button"
+                        className={`script-action-btn ${isScriptEditorExpanded ? "active-pink" : ""}`}
+                        onClick={() => setIsScriptEditorExpanded((prev) => !prev)}
+                        title={isScriptEditorExpanded ? "Modo compacto" : "Ampliar editor para textos largos"}
+                      >
+                        <span>{isScriptEditorExpanded ? "⤡ Reducir" : "⤢ Ampliar"}</span>
+                      </button>
+
+                      {/* Botón Vaciar */}
+                      <button
+                        type="button"
+                        className="script-action-btn text-danger"
+                        onClick={handleClearScript}
+                        title="Vaciar todo el guion para escribir uno nuevo"
+                      >
+                        <Dashicon name="trash" size={12} color="#EF4444" />
+                        <span>Vaciar</span>
+                      </button>
+
+                      {/* Botón Restablecer */}
+                      <button
+                        type="button"
+                        className="script-action-btn text-muted"
+                        onClick={() => setTeleprompterScript(DEFAULT_TELEPROMPTER_SCRIPT)}
+                        title="Restablecer guion predeterminado del sistema"
+                      >
+                        ↺ Defecto
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Textarea del Guion con soporte para textos largos */}
                   <textarea
-                    className="script-editor-textarea"
+                    className={`script-editor-textarea ${isScriptEditorExpanded ? "expanded" : ""}`}
                     value={teleprompterScript}
                     onChange={(e) => setTeleprompterScript(e.target.value)}
-                    placeholder="Escribe o pega aquí el guion que leerás durante la transmisión..."
+                    placeholder="Escribe, pega aquí tu guion largo (Word, Docs, Notion) o importa un archivo .txt / .pdf con los botones superiores..."
                   />
+
+                  {/* Barra de Métricas en Vivo del Guion */}
+                  <div className="script-live-metrics-bar">
+                    <span className="script-metric-badge" title="Palabras totales en el guion">
+                      <strong>{scriptMetrics.words.toLocaleString()}</strong> palabras
+                    </span>
+                    <span className="script-metric-badge" title="Caracteres totales">
+                      <strong>{scriptMetrics.chars.toLocaleString()}</strong> caracteres
+                    </span>
+                    <span className="script-metric-badge" title="Párrafos o bloques de texto">
+                      <strong>{scriptMetrics.paragraphs}</strong> párrafos
+                    </span>
+                    <span className="script-metric-badge time-badge" title="Tiempo estimado de lectura a ritmo natural (~130 palabras por minuto)">
+                      ⏱️ <strong>~{scriptMetrics.readTimeMinutes} min</strong> de lectura en vivo
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
