@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { type UnifiedChatMessage, type ViewerRangeOption, DEFAULT_VIEWER_RANGES } from "@/lib/studio-data";
-import { PlatformLogo } from "@/components/PlatformLogos";
+import { PlatformLogo, SocialIcon } from "@/components/PlatformLogos";
 import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 
 interface RealFeelLiveChatOverlayProps {
@@ -19,6 +19,7 @@ interface RealFeelLiveChatOverlayProps {
   compactMode?: boolean;
   externalMessageToPush?: { nonce: number; text: string } | null;
   hasPipCamera?: boolean;
+  onOpenWhatsApp?: () => void;
 }
 
 type HeartParticle = {
@@ -175,6 +176,7 @@ export function RealFeelLiveChatOverlay({
   compactMode = false,
   externalMessageToPush = null,
   hasPipCamera = false,
+  onOpenWhatsApp,
 }: RealFeelLiveChatOverlayProps) {
   const [localMessages, setLocalMessages] = useState<UnifiedChatMessage[]>(() =>
     propMessages && propMessages.length > 0
@@ -773,6 +775,31 @@ export function RealFeelLiveChatOverlay({
             >
               ➤
             </button>
+
+            {onOpenWhatsApp && (
+              <button
+                type="button"
+                onClick={onOpenWhatsApp}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                  border: "none",
+                  color: "#FFFFFF",
+                  fontSize: "0.85rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(37, 211, 102, 0.4)",
+                  flexShrink: 0,
+                }}
+                title="Escríbenos al WhatsApp"
+              >
+                <SocialIcon network="whatsapp" size={16} />
+              </button>
+            )}
           </form>
         )}
       </div>

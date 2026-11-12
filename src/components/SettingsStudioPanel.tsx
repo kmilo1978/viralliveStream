@@ -6,7 +6,9 @@ import { ViraliveLogo } from "@/components/ViraliveLogo";
 import { VoiceFinancePanel } from "@/components/VoiceFinancePanel";
 import { DocumentationCenterPanel } from "@/components/DocumentationCenterPanel";
 import { VirtualCameraGuideTable } from "@/components/VirtualCameraGuideTable";
-import { type UsageLedgerEntry } from "@/lib/studio-data";
+import { WhatsAppStudioPanel } from "@/components/WhatsAppStudioPanel";
+import { SocialIcon } from "@/components/PlatformLogos";
+import { type UsageLedgerEntry, type WhatsAppConfig, DEFAULT_WHATSAPP_CONFIG } from "@/lib/studio-data";
 
 interface SettingsStudioPanelProps {
   accountCredits?: number | null;
@@ -14,7 +16,9 @@ interface SettingsStudioPanelProps {
   onClearLedger?: () => void;
   onProcessedAudioStream?: (stream: MediaStream | null) => void;
   onNavigateToTab?: (tab: "CAM" | "TRY_ON" | "DUO" | "EXPLORE" | "CREATE" | "PRO" | "DOCS" | "SETTINGS", proSubTab?: string) => void;
-  initialSubTab?: "apis" | "golive" | "voice_finance" | "obs" | "docs";
+  initialSubTab?: "apis" | "whatsapp" | "golive" | "voice_finance" | "obs" | "docs";
+  whatsappConfig?: WhatsAppConfig;
+  onChangeWhatsAppConfig?: (cfg: WhatsAppConfig) => void;
 }
 
 export function SettingsStudioPanel({
@@ -24,8 +28,41 @@ export function SettingsStudioPanel({
   onProcessedAudioStream = () => {},
   onNavigateToTab,
   initialSubTab = "apis",
+  whatsappConfig,
+  onChangeWhatsAppConfig,
 }: SettingsStudioPanelProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"apis" | "golive" | "voice_finance" | "obs" | "docs">(initialSubTab);
+  const [activeSubTab, setActiveSubTab] = useState<"apis" | "whatsapp" | "golive" | "voice_finance" | "obs" | "docs">(initialSubTab);
+
+  const [currentWhatsAppConfig, setCurrentWhatsAppConfig] = useState<WhatsAppConfig>(
+    whatsappConfig || DEFAULT_WHATSAPP_CONFIG
+  );
+
+  useEffect(() => {
+    if (whatsappConfig) {
+      setCurrentWhatsAppConfig(whatsappConfig);
+    } else {
+      try {
+        const stored = localStorage.getItem("miplataformastream.whatsappConfig.v1");
+        if (stored) {
+          setCurrentWhatsAppConfig(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.error("Error loading whatsappConfig in settings:", err);
+      }
+    }
+  }, [whatsappConfig]);
+
+  const handleUpdateWhatsAppConfig = (newCfg: WhatsAppConfig) => {
+    setCurrentWhatsAppConfig(newCfg);
+    if (onChangeWhatsAppConfig) {
+      onChangeWhatsAppConfig(newCfg);
+    }
+    try {
+      localStorage.setItem("miplataformastream.whatsappConfig.v1", JSON.stringify(newCfg));
+    } catch (err) {
+      console.error("Error saving whatsappConfig in settings:", err);
+    }
+  };
 
   // 1. Estados de APIs de IA
   const [decartApiKey, setDecartApiKey] = useState("");
@@ -338,6 +375,26 @@ export function SettingsStudioPanel({
         >
           <Dashicon name="admin-tools" size={16} />
           <span>APIs de IA</span>
+        </button>
+
+        <button
+          type="button"
+          className={`studio-segmented-btn ${activeSubTab === "whatsapp" ? "active" : ""}`}
+          style={{
+            minHeight: 44,
+            padding: "8px 10px",
+            fontSize: "0.82rem",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            borderColor: activeSubTab === "whatsapp" ? "#25D366" : undefined,
+            boxShadow: activeSubTab === "whatsapp" ? "0 0 12px rgba(37, 211, 102, 0.3)" : undefined,
+          }}
+          onClick={() => setActiveSubTab("whatsapp")}
+        >
+          <SocialIcon network="whatsapp" size={16} />
+          <span>WhatsApp &amp; Agente IA</span>
         </button>
 
         <button
@@ -908,8 +965,117 @@ export function SettingsStudioPanel({
                   <span>3. Pulsa <strong>&quot;Probar&quot;</strong> para verificar la respuesta del endpoint y activar en streaming.</span>
                 </div>
               </div>
+
+              {/* 11. WhatsApp Business API & Agente IA */}
+              <div style={{ minWidth: 0, background: "#151624", border: "1px solid rgba(37, 211, 102, 0.4)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFFFFF" }}>
+                      <SocialIcon network="whatsapp" size={16} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#FFFFFF" }}>WhatsApp API &amp; Agente IA de Ventas</strong>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8" }}>
+                        Conexión técnica por QR, Número wa.me o Meta Cloud API / Evolution API
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubTab("whatsapp")}
+                    style={{
+                      background: "rgba(37, 211, 102, 0.15)",
+                      border: "1px solid #25D366",
+                      color: "#4ADE80",
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      fontSize: "0.74rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span>Configurar Conexión Técnica ➔</span>
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.74rem", color: "#CBD5E1", background: "rgba(255, 255, 255, 0.03)", padding: "8px 12px", borderRadius: 8 }}>
+                  <span>Teléfono: <strong style={{ color: "#25D366" }}>{currentWhatsAppConfig.phoneNumber}</strong></span>
+                  <span>·</span>
+                  <span>Modo: <strong style={{ color: "#60A5FA" }}>{currentWhatsAppConfig.mode === "api" ? "API & Agente IA" : currentWhatsAppConfig.mode === "qr" ? "Código QR" : "Número Directo"}</strong></span>
+                  <span>·</span>
+                  <span>Agente IA: <strong style={{ color: currentWhatsAppConfig.aiAgentEnabled ? "#4ADE80" : "#F87171" }}>{currentWhatsAppConfig.aiAgentEnabled ? "Activo 24/7" : "Inactivo"}</strong></span>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 4. CONTENIDO: PESTAÑA WHATSAPP TÉCNICO (CÓDIGO QR, NÚMERO Y APIS) */}
+      {activeSubTab === "whatsapp" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(18, 140, 126, 0.12) 100%)",
+              border: "1px solid rgba(37, 211, 102, 0.35)",
+              borderRadius: 14,
+              padding: "16px 20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 12,
+                  background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 14px rgba(37, 211, 102, 0.4)",
+                  color: "#FFFFFF",
+                }}
+              >
+                <SocialIcon network="whatsapp" size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#FFFFFF" }}>
+                  Configuración Técnica de WhatsApp (Código QR, Número &amp; APIs)
+                </h3>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#CBD5E1" }}>
+                  Vincula tu dispositivo mediante <strong>Código QR</strong>, genera enlaces <strong>wa.me</strong> o conecta por <strong>API &amp; Webhooks</strong> (Meta Cloud API, Evolution API) con Agente IA 24/7.
+                </p>
+              </div>
+            </div>
+            <span
+              style={{
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                background: "rgba(37, 211, 102, 0.15)",
+                color: "#4ADE80",
+                border: "1px solid #25D366",
+                borderRadius: 999,
+                padding: "4px 10px",
+              }}
+            >
+              Conexión Técnica Oficial
+            </span>
+          </div>
+
+          <WhatsAppStudioPanel
+            config={currentWhatsAppConfig}
+            onChangeConfig={handleUpdateWhatsAppConfig}
+            onToggleOnScreen={() => handleUpdateWhatsAppConfig({ ...currentWhatsAppConfig, showOnScreen: !currentWhatsAppConfig.showOnScreen })}
+            activeCabinName="CAM"
+          />
         </div>
       )}
 

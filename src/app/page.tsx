@@ -399,6 +399,7 @@ export default function StudioDeluluPage() {
   // WhatsApp en Vivo (QR, Número y Agente IA)
   const WHATSAPP_STORAGE_KEY = "miplataformastream.whatsappConfig.v1";
   const [whatsappConfig, setWhatsappConfig] = useState<WhatsAppConfig>(DEFAULT_WHATSAPP_CONFIG);
+  const [showWhatsAppBubblePopover, setShowWhatsAppBubblePopover] = useState<boolean>(false);
 
   // Formulario nuevo producto
   const [newProdTitle, setNewProdTitle] = useState<string>("");
@@ -4513,6 +4514,7 @@ export default function StudioDeluluPage() {
                   viewerRange={guestSplitConfig.viewerRange}
                   showHearts={true}
                   showBottomBar={false}
+                  onOpenWhatsApp={() => setShowWhatsAppBubblePopover((prev) => !prev)}
                   showLiveGoal={!showPhoneMockupFrame}
                   streamerName={streamerName}
                   bottomPadding={showPhoneMockupFrame ? 72 : 14}
@@ -4725,54 +4727,81 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
-              {/* BADGE / TARJETA FLOTANTE DE WHATSAPP EN VIVO (QR, NÚMERO Y AGENTE IA) */}
+              {/* BURBUJA FLOTANTE DE WHATSAPP EN PANTALLA (SI ESTÁ ACTIVA EN CAPAS) */}
               {whatsappConfig.showOnScreen && (
                 <div
-                  className={`whatsapp-live-overlay-stage pos-${whatsappConfig.position || "bottom-left"} ${showPhoneMockupFrame ? "in-mockup" : ""}`}
-                  onClick={() => {
-                    const cleanPhone = whatsappConfig.phoneNumber.replace(/[^0-9]/g, "");
-                    const waLink = cleanPhone
-                      ? `https://wa.me/${cleanPhone}${whatsappConfig.defaultMessage ? `?text=${encodeURIComponent(whatsappConfig.defaultMessage)}` : ""}`
-                      : "https://wa.me/";
-                    window.open(waLink, "_blank");
+                  className={`whatsapp-stage-floating-bubble pos-${whatsappConfig.position || "bottom-left"} ${showPhoneMockupFrame ? "in-mockup" : ""}`}
+                  onClick={() => setShowWhatsAppBubblePopover((prev) => !prev)}
+                  style={{
+                    position: "absolute",
+                    bottom: showPhoneMockupFrame ? 70 : 20,
+                    left: 20,
+                    zIndex: 56,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "rgba(14, 20, 18, 0.92)",
+                    backdropFilter: "blur(12px)",
+                    border: "1.5px solid #25D366",
+                    borderRadius: 24,
+                    padding: "6px 12px",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(37, 211, 102, 0.35)",
+                    color: "#FFFFFF",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
                   }}
-                  title={`Clic para chatear por WhatsApp al ${whatsappConfig.phoneNumber}`}
+                  title={`Clic para abrir WhatsApp (${whatsappConfig.phoneNumber})`}
                 >
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <SocialIcon network="whatsapp" size={17} />
+                  </div>
+                  <span>{whatsappConfig.callToAction || "WhatsApp"}</span>
+                  {whatsappConfig.aiAgentEnabled && (
+                    <span
+                      style={{
+                        background: "#25D366",
+                        color: "#000",
+                        fontSize: "0.58rem",
+                        fontWeight: 900,
+                        padding: "1px 5px",
+                        borderRadius: 999,
+                      }}
+                    >
+                      IA
+                    </span>
+                  )}
                   <button
                     type="button"
-                    className="whatsapp-overlay-close-btn"
                     onClick={(e) => {
                       e.stopPropagation();
                       persistWhatsAppConfig({ ...whatsappConfig, showOnScreen: false });
                     }}
-                    title="Ocultar WhatsApp de la pantalla"
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#94A3B8",
+                      fontSize: "0.9rem",
+                      cursor: "pointer",
+                      padding: "0 0 0 4px",
+                      lineHeight: 1,
+                    }}
+                    title="Ocultar de pantalla"
                   >
                     ×
                   </button>
-
-                  <div className="whatsapp-overlay-icon-wrap">
-                    <SocialIcon network="whatsapp" size={22} />
-                    {whatsappConfig.aiAgentEnabled && (
-                      <span className="whatsapp-overlay-ai-badge" title="Agente IA de Ventas Activo">
-                        IA
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="whatsapp-overlay-info">
-                    <div className="whatsapp-overlay-cta">{whatsappConfig.callToAction || "Escríbenos a WhatsApp"}</div>
-                    <div className="whatsapp-overlay-phone">{whatsappConfig.phoneNumber}</div>
-                    <div className="whatsapp-overlay-sub">
-                      {whatsappConfig.aiAgentEnabled ? "🤖 Agente IA disponible 24/7" : "Atención directa en vivo"}
-                    </div>
-                  </div>
-
-                  {whatsappConfig.qrCodeDataUrl && (
-                    <div className="whatsapp-overlay-qr-box" title="Escanea con la cámara de tu celular para abrir WhatsApp">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={whatsappConfig.qrCodeDataUrl} alt="QR Escaneable de WhatsApp" />
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -4811,77 +4840,230 @@ export default function StudioDeluluPage() {
             {/* Cierre del envoltorio relativo del monitor */}
             </div>
 
-            {/* CASILLA DE COMENTARIOS DEBAJO DE LA PANTALLA (Para ver los mensajes en pantalla 100% limpios y sin obstáculos) */}
-            {realFeelChatEnabled && (
-              <form
-                className="under-monitor-chat-bar"
-                onSubmit={handleSendUnderMonitorChat}
+            {/* CASILLA DE COMENTARIOS DEBAJO DE LA PANTALLA CON BURBUJA DE WHATSAPP AL LADO */}
+            <div
+              className="under-monitor-comment-row"
                 style={{
                   width: "100%",
                   maxWidth: effectiveCropMode === "9:16" ? 440 : 1360,
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  padding: "6px 14px",
-                  background: "rgba(18, 18, 28, 0.94)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255, 255, 255, 0.14)",
-                  borderRadius: 24,
-                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.45)",
+                  gap: 10,
                   margin: "8px 0 6px 0",
-                  zIndex: 20,
+                  zIndex: 25,
                   position: "relative",
                   boxSizing: "border-box",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", opacity: 0.8 }}><Dashicon name="format-chat" size={16} color="rgba(255,255,255,0.8)" /></span>
-                  <input
-                    type="text"
-                    placeholder="Add a comment... (Presiona Enter para enviar en vivo)"
-                    value={underMonitorChatText}
-                    onChange={(e) => setUnderMonitorChatText(e.target.value)}
-                    style={{
-                      flex: 1,
-                      background: "transparent",
-                      border: "none",
-                      outline: "none",
-                      color: "#FFFFFF",
-                      fontSize: "0.82rem",
-                      fontWeight: 500,
-                      minWidth: 0,
-                    }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!underMonitorChatText.trim()}
+                <form
+                  className="under-monitor-chat-bar"
+                  onSubmit={handleSendUnderMonitorChat}
                   style={{
-                    width: 32,
-                    height: 32,
-                    minWidth: 32,
-                    borderRadius: "50%",
-                    background: underMonitorChatText.trim()
-                      ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
-                      : "rgba(255, 255, 255, 0.12)",
-                    border: "none",
-                    color: "#FFFFFF",
-                    fontSize: "0.85rem",
+                    flex: 1,
+                    minWidth: 0,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    cursor: underMonitorChatText.trim() ? "pointer" : "default",
-                    boxShadow: underMonitorChatText.trim() ? "0 2px 8px rgba(236, 72, 153, 0.45)" : "none",
-                    transition: "all 0.15s ease",
-                    flexShrink: 0,
+                    gap: 8,
+                    padding: "6px 14px",
+                    background: "rgba(18, 18, 28, 0.94)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 255, 255, 0.14)",
+                    borderRadius: 24,
+                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.45)",
+                    position: "relative",
+                    boxSizing: "border-box",
                   }}
-                  title="Enviar comentario en vivo"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
-                </button>
-              </form>
-            )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", opacity: 0.8 }}><Dashicon name="format-chat" size={16} color="rgba(255,255,255,0.8)" /></span>
+                    <input
+                      type="text"
+                      placeholder="Add a comment... (Presiona Enter para enviar en vivo)"
+                      value={underMonitorChatText}
+                      onChange={(e) => setUnderMonitorChatText(e.target.value)}
+                      style={{
+                        flex: 1,
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
+                        color: "#FFFFFF",
+                        fontSize: "0.82rem",
+                        fontWeight: 500,
+                        minWidth: 0,
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!underMonitorChatText.trim()}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      minWidth: 32,
+                      borderRadius: "50%",
+                      background: underMonitorChatText.trim()
+                        ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
+                        : "rgba(255, 255, 255, 0.12)",
+                      border: "none",
+                      color: "#FFFFFF",
+                      fontSize: "0.85rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: underMonitorChatText.trim() ? "pointer" : "default",
+                      boxShadow: underMonitorChatText.trim() ? "0 2px 8px rgba(236, 72, 153, 0.45)" : "none",
+                      transition: "all 0.15s ease",
+                      flexShrink: 0,
+                    }}
+                    title="Enviar comentario en vivo"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                  </button>
+                </form>
+
+                {/* BURBUJA DE WHATSAPP AL LADO DE MENSAJES */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    className="whatsapp-bubble-beside-messages"
+                    onClick={() => setShowWhatsAppBubblePopover((prev) => !prev)}
+                    style={{
+                      height: 44,
+                      borderRadius: 24,
+                      padding: "0 14px",
+                      background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                      border: "1.5px solid rgba(255, 255, 255, 0.35)",
+                      boxShadow: "0 4px 16px rgba(37, 211, 102, 0.45)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      color: "#FFFFFF",
+                      fontSize: "0.78rem",
+                      fontWeight: 800,
+                      transition: "all 0.2s ease",
+                      userSelect: "none",
+                    }}
+                    title="Escríbenos a WhatsApp en vivo"
+                  >
+                    <SocialIcon network="whatsapp" size={20} />
+                    <span>WhatsApp</span>
+                    {whatsappConfig.aiAgentEnabled && (
+                      <span
+                        style={{
+                          background: "#FFFFFF",
+                          color: "#128C7E",
+                          fontSize: "0.6rem",
+                          fontWeight: 900,
+                          padding: "1px 6px",
+                          borderRadius: 999,
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                        }}
+                      >
+                        IA
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Popover al pulsar la burbuja de WhatsApp */}
+                  {showWhatsAppBubblePopover && (
+                    <div
+                      className="whatsapp-bubble-popover"
+                      style={{
+                        position: "absolute",
+                        bottom: "calc(100% + 10px)",
+                        right: 0,
+                        width: 290,
+                        background: "rgba(15, 17, 26, 0.98)",
+                        border: "1.5px solid #25D366",
+                        borderRadius: 16,
+                        padding: 14,
+                        boxShadow: "0 14px 40px rgba(0,0,0,0.85), 0 0 20px rgba(37, 211, 102, 0.3)",
+                        backdropFilter: "blur(14px)",
+                        zIndex: 100,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                        color: "#FFFFFF",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <SocialIcon network="whatsapp" size={16} />
+                          <strong style={{ fontSize: "0.82rem", color: "#25D366" }}>
+                            {whatsappConfig.callToAction || "Escríbenos a WhatsApp"}
+                          </strong>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowWhatsAppBubblePopover(false)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#94A3B8",
+                            cursor: "pointer",
+                            fontSize: "1rem",
+                            padding: 2,
+                            lineHeight: 1,
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: "0.74rem", color: "#CBD5E1" }}>
+                        Canal oficial: <strong style={{ color: "#FFFFFF" }}>{whatsappConfig.phoneNumber}</strong>
+                      </div>
+
+                      {whatsappConfig.aiAgentEnabled && (
+                        <div style={{ fontSize: "0.68rem", color: "#A7F3D0", background: "rgba(37, 211, 102, 0.12)", border: "1px solid rgba(37, 211, 102, 0.3)", padding: "4px 8px", borderRadius: 6 }}>
+                          🤖 Agente IA activo 24/7 para responder dudas sobre productos y ventas.
+                        </div>
+                      )}
+
+                      {whatsappConfig.qrCodeDataUrl && (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px", background: "#FFFFFF", borderRadius: 10 }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={whatsappConfig.qrCodeDataUrl} alt="QR WhatsApp" style={{ width: 120, height: 120, display: "block" }} />
+                          <span style={{ fontSize: "0.62rem", color: "#333", fontWeight: 700 }}>Apunta con tu cámara para abrir</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cleanPhone = whatsappConfig.phoneNumber.replace(/[^0-9]/g, "");
+                          const waLink = cleanPhone
+                            ? `https://wa.me/${cleanPhone}${whatsappConfig.defaultMessage ? `?text=${encodeURIComponent(whatsappConfig.defaultMessage)}` : ""}`
+                            : "https://wa.me/";
+                          window.open(waLink, "_blank");
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          background: "#25D366",
+                          border: "none",
+                          color: "#FFFFFF",
+                          fontWeight: 800,
+                          fontSize: "0.78rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                          boxShadow: "0 2px 10px rgba(37, 211, 102, 0.4)",
+                        }}
+                      >
+                        <SocialIcon network="whatsapp" size={16} />
+                        <span>Abrir Chat de WhatsApp ↗</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
             {/* Franja de estado compacta para móviles (<= 640px) que libera la vista de cámara */}
             <div className="mobile-stage-status-strip">
@@ -7441,13 +7623,15 @@ export default function StudioDeluluPage() {
       )}
 
       {/* -------------------------------------------------------------
-          VISTA 5: PANEL DE CONFIGURACIÓN & SETTINGS AVANZADOS (APIs, Go Live, Voz/Finanzas, OBS, Docs)
+          VISTA 5: PANEL DE CONFIGURACIÓN & SETTINGS AVANZADOS (APIs, WhatsApp Técnico, Go Live, Voz/Finanzas, OBS, Docs)
           ------------------------------------------------------------- */}
       {activeTab === "SETTINGS" && (
         <SettingsStudioPanel
           accountCredits={account.credits}
           usageLedger={usageLedger}
           onClearLedger={() => setUsageLedger([])}
+          whatsappConfig={whatsappConfig}
+          onChangeWhatsAppConfig={persistWhatsAppConfig}
           onProcessedAudioStream={(stream) => {
             if (stream) setupVuMeter(stream);
           }}
