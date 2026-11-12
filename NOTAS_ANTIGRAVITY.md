@@ -1131,3 +1131,18 @@
 - Solicitud: Agregar a la Versión 2 un módulo tipo Dashboard con todas las métricas (horas de reproducción, plataformas, comentarios, CTA, gráficas y salud técnica).
 - Archivo creado: `ROADMAP_V2_SAAS.md` (consolidando arquitectura V2 completa: Multi-usuario, Motor MultiStream Nube WebRTC→RTMP, Playlist 24/7 en nube, Composio.dev, condicionales `*` de TikTok/Instagram Live y el nuevo Módulo 5: Dashboard de Analítica, Métricas & Gráficas).
 - Estado V1: Sin cambios visuales en V1 (`V1 = Cabina + OBS` intacta y estable). Subiendo documentación a GitHub automáticamente.
+
+
+## Validación completada
+- Fecha: 2026-11-12 12:15
+- Resultado: Aprobado (score 10/10)
+- Resumen: Limpiada la pantalla del monitor en **CAM**, **TRY ON** y **DÚO** (`src/app/page.tsx`): eliminadas las etiquetas flotantes sobre el video (`Fondo Virtual Activo / Chroma Key (Verde)` `.monitor-bg-badge-overlay`, `Previsualización Local (0 Créditos)` `.zero-credits-badge` y `Try-On: <nombre>`) tanto en escritorio como en la franja móvil para que ninguna característica marcada estampe su nombre sobre la pantalla.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow). Subiendo automáticamente a GitHub.
+
+## Nueva sesión
+- Fecha: 2026-11-12 12:15
+- Solicitud: No mostrar sobre la pantalla de CAM, TRY ON y DÚO los badges de Fondo Virtual Activo, Previsualización Local ni el nombre Try-On al marcar características.
+- Decisiones clave:
+  - Removidos `.monitor-local-preview-badges`, `.monitor-bg-badge-overlay` y chips homólogos móviles en `src/app/page.tsx`.
+- Pendientes:
+  - Respaldo automático en `origin/main` en ejecución.

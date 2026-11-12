@@ -4087,35 +4087,6 @@ export default function StudioDeluluPage() {
                           }}
                         />
                       )}
-
-                      {!showPhoneMockupFrame && (
-                        <div className="monitor-local-preview-badges" style={{ position: "relative", zIndex: 10, padding: "48px 14px 8px 14px", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, width: "100%", pointerEvents: "none" }}>
-                          <span className="zero-credits-badge" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                            <Dashicon name="visibility" size={12} />
-                            <span>Previsualización Local (0 Créditos)</span>
-                            {virtualBackgrounds.find((b) => b.id === selectedBgId)?.mediaType === "video" && (
-                              <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                                · <Dashicon name="format-video" size={12} /> Video en Bucle
-                              </span>
-                            )}
-                          </span>
-                          {activeTab === "TRY_ON" && selectedGarmentObj && (
-                            <span
-                              className="zero-credits-badge"
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                borderColor: "rgba(236, 72, 153, 0.75)",
-                                backgroundColor: "rgba(236, 72, 153, 0.25)",
-                              }}
-                            >
-                              <Dashicon name="products" size={12} color="#F472B6" />
-                              <span>Try-On: {selectedGarmentObj.name}</span>
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -4147,49 +4118,6 @@ export default function StudioDeluluPage() {
                       transform: mirrorInput ? "scaleX(-1)" : "none",
                     }}
                   />
-                </div>
-              )}
-
-              {/* FONDO VIRTUAL ACTIVO: INDICADOR Y MINIATURA FOTOGRÁFICA EN EL MONITOR (oculto en Vista Móvil o con Chat activo) */}
-              {selectedBgId && selectedBgId !== "bg-none" && !showPhoneMockupFrame && !realFeelChatEnabled && (
-                <div
-                  className="monitor-bg-badge-overlay"
-                  style={{
-                    position: "absolute",
-                    bottom: 12,
-                    left: 12,
-                    zIndex: 45,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    background: "rgba(15, 15, 25, 0.9)",
-                    border: "1px solid rgba(59, 130, 246, 0.7)",
-                    borderRadius: 8,
-                    padding: "4px 10px 4px 6px",
-                    boxShadow: "0 4px 14px rgba(0, 0, 0, 0.6)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={virtualBackgrounds.find((b) => b.id === selectedBgId)?.customImageUrl || ""}
-                    alt="Fondo activo"
-                    style={{
-                      width: 32,
-                      height: 22,
-                      borderRadius: 4,
-                      objectFit: "cover",
-                      border: "1px solid rgba(255, 255, 255, 0.3)",
-                    }}
-                  />
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontSize: "0.58rem", color: "#93C5FD", fontWeight: 700, textTransform: "uppercase" }}>
-                      Fondo Virtual Activo
-                    </span>
-                    <span style={{ fontSize: "0.74rem", color: "#FFFFFF", fontWeight: 800 }}>
-                      {virtualBackgrounds.find((b) => b.id === selectedBgId)?.name}
-                    </span>
-                  </div>
                 </div>
               )}
 
@@ -4480,20 +4408,10 @@ export default function StudioDeluluPage() {
                 <span className={`live-indicator-dot ${isConnectedLive ? "active" : ""}`} />
                 <span>{isConnectedLive ? "EN VIVO" : "STANDBY"}</span>
               </span>
-              <span className="mobile-status-chip mobile-status-chip-green">
-                <Dashicon name="visibility" size={12} />
-                <span>Previsualización Local (0 Cr)</span>
-              </span>
               <span className="mobile-status-chip">
                 <Dashicon name="admin-users" size={12} color="#60A5FA" />
                 <span>{guestSplitConfig.viewerRange.formattedCount}</span>
               </span>
-              {activeTab === "TRY_ON" && selectedGarmentObj && (
-                <span className="mobile-status-chip mobile-status-chip-pink">
-                  <Dashicon name="products" size={12} color="#F472B6" />
-                  <span>Try-On: {selectedGarmentObj.name}</span>
-                </span>
-              )}
             </div>
 
             {lastActionFeedback && (
