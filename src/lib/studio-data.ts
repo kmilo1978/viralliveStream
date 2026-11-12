@@ -1278,6 +1278,17 @@ export const ALL_45_MULTISTREAM_PLATFORMS = [
 // -------------------------------------------------------------
 export type CurrencyOption = "USD" | "COP" | "EUR" | "MXN" | "GBP";
 
+export type ShoppableProductPosition =
+  | "bottom-center"
+  | "bottom-right"
+  | "bottom-left"
+  | "middle-center"
+  | "middle-right"
+  | "top-center"
+  | "top-right";
+
+export type ShoppableScheduleMode = "manual" | "interval" | "count";
+
 export type ShoppableProductItem = {
   id: string;
   title: string;
@@ -1289,10 +1300,16 @@ export type ShoppableProductItem = {
   compareAtPrice?: number;
   imageUrl: string;
   qrCodeDataUrl?: string;
-  position: "bottom-center" | "bottom-left" | "bottom-right";
+  position: ShoppableProductPosition;
   enabled: boolean;
   scansCount?: number;
   clicksCount?: number;
+  // Programación
+  scheduleMode?: ShoppableScheduleMode;
+  intervalMinutes?: number;
+  displayDurationSeconds?: number;
+  repeatCount?: number;
+  currentDisplayCount?: number;
 };
 
 export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
@@ -1307,9 +1324,14 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     compareAtPrice: 59.99,
     imageUrl: "/products/headphones.jpg",
     position: "bottom-center",
-    enabled: true,
+    enabled: false,
     scansCount: 48,
     clicksCount: 19,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
   },
   {
     id: "prod-smartwatch",
@@ -1325,6 +1347,11 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     enabled: false,
     scansCount: 24,
     clicksCount: 8,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
   },
   {
     id: "prod-hoodie",
@@ -1340,6 +1367,11 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     enabled: false,
     scansCount: 15,
     clicksCount: 5,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
   },
 ];
 

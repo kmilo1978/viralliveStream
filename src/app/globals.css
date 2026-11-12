@@ -3003,6 +3003,29 @@ button {
   right: 20px;
 }
 
+.shoppable-product-card-stage.pos-middle-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.shoppable-product-card-stage.pos-middle-right {
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+}
+
+.shoppable-product-card-stage.pos-top-center {
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.shoppable-product-card-stage.pos-top-right {
+  top: 60px;
+  right: 24px;
+}
+
 .shoppable-live-tag {
   display: inline-flex;
   align-items: center;
@@ -5634,27 +5657,69 @@ button {
   outline: 2px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Tarjeta Live Shopping optimizada dentro del Marco Smartphone (Estilo TikTok Shop Pin con QR) */
+/* Tarjeta Live Shopping optimizada dentro del Marco Smartphone (Estilo TikTok Shop Pin con QR)
+   - Ubicada estratégicamente DEBAJO DE LOS COMENTARIOS (bottom: 12px) sin que ninguno de los dos se monte o tape */
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-bottom-center,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-bottom-left,
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-bottom-right {
-  bottom: 242px !important;
+  bottom: 12px !important;
+  top: auto !important;
   left: 10px !important;
-  right: auto !important;
+  right: 10px !important;
   transform: none !important;
-  max-width: 250px !important;
-  width: calc(100% - 92px) !important;
-  padding: 8px 10px !important;
+  max-width: calc(100% - 20px) !important;
+  width: auto !important;
+  padding: 6px 10px !important;
   gap: 8px !important;
-  background: rgba(14, 14, 24, 0.94) !important;
+  background: rgba(14, 14, 24, 0.96) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
-  border: 1.5px solid rgba(236, 72, 153, 0.5) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.6) !important;
   border-radius: 14px !important;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.75), 0 0 14px rgba(236, 72, 153, 0.22) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), 0 0 16px rgba(236, 72, 153, 0.25) !important;
   color: #FFFFFF !important;
   z-index: 70 !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-middle-center,
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-middle-right {
+  top: 48% !important;
+  bottom: auto !important;
+  left: 10px !important;
+  right: 10px !important;
+  transform: translateY(-50%) !important;
+  max-width: calc(100% - 20px) !important;
+  width: auto !important;
+  padding: 6px 10px !important;
+  gap: 8px !important;
+  background: rgba(14, 14, 24, 0.96) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.6) !important;
+  border-radius: 14px !important;
+  z-index: 70 !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-top-center,
+.delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage.pos-top-right {
+  top: 54px !important;
+  bottom: auto !important;
+  left: 10px !important;
+  right: 10px !important;
+  transform: none !important;
+  max-width: calc(100% - 20px) !important;
+  width: auto !important;
+  padding: 6px 10px !important;
+  gap: 8px !important;
+  background: rgba(14, 14, 24, 0.96) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.6) !important;
+  border-radius: 14px !important;
+  z-index: 70 !important;
+}
+
+/* Elevación inteligente del feed de comentarios de TikTok Live cuando Shop QR está activo en móvil */
+.delulu-monitor-container.in-phone-mockup .real-feel-live-chat-overlay.has-active-shop-card .real-feel-chat-feed-col {
+  margin-bottom: 64px !important;
+  max-height: 160px !important;
 }
 
 .delulu-monitor-container.in-phone-mockup .shoppable-product-card-stage .shoppable-card-thumb-wrap,
@@ -5754,11 +5819,14 @@ button {
   opacity: 1 !important;
 }
 
-/* Tarjeta Live Shopping en modo escritorio (16:9 / 1:1) - Proporcional, centrada y sin solapar chat ni PiP */
+/* Tarjeta Live Shopping en modo escritorio (16:9 / 1:1) - 3 Espacios en Pantalla (Abajo, Medio, Arriba) */
+
+/* 1. ESPACIO ABAJO: Rectángulo inferior marcado por el usuario */
 .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-center {
   bottom: 24px !important;
   left: 50% !important;
   right: auto !important;
+  top: auto !important;
   transform: translateX(-50%) !important;
   max-width: 440px !important;
   width: auto !important;
@@ -5776,23 +5844,102 @@ button {
   transform: translateX(-50%) translateY(-2px) !important;
 }
 
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-right {
+  bottom: 24px !important;
+  right: 28px !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  max-width: 420px !important;
+  padding: 12px 18px !important;
+  border-radius: 18px !important;
+  z-index: 75 !important;
+}
+
 .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-left {
   bottom: 330px !important;
   left: 20px !important;
   right: auto !important;
+  top: auto !important;
   transform: none !important;
   max-width: 400px !important;
   padding: 10px 16px !important;
   z-index: 75 !important;
 }
 
-.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-right {
-  bottom: 215px !important;
-  right: 24px !important;
+/* 2. ESPACIO MEDIO: Zona central flotante */
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-middle-center {
+  top: 50% !important;
+  left: 50% !important;
+  bottom: auto !important;
+  right: auto !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: 440px !important;
+  width: auto !important;
+  min-width: 380px !important;
+  padding: 12px 18px !important;
+  gap: 14px !important;
+  border-radius: 18px !important;
+  background: rgba(18, 18, 28, 0.95) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.65) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(236, 72, 153, 0.4) !important;
+  z-index: 75 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-middle-center:hover {
+  transform: translate(-50%, -52%) !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-middle-right {
+  top: 50% !important;
+  right: 28px !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: translateY(-50%) !important;
+  max-width: 420px !important;
+  padding: 12px 18px !important;
+  border-radius: 18px !important;
+  background: rgba(18, 18, 28, 0.95) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.65) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(236, 72, 153, 0.4) !important;
+  z-index: 75 !important;
+}
+
+/* 3. ESPACIO ARRIBA: Zona superior */
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-top-center {
+  top: 18px !important;
+  left: 50% !important;
+  bottom: auto !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  max-width: 440px !important;
+  width: auto !important;
+  min-width: 380px !important;
+  padding: 12px 18px !important;
+  gap: 14px !important;
+  border-radius: 18px !important;
+  background: rgba(18, 18, 28, 0.95) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.65) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(236, 72, 153, 0.4) !important;
+  z-index: 75 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-top-center:hover {
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-top-right {
+  top: 60px !important;
+  right: 28px !important;
+  bottom: auto !important;
   left: auto !important;
   transform: none !important;
-  max-width: 400px !important;
-  padding: 10px 16px !important;
+  max-width: 420px !important;
+  padding: 12px 18px !important;
+  border-radius: 18px !important;
+  background: rgba(18, 18, 28, 0.95) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.65) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(236, 72, 153, 0.4) !important;
   z-index: 75 !important;
 }
 
@@ -6883,12 +7030,13 @@ body {
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-center,
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-left,
   .delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-right {
-    bottom: 242px !important;
+    bottom: 12px !important;
+    top: auto !important;
     left: 10px !important;
-    right: auto !important;
+    right: 10px !important;
     transform: none !important;
-    max-width: 240px !important;
-    width: calc(100% - 90px) !important;
+    max-width: calc(100% - 20px) !important;
+    width: auto !important;
     padding: 6px 8px !important;
     gap: 8px !important;
     border-radius: 12px !important;

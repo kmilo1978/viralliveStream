@@ -75,6 +75,8 @@ import {
   ALL_45_MULTISTREAM_PLATFORMS,
   DEFAULT_SHOPPABLE_PRODUCTS,
   type ShoppableProductItem,
+  type ShoppableProductPosition,
+  type ShoppableScheduleMode,
   type CurrencyOption,
   DEFAULT_TIKTOK_BRAND_THEMES,
   type TikTokBrandTheme,
@@ -409,8 +411,18 @@ export default function StudioDeluluPage() {
   const [newProdPrice, setNewProdPrice] = useState<string>("49.99");
   const [newProdComparePrice, setNewProdComparePrice] = useState<string>("59.99");
   const [newProdImageUrl, setNewProdImageUrl] = useState<string>("/products/headphones.jpg");
-  const [newProdPosition, setNewProdPosition] = useState<"bottom-center" | "bottom-left" | "bottom-right">("bottom-center");
+  const [newProdPosition, setNewProdPosition] = useState<ShoppableProductPosition>("bottom-center");
   const productUploadInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Programación y Ubicación de Live Shopping (Manual, Intervalo o # de veces con 3 Espacios en Pantalla)
+  const [liveShopScheduleMode, setLiveShopScheduleMode] = useState<ShoppableScheduleMode>("manual");
+  const [liveShopIntervalMinutes, setLiveShopIntervalMinutes] = useState<number>(2);
+  const [liveShopDisplaySeconds, setLiveShopDisplaySeconds] = useState<number>(15);
+  const [liveShopRepeatCount, setLiveShopRepeatCount] = useState<number>(3);
+  const [liveShopCurrentCount, setLiveShopCurrentCount] = useState<number>(0);
+  const [liveShopNextCountdown, setLiveShopNextCountdown] = useState<number>(0);
+  const [liveShopStatusText, setLiveShopStatusText] = useState<string>("");
+  const [liveShopGlobalPosition, setLiveShopGlobalPosition] = useState<ShoppableProductPosition>("bottom-center");
 
   // UX Limpia y Distribución de Funcionalidades en CAM (abre Chat IA con Agente IA en derecha por defecto)
   const [activeStudioTab, setActiveStudioTab] = useState<StudioDockTab>("chat");
@@ -2636,7 +2648,92 @@ export default function StudioDeluluPage() {
 
   const activeDestinations = multistreamDestinations.filter((d) => d.enabled);
   const totalMultistreamViewers = activeDestinations.reduce((acc, curr) => acc + (curr.viewers || 0), 18400);
-  const activeProduct = shoppableProducts.find((p) => p.id === activeProductId && p.enabled);
+  const activeProduct = shoppableProducts.find((p) => p.id === activeProductId);
+
+  const handleSelectLiveShopPosition = useCallback(
+    (pos: ShoppableProductPosition) => {
+      setLiveShopGlobalPosition(pos);
+      if (activeProductId) {
+        const updated = shoppableProducts.map((p) => (p.id === activeProductId ? { ...p, position: pos } : p));
+        persistShoppableProducts(updated);
+      }
+      const label = pos.includes("bottom")
+        ? "Abajo (Zona marcada)"
+        : pos.includes("middle")
+        ? "En el Medio"
+        : "Arriba";
+      setStreamInfo(`📍 Shop QR ubicado en: ${label}`);
+    },
+    [activeProductId, persistShoppableProducts, shoppableProducts],
+  );
+
+  // Control de Temporizador y Emisión Programada para Live Shopping (Intervalo o Número de veces)
+  useEffect(() => {
+    if (liveShopScheduleMode === "manual") {
+      setLiveShopNextCountdown(0);
+      setLiveShopStatusText("");
+      return;
+    }
+
+    // Inicializar cuenta regresiva inicial si es 0
+    if (liveShopNextCountdown <= 0) {
+      const initialWait = activeProductId ? liveShopDisplaySeconds : liveShopIntervalMinutes * 60;
+      setLiveShopNextCountdown(initialWait);
+    }
+
+    const timer = setInterval(() => {
+      setLiveShopNextCountdown((prev) => {
+        if (prev <= 1) {
+          if (activeProductId) {
+            // El banner estaba visible -> se oculta
+            setActiveProductId(null);
+            if (liveShopScheduleMode === "count") {
+              if (liveShopCurrentCount >= liveShopRepeatCount) {
+                // Se completaron todas las repeticiones
+                setLiveShopScheduleMode("manual");
+                setLiveShopStatusText(`✅ Finalizaron los ${liveShopRepeatCount} pases de Shop QR`);
+                setStreamInfo(`✅ Transmisión: Se completaron los ${liveShopRepeatCount} pases programados de Shop QR.`);
+                return 0;
+              }
+            }
+            const nextWait = liveShopIntervalMinutes * 60;
+            const m = Math.floor(nextWait / 60);
+            const s = nextWait % 60;
+            setLiveShopStatusText(`⏳ Próximo pase en ${m}:${s.toString().padStart(2, "0")}`);
+            return nextWait;
+          } else {
+            // El banner estaba oculto -> se activa en pantalla
+            const firstProd = shoppableProducts[0];
+            if (firstProd) {
+              setActiveProductId(firstProd.id);
+              if (liveShopScheduleMode === "count") {
+                setLiveShopCurrentCount((c) => {
+                  const nextCount = c + 1;
+                  setLiveShopStatusText(`📊 Pase ${nextCount} de ${liveShopRepeatCount} en pantalla (${liveShopDisplaySeconds}s)`);
+                  return nextCount;
+                });
+              } else {
+                setLiveShopStatusText(`🟢 En pantalla por ${liveShopDisplaySeconds}s`);
+              }
+            }
+            return liveShopDisplaySeconds;
+          }
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [
+    liveShopScheduleMode,
+    liveShopIntervalMinutes,
+    liveShopDisplaySeconds,
+    liveShopRepeatCount,
+    liveShopCurrentCount,
+    activeProductId,
+    shoppableProducts,
+    liveShopNextCountdown,
+  ]);
 
 
 
@@ -4517,9 +4614,10 @@ export default function StudioDeluluPage() {
                   onOpenWhatsApp={() => setShowWhatsAppBubblePopover((prev) => !prev)}
                   showLiveGoal={!showPhoneMockupFrame}
                   streamerName={streamerName}
-                  bottomPadding={showPhoneMockupFrame ? 72 : 14}
+                  bottomPadding={showPhoneMockupFrame ? (activeProduct ? 76 : 14) : 14}
                   maxVisible={showPhoneMockupFrame ? 4 : 4}
                   compactMode={showPhoneMockupFrame}
+                  hasActiveProduct={!!activeProduct}
                   hasPipCamera={
                     bgPreviewEnabled &&
                     !isConnectedLive &&
@@ -4665,7 +4763,7 @@ export default function StudioDeluluPage() {
               {/* TARJETA DE PRODUCTO COMPRABLE EN VIVO (SHOPPABLE PRODUCT CARD - ESTILO ONESTREAM LIVE) */}
               {activeProduct && (
                 <div
-                  className={`shoppable-product-card-stage pos-${activeProduct.position || "bottom-center"}`}
+                  className={`shoppable-product-card-stage pos-${liveShopGlobalPosition || activeProduct.position || "bottom-center"}`}
                   onClick={() => window.open(activeProduct.linkUrl, "_blank")}
                   title={`Clic para ver o comprar ${activeProduct.title} (${activeProduct.linkUrl})`}
                 >
@@ -5759,6 +5857,289 @@ export default function StudioDeluluPage() {
                       <Dashicon name="no-alt" size={14} />
                       <span>Desactivar QR</span>
                     </button>
+                  )}
+                </div>
+
+                {/* 1. SELECTOR DE UBICACIÓN EN PANTALLA (3 ESPACIOS: ABAJO, MEDIO, ARRIBA) */}
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 14,
+                    backgroundColor: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-white)", display: "flex", alignItems: "center", gap: 6 }}>
+                      <Dashicon name="desktop" size={13} color="var(--accent-pink)" />
+                      <span>Ubicación en Pantalla (3 Espacios):</span>
+                    </span>
+                    <span style={{ fontSize: "0.68rem", color: "var(--accent-pink)", fontWeight: 700 }}>
+                      {liveShopGlobalPosition.startsWith("bottom") ? "⬇️ Abajo (Zona Marcada)" : liveShopGlobalPosition.startsWith("middle") ? "⏺️ En el Medio" : "⬆️ Arriba"}
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${liveShopGlobalPosition.startsWith("bottom") ? "primary" : ""}`}
+                      style={{ padding: "6px 8px", fontSize: "0.72rem", justifyContent: "center" }}
+                      onClick={() => handleSelectLiveShopPosition("bottom-center")}
+                      title="Abajo en el centro (rectángulo inferior marcado)"
+                    >
+                      <span>⬇️ Abajo</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${liveShopGlobalPosition.startsWith("middle") ? "primary" : ""}`}
+                      style={{ padding: "6px 8px", fontSize: "0.72rem", justifyContent: "center" }}
+                      onClick={() => handleSelectLiveShopPosition("middle-center")}
+                      title="En el medio de la pantalla"
+                    >
+                      <span>⏺️ Medio</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${liveShopGlobalPosition.startsWith("top") ? "primary" : ""}`}
+                      style={{ padding: "6px 8px", fontSize: "0.72rem", justifyContent: "center" }}
+                      onClick={() => handleSelectLiveShopPosition("top-center")}
+                      title="En la parte superior de la pantalla"
+                    >
+                      <span>⬆️ Arriba</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. MODO DE EMISIÓN: MANUAL O PROGRAMADO (CADA X TIEMPO O # DE VECES) */}
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 14,
+                    backgroundColor: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--text-white)", display: "flex", alignItems: "center", gap: 6 }}>
+                      <Dashicon name="clock" size={13} color="#10B981" />
+                      <span>Modo de Emisión:</span>
+                    </span>
+                    {liveShopStatusText && (
+                      <span style={{ fontSize: "0.68rem", color: "#10B981", fontWeight: 800 }}>
+                        {liveShopStatusText}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${liveShopScheduleMode === "manual" ? "primary" : ""}`}
+                      style={{ padding: "6px 6px", fontSize: "0.7rem", justifyContent: "center" }}
+                      onClick={() => {
+                        setLiveShopScheduleMode("manual");
+                        setLiveShopStatusText("");
+                      }}
+                      title="Control manual: Activa o desactiva con los switches cuando desees"
+                    >
+                      <span>🔘 Manual</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${liveShopScheduleMode === "interval" ? "primary" : ""}`}
+                      style={{ padding: "6px 6px", fontSize: "0.7rem", justifyContent: "center" }}
+                      onClick={() => {
+                        setLiveShopScheduleMode("interval");
+                        setLiveShopNextCountdown(liveShopIntervalMinutes * 60);
+                        setLiveShopStatusText(`⏳ Próximo pase en ${liveShopIntervalMinutes} min`);
+                      }}
+                      title="Programar para que aparezca automáticamente cada X tiempo"
+                    >
+                      <span>⏱️ Cada X min</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${liveShopScheduleMode === "count" ? "primary" : ""}`}
+                      style={{ padding: "6px 6px", fontSize: "0.7rem", justifyContent: "center" }}
+                      onClick={() => {
+                        setLiveShopScheduleMode("count");
+                        setLiveShopCurrentCount(0);
+                        setLiveShopNextCountdown(liveShopIntervalMinutes * 60);
+                        setLiveShopStatusText(`⏳ Pase 1 de ${liveShopRepeatCount} listo`);
+                      }}
+                      title="Programar para mostrarse un número exacto de veces en la transmisión"
+                    >
+                      <span>🔢 # de veces</span>
+                    </button>
+                  </div>
+
+                  {/* AJUSTES SEGÚN MODO SELECCIONADO */}
+                  {liveShopScheduleMode === "interval" && (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        backgroundColor: "rgba(16, 185, 129, 0.08)",
+                        border: "1px solid rgba(16, 185, 129, 0.25)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#E5E7EB" }}>Repetir cada:</span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[1, 2, 3, 5, 10].map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => {
+                                setLiveShopIntervalMinutes(m);
+                                setLiveShopNextCountdown(m * 60);
+                              }}
+                              style={{
+                                padding: "2px 7px",
+                                fontSize: "0.68rem",
+                                borderRadius: 6,
+                                border: liveShopIntervalMinutes === m ? "1px solid #10B981" : "1px solid rgba(255,255,255,0.1)",
+                                backgroundColor: liveShopIntervalMinutes === m ? "#10B981" : "rgba(255,255,255,0.05)",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {m}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#E5E7EB" }}>Duración en pantalla:</span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[10, 15, 20, 30].map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setLiveShopDisplaySeconds(s)}
+                              style={{
+                                padding: "2px 7px",
+                                fontSize: "0.68rem",
+                                borderRadius: 6,
+                                border: liveShopDisplaySeconds === s ? "1px solid var(--accent-pink)" : "1px solid rgba(255,255,255,0.1)",
+                                backgroundColor: liveShopDisplaySeconds === s ? "var(--accent-pink)" : "rgba(255,255,255,0.05)",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {s}s
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {liveShopScheduleMode === "count" && (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        backgroundColor: "rgba(99, 102, 241, 0.08)",
+                        border: "1px solid rgba(99, 102, 241, 0.25)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#E5E7EB" }}>Total repeticiones:</span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[1, 2, 3, 5, 8].map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setLiveShopRepeatCount(c);
+                                setLiveShopCurrentCount(0);
+                              }}
+                              style={{
+                                padding: "2px 7px",
+                                fontSize: "0.68rem",
+                                borderRadius: 6,
+                                border: liveShopRepeatCount === c ? "1px solid #6366F1" : "1px solid rgba(255,255,255,0.1)",
+                                backgroundColor: liveShopRepeatCount === c ? "#6366F1" : "rgba(255,255,255,0.05)",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {c}x
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#E5E7EB" }}>Duración visible:</span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[10, 15, 20, 30].map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setLiveShopDisplaySeconds(s)}
+                              style={{
+                                padding: "2px 7px",
+                                fontSize: "0.68rem",
+                                borderRadius: 6,
+                                border: liveShopDisplaySeconds === s ? "1px solid var(--accent-pink)" : "1px solid rgba(255,255,255,0.1)",
+                                backgroundColor: liveShopDisplaySeconds === s ? "var(--accent-pink)" : "rgba(255,255,255,0.05)",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {s}s
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#E5E7EB" }}>Intervalo entre pases:</span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[1, 2, 3, 5].map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => {
+                                setLiveShopIntervalMinutes(m);
+                                setLiveShopNextCountdown(m * 60);
+                              }}
+                              style={{
+                                padding: "2px 7px",
+                                fontSize: "0.68rem",
+                                borderRadius: 6,
+                                border: liveShopIntervalMinutes === m ? "1px solid #10B981" : "1px solid rgba(255,255,255,0.1)",
+                                backgroundColor: liveShopIntervalMinutes === m ? "#10B981" : "rgba(255,255,255,0.05)",
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {m}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -9099,11 +9480,11 @@ export default function StudioDeluluPage() {
 
               <div>
                 <label style={{ fontSize: "0.74rem", color: "#E5E7EB", fontWeight: 600, display: "block", marginBottom: 4 }}>
-                  Posición en Pantalla:
+                  Posición en Pantalla (3 Espacios Clave):
                 </label>
                 <select
                   value={newProdPosition}
-                  onChange={(e) => setNewProdPosition(e.target.value as "bottom-center" | "bottom-left" | "bottom-right")}
+                  onChange={(e) => setNewProdPosition(e.target.value as ShoppableProductPosition)}
                   style={{
                     width: "100%",
                     backgroundColor: "#2A2A38",
@@ -9114,9 +9495,12 @@ export default function StudioDeluluPage() {
                     fontSize: "0.8rem",
                   }}
                 >
-                  <option value="bottom-center">Abajo Centro (Recomendado)</option>
-                  <option value="bottom-left">Abajo Izquierda</option>
-                  <option value="bottom-right">Abajo Derecha</option>
+                  <option value="bottom-center">⬇️ Abajo Centro (Zona recomendada marcada)</option>
+                  <option value="bottom-right">⬇️ Abajo Derecha</option>
+                  <option value="middle-center">⏺️ En el Medio - Centro</option>
+                  <option value="middle-right">⏺️ En el Medio - Derecha</option>
+                  <option value="top-center">⬆️ Arriba - Superior Centro</option>
+                  <option value="top-right">⬆️ Arriba - Superior Derecha</option>
                 </select>
               </div>
 
@@ -9246,6 +9630,11 @@ export default function StudioDeluluPage() {
                               {p.currencySymbol}{p.compareAtPrice.toFixed(2)}
                             </span>
                           )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                          <span style={{ fontSize: "0.68rem", backgroundColor: "rgba(236, 72, 153, 0.2)", color: "#F472B6", padding: "2px 7px", borderRadius: 5, fontWeight: 700 }}>
+                            {p.position?.startsWith("bottom") ? "⬇️ Abajo (Zona Marcada)" : p.position?.startsWith("middle") ? "⏺️ En el Medio" : "⬆️ Arriba"}
+                          </span>
                         </div>
                       </div>
                     </div>

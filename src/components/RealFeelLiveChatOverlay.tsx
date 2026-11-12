@@ -20,6 +20,7 @@ interface RealFeelLiveChatOverlayProps {
   externalMessageToPush?: { nonce: number; text: string } | null;
   hasPipCamera?: boolean;
   onOpenWhatsApp?: () => void;
+  hasActiveProduct?: boolean;
 }
 
 type HeartParticle = {
@@ -177,6 +178,7 @@ export function RealFeelLiveChatOverlay({
   externalMessageToPush = null,
   hasPipCamera = false,
   onOpenWhatsApp,
+  hasActiveProduct = false,
 }: RealFeelLiveChatOverlayProps) {
   const [localMessages, setLocalMessages] = useState<UnifiedChatMessage[]>(() =>
     propMessages && propMessages.length > 0
@@ -308,7 +310,7 @@ export function RealFeelLiveChatOverlay({
 
   return (
     <div
-      className="real-feel-live-chat-overlay"
+      className={`real-feel-live-chat-overlay ${hasActiveProduct ? "has-active-shop-card" : ""}`}
       style={{
         position: "absolute",
         inset: 0,
@@ -419,7 +421,7 @@ export function RealFeelLiveChatOverlay({
             gap: 10,
           }}
         >
-          {/* COLUMNA IZQUIERDA: FEED DE COMENTARIOS TIKTOK LIVE (PROPORCIONAL EN 16:9 Y COMPACTO EN MÓVIL) */}
+          {/* COLUMNA IZQUIERDA: FEED DE COMENTARIOS TIKTOK LIVE (PROPORCIONAL EN 16:9 Y COMPACTO EN MÓVIL, ELEVADO LIMPIAMENTE SOBRE EL SHOP QR) */}
           <div
             className="real-feel-chat-feed-col"
             style={{
@@ -428,7 +430,8 @@ export function RealFeelLiveChatOverlay({
               justifyContent: "flex-end",
               gap: compactMode ? 5 : 8,
               maxWidth: compactMode ? (hasPipCamera ? "calc(100% - 132px)" : "85%") : "480px",
-              maxHeight: compactMode ? 235 : 320,
+              maxHeight: compactMode ? (hasActiveProduct ? 160 : 235) : 320,
+              marginBottom: compactMode && hasActiveProduct ? 64 : 0,
               overflow: "hidden",
               pointerEvents: "auto",
               maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 4%, #000 10%, #000 100%)",

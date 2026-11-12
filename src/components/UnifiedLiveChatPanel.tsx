@@ -1012,6 +1012,25 @@ function StandaloneChatPanelView({
           >
             <div className="switchy-thumb" />
           </button>
+
+          {onToggleChatOverlay && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: 8, paddingLeft: 8, borderLeft: "1px solid rgba(255,255,255,0.12)" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: chatOverlayEnabled ? "var(--ok-green)" : "#94A3B8" }}>
+                {chatOverlayEnabled ? "CHAT ON" : "CHAT OFF"}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={Boolean(chatOverlayEnabled)}
+                aria-label="Mostrar u ocultar comentarios en vivo en pantalla"
+                className={`switchy-toggle compact-switch ${chatOverlayEnabled ? "active-green" : ""}`}
+                onClick={onToggleChatOverlay}
+                title="Mostrar u ocultar comentarios en el monitor"
+              >
+                <div className="switchy-thumb" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
