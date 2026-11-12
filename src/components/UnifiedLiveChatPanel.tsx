@@ -958,29 +958,7 @@ function StandaloneChatPanelView({
             </span>
           </div>
         </div>
-      ) : (
-        onToggleChatOverlay && (
-          <div className="unified-switch-row unified-overlay-master-card">
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <Dashicon name="format-chat" size={15} color="#EC4899" />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "#FFFFFF" }}>Chat IA en Monitor</div>
-                <div style={{ fontSize: "0.66rem", color: "#94A3B8" }}>Mostrar comentarios sobre el video</div>
-              </div>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={!!chatOverlayEnabled}
-              aria-label="Mostrar chat en vivo sobre el monitor"
-              className={`switchy-toggle compact-switch ${chatOverlayEnabled ? "active-green" : ""}`}
-              onClick={onToggleChatOverlay}
-            >
-              <div className="switchy-thumb" />
-            </button>
-          </div>
-        )
-      )}
+      ) : null}
 
       {/* Control rápido de mensaje fijado en pantalla + acceso directo a personalizar manual */}
       <div className="unified-pin-master-bar">

@@ -1270,3 +1270,21 @@
   4. Flujo continuo hacia Try-On y CAM con los activos creados.
 - Pendientes:
   - Commit y push inmediato a `origin/main` en GitHub.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:40
+- Resultado: Aprobado (score 10/10)
+- Resumen: Eliminación de la tarjeta duplicada "Chat IA en Monitor" dentro del panel de Chat unificado, centralizando el control en el panel maestro "Capas en Pantalla":
+  1. **Retiro de Interruptor Redundante**: Se eliminó la tarjeta `unified-overlay-master-card` ("Chat IA en Monitor / Mostrar comentarios sobre el video") en `src/components/UnifiedLiveChatPanel.tsx`, evitando controles duplicados y reduciendo ruido visual.
+  2. **Control Centralizado en "Capas en Pantalla"**: El encendido y apagado de la capa de comentarios y reacciones permanece unificado en la barra lateral derecha bajo **Capas en Pantalla** (`Chat IA & Reacciones`), manteniendo consistencia con las demás capas del monitor (Fondo, Live Shopping, Banners, Teleprompter, Botones y Dúo).
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> `Occurrences of redundant 'Chat IA en Monitor': 0`, `Capas en Pantalla 'Chat IA & Reacciones' when expanded: 1`.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:40
+- Solicitud: Eliminar la función repetida de "Chat IA en Monitor" en el chat ya que se encuentra presente en Capas en Pantalla.
+- Decisiones clave:
+  1. Mantener todas las activaciones de capas del monitor exclusivamente en el módulo de "Capas en Pantalla".
+  2. Simplificar la interfaz del panel de Chat para enfocarse exclusivamente en mensajes, moderación y comentarios fijados.
+- Pendientes:
+  - Commit y push inmediato a `origin/main` en GitHub.
