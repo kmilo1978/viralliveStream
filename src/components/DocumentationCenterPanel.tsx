@@ -22,7 +22,8 @@ export type DocSectionId =
   | "tryon_virtual"
   | "voice_finance"
   | "skins_studio"
-  | "obs_alerts";
+  | "obs_alerts"
+  | "vcam_videocalls";
 
 interface DocumentationCenterPanelProps {
   onNavigateToTab?: (tab: "CAM" | "TRY_ON" | "DUO" | "EXPLORE" | "CREATE" | "PRO" | "DOCS" | "SETTINGS", proSubTab?: string) => void;
@@ -644,6 +645,46 @@ const DOC_ITEMS: DocItem[] = [
         {
           mistake: "La fuente de navegador de OBS se ve con fondo blanco.",
           solution: "En las propiedades de la fuente de navegador en OBS, marca la opción 'Fondo transparente'.",
+        },
+      ],
+    },
+  },
+  {
+    id: "vcam_videocalls",
+    title: "Cámara Virtual en Videollamadas (Zoom, Meet, Teams, WhatsApp)",
+    category: "Integraciones",
+    icon: "video-alt2",
+    badge: "Videollamadas",
+    targetTab: "CAM",
+    shortDesc: "Guía paso a paso para transmitir tu cabina, ropa Try-On y fondos virtuales a Zoom, Meet, Teams y WhatsApp.",
+    content: {
+      whatIs:
+        "El sistema de puente de video que convierte tu señal en vivo de Virallive (con tus filtros, ropa Try-On, fondos y tercios) en una cámara web virtual compatible con cualquier aplicación de videollamadas del mundo.",
+      whatIsFor:
+        "Permite que tus reuniones de Zoom, clases de Google Meet, llamadas corporativas de Microsoft Teams y videollamadas de ventas de WhatsApp Desktop o Web utilicen la imagen profesional de tu estudio sin marcas de agua ni software adicional costoso.",
+      howTo: [
+        "Paso 1: Abre la señal limpia de tu cabina pulsando 'Pop-out' o añade una fuente Navegador en OBS Studio con http://localhost:3000/obs-stage (1920x1080).",
+        "Paso 2: En OBS Studio (esquina inferior derecha), haz clic en el botón 'Iniciar Cámara Virtual'.",
+        "Paso 3 en Zoom: Ve a Configuración ⚙️ > Video > Cámara y selecciona 'OBS Virtual Camera'. Desactiva 'Reflejar mi video' si vas a mostrar texto o códigos QR.",
+        "Paso 3 en Google Meet: Haz clic en los 3 puntos > Configuración > Video > Cámara y elige 'OBS Virtual Camera'. Ajusta resolución a 720p HD.",
+        "Paso 3 en Microsoft Teams: Ve a Configuración > Dispositivos > Cámara y elige 'OBS Virtual Camera'. Desmarca fondos virtuales nativos de Teams.",
+        "Paso 3 en WhatsApp Desktop (Windows): Ve a Ajustes de llamada > Dispositivos de Video y elige 'OBS Virtual Camera'.",
+        "Paso 3 en WhatsApp Web: Al iniciar la videollamada, cuando el navegador te pida permiso, selecciona 'OBS Virtual Camera'.",
+      ],
+      technicalDetails: [
+        { label: "Protocolo de Salida", value: "DirectShow Virtual Device (Windows) / CoreMedia (macOS) vía OBS Studio" },
+        { label: "Latencia de Envío", value: "< 25 milisegundos en tiempo real local" },
+        { label: "Resoluciones Compatibles", value: "1080p Full HD (1920x1080) y 720p HD (1280x720) a 60 FPS" },
+        { label: "Aplicaciones Verificadas", value: "Zoom, Google Meet, Microsoft Teams, WhatsApp Desktop, WhatsApp Web, Discord, Skype, Slack" },
+      ],
+      commonMistakes: [
+        {
+          mistake: "La aplicación de videollamada muestra la pantalla negra o congelada.",
+          solution: "Asegúrate de haber presionado 'Iniciar Cámara Virtual' en OBS Studio y que la ventana de la cabina esté abierta.",
+        },
+        {
+          mistake: "En Zoom las letras de los banners se leen al revés.",
+          solution: "En la configuración de video de Zoom, desmarca la casilla 'Reflejar mi video'. Tus espectadores siempre lo ven al derecho.",
         },
       ],
     },

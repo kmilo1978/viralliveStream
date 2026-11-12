@@ -20,6 +20,7 @@ import { WhatsAppStudioPanel } from "@/components/WhatsAppStudioPanel";
 import { RealFeelLiveChatOverlay } from "@/components/RealFeelLiveChatOverlay";
 import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 import { GuestSplitScreenPanel, type GuestSplitScreenConfig } from "@/components/GuestSplitScreenPanel";
+import { VirtualCameraGuideTable } from "@/components/VirtualCameraGuideTable";
 import { StreamConfigModal } from "@/components/StreamConfigModal";
 import { ViewerRangeControl } from "@/components/ViewerRangeControl";
 import { Dashicon, type DashiconName } from "@/components/Dashicons";
@@ -2965,6 +2966,88 @@ export default function StudioDeluluPage() {
                 <span>OBS</span>
               </button>
             </div>
+
+            {/* GUÍA PASO A PASO EN CADA MÓDULO (CAM, TRY ON, DÚO) */}
+            {activeTab === "CAM" && (
+              <button
+                type="button"
+                className="btn-vcam-guide-pill"
+                onClick={() => setShowObsModal(true)}
+                style={{
+                  background: "linear-gradient(90deg, rgba(236, 72, 153, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)",
+                  border: "1px solid rgba(236, 72, 153, 0.35)",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  color: "#F472B6",
+                  fontSize: "0.74rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  marginBottom: 10,
+                }}
+                title="Paso a paso para Zoom, Google Meet, Microsoft Teams y WhatsApp"
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  📹 <strong>Videollamadas:</strong> Zoom, Meet, Teams, WhatsApp
+                </span>
+                <span style={{ fontSize: "0.68rem", color: "#A78BFA", textDecoration: "underline" }}>Paso a Paso ➔</span>
+              </button>
+            )}
+
+            {activeTab === "TRY_ON" && (
+              <div
+                className="tryon-vcam-helper-banner"
+                onClick={() => setShowObsModal(true)}
+                style={{
+                  background: "linear-gradient(90deg, rgba(139, 92, 246, 0.14) 0%, rgba(236, 72, 153, 0.14) 100%)",
+                  border: "1px dashed #8B5CF6",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}
+                title="Aprende a usar tu ropa Try-On en videollamadas"
+              >
+                <span style={{ fontSize: "0.76rem", color: "#C4B5FD", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  👗 <span>Usa tu ropa Try-On en Zoom, Meet, Teams y WhatsApp</span>
+                </span>
+                <span style={{ fontSize: "0.7rem", color: "#A78BFA", textDecoration: "underline", fontWeight: 600 }}>
+                  Paso a Paso ➔
+                </span>
+              </div>
+            )}
+
+            {activeTab === "DUO" && (
+              <div
+                className="duo-vcam-helper-banner"
+                onClick={() => setShowObsModal(true)}
+                style={{
+                  background: "linear-gradient(90deg, rgba(59, 130, 246, 0.14) 0%, rgba(139, 92, 246, 0.14) 100%)",
+                  border: "1px dashed #3B82F6",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}
+                title="Aprende a transmitir tu pantalla dividida Dúo a videollamadas"
+              >
+                <span style={{ fontSize: "0.76rem", color: "#93C5FD", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  👥 <span>Transmite Dúo / Batalla PK a Zoom, Meet, Teams y WhatsApp</span>
+                </span>
+                <span style={{ fontSize: "0.7rem", color: "#60A5FA", textDecoration: "underline", fontWeight: 600 }}>
+                  Paso a Paso ➔
+                </span>
+              </div>
+            )}
 
             {activeTab === "DUO" ? (
               <>
@@ -7388,105 +7471,66 @@ export default function StudioDeluluPage() {
       )}
 
       {/* -------------------------------------------------------------
-          MODAL OBS STUDIO / VIRTUAL CAMERA HELPER
+          MODAL OBS STUDIO / VIRTUAL CAMERA HELPER CON GUÍA PASO A PASO
           ------------------------------------------------------------- */}
       {showObsModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0,0,0,0.8)",
-            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(10px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
             padding: 20,
+            overflowY: "auto",
           }}
           onClick={() => setShowObsModal(false)}
         >
           <div
             style={{
-              backgroundColor: "var(--surface)",
-              border: "1px solid var(--accent-pink)",
-              borderRadius: 16,
-              maxWidth: 580,
+              position: "relative",
+              maxWidth: 780,
               width: "100%",
-              padding: 24,
-              boxShadow: "0 10px 40px var(--accent-pink-glow)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 14,
+              maxHeight: "92vh",
+              overflowY: "auto",
+              borderRadius: 20,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800 }}>
-                Conectar a OBS Studio y Cámara Virtual
-              </h3>
-              <button
-                className="btn-prompt-icon"
-                onClick={() => setShowObsModal(false)}
-                style={{ fontSize: "1.2rem" }}
-              >
-                ✕
-              </button>
-            </div>
-
-                        <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
-              Usa tu señal de <strong>CAM</strong> (fondos virtuales, ropa Try-On, filtros IA y overlays) en tiempo real dentro de <strong>Zoom, Google Meet, Microsoft Teams, WhatsApp o Discord</strong>:
-            </p>
-
-            <ol
+            <button
+              type="button"
+              onClick={() => setShowObsModal(false)}
               style={{
-                fontSize: "0.8rem",
-                color: "var(--text-white)",
-                paddingLeft: 20,
-                margin: 0,
+                position: "absolute",
+                top: 14,
+                right: 14,
+                zIndex: 10,
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: "rgba(255, 255, 255, 0.12)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                color: "#FFFFFF",
+                fontSize: "1.1rem",
+                cursor: "pointer",
                 display: "flex",
-                flexDirection: "column",
-                gap: 8,
+                alignItems: "center",
+                justifyContent: "center",
               }}
+              title="Cerrar Guía"
             >
-              <li>
-                <strong>Paso 1 (Abrir señal limpia):</strong> Pulsa el botón abajo <em>&quot;Abrir Ventana Desacoplada (Pop-out)&quot;</em> o agrega una fuente <em>Navegador (Browser Source)</em> en OBS con la dirección:
-                <div
-                  style={{
-                    marginTop: 4,
-                    padding: "6px 10px",
-                    backgroundColor: "var(--surface-inset)",
-                    borderRadius: 6,
-                    fontFamily: "monospace",
-                    fontSize: "0.75rem",
-                    border: "1px solid var(--border-dark)",
-                  }}
-                >
-                  http://localhost:3000/obs-stage
-                </div>
-              </li>
-              <li>
-                <strong>Paso 2 (Activar Cámara Virtual):</strong> En OBS Studio, haz clic en <strong>&quot;Iniciar Cámara Virtual&quot;</strong> (esquina inferior derecha).
-              </li>
-              <li>
-                <strong>Paso 3 (Seleccionar en tu llamada):</strong> Abre Zoom, Google Meet, Microsoft Teams o WhatsApp, ve a Configuración de Video y selecciona <em>&quot;OBS Virtual Camera&quot;</em> como tu cámara web.
-              </li>
-            </ol>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
-              <a
-                href="/obs-stage"
-                target="_blank"
-                rel="noreferrer"
-                className="pill-ctrl-button"
-                style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <Dashicon name="external" size={14} />
-                <span>Abrir Ventana Desacoplada (Pop-out)</span>
-              </a>
-              <button className="pill-ctrl-button active-pink" onClick={() => setShowObsModal(false)}>
-                Entendido
-              </button>
-            </div>
+              ✕
+            </button>
+            <VirtualCameraGuideTable
+              onOpenPopout={() => {
+                if (typeof window !== "undefined") {
+                  window.open("/obs-stage", "_blank", "width=1280,height=720");
+                }
+              }}
+            />
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import {
   TwitchLogo,
 } from "@/components/PlatformLogos";
 import { Dashicon } from "@/components/Dashicons";
+import { VirtualCameraGuideTable } from "@/components/VirtualCameraGuideTable";
 
 export type StreamPlatform = "instagram" | "tiktok" | "youtube" | "twitch";
 
@@ -499,6 +500,9 @@ export function StreamConfigModal({
           {/* ===================== TAB CAMERA ===================== */}
           {activeTab === "Camera" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* GUÍA CÁMARA VIRTUAL Y VIDEOLLAMADAS */}
+              <VirtualCameraGuideTable compact={true} />
+
               <div>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "#FFFFFF" }}>
                   Formato de Pantalla &amp; Monitor:

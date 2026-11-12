@@ -5,6 +5,7 @@ import { Dashicon } from "@/components/Dashicons";
 import { ViraliveLogo } from "@/components/ViraliveLogo";
 import { VoiceFinancePanel } from "@/components/VoiceFinancePanel";
 import { DocumentationCenterPanel } from "@/components/DocumentationCenterPanel";
+import { VirtualCameraGuideTable } from "@/components/VirtualCameraGuideTable";
 import { type UsageLedgerEntry } from "@/lib/studio-data";
 
 interface SettingsStudioPanelProps {
@@ -823,6 +824,14 @@ export function SettingsStudioPanel({
                     {apiTestResults.deepfacelive.msg} {apiTestResults.deepfacelive.latency ? `(${apiTestResults.deepfacelive.latency}ms)` : ""}
                   </span>
                 )}
+
+                {/* Paso a paso de inicio y conexión DeepFaceLive */}
+                <div style={{ background: "rgba(139, 92, 246, 0.08)", border: "1px dashed rgba(139, 92, 246, 0.3)", borderRadius: 8, padding: "8px 12px", fontSize: "0.74rem", color: "#CBD5E1", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <strong style={{ color: "#C4B5FD", fontSize: "0.76rem" }}>📋 Paso a paso para iniciar y conectar DeepFaceLive:</strong>
+                  <span>1. Ejecuta tu servidor local: <code style={{ color: "#4ADE80", background: "#050508", padding: "1px 5px", borderRadius: 4 }}>python main.py run DeepFaceLive --host 127.0.0.1 --port 8000</code></span>
+                  <span>2. En la GUI de DeepFaceLive, carga tu modelo <code style={{ color: "#93C5FD" }}>.dfm</code> y activa la cámara de entrada.</span>
+                  <span>3. Haz clic en <strong>&quot;Probar&quot;</strong> arriba para sincronizar el intercambio facial sin consumo de saldo.</span>
+                </div>
               </div>
 
               {/* 10. Deep-Live-Cam API */}
@@ -890,6 +899,14 @@ export function SettingsStudioPanel({
                     {apiTestResults.deeplivecam.msg} {apiTestResults.deeplivecam.latency ? `(${apiTestResults.deeplivecam.latency}ms)` : ""}
                   </span>
                 )}
+
+                {/* Paso a paso de inicio y conexión Deep-Live-Cam */}
+                <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px dashed rgba(16, 185, 129, 0.3)", borderRadius: 8, padding: "8px 12px", fontSize: "0.74rem", color: "#CBD5E1", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <strong style={{ color: "#6EE7B7", fontSize: "0.76rem" }}>📋 Paso a paso para iniciar y conectar Deep-Live-Cam:</strong>
+                  <span>1. Inicia el servidor con aceleración GPU: <code style={{ color: "#4ADE80", background: "#050508", padding: "1px 5px", borderRadius: 4 }}>python run.py --execution-provider cuda</code></span>
+                  <span>2. Carga la foto del rostro objetivo (1-Click Face Swap) y selecciona el mejorador <strong>GFPGAN v1.4</strong>.</span>
+                  <span>3. Pulsa <strong>&quot;Probar&quot;</strong> para verificar la respuesta del endpoint y activar en streaming.</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1103,9 +1120,12 @@ export function SettingsStudioPanel({
         </div>
       )}
 
-      {/* 6. CONTENIDO: PESTAÑA 4 - OBS STUDIO & WEBSOCKET */}
+      {/* 6. CONTENIDO: PESTAÑA 4 - OBS STUDIO, WEBSOCKET & CÁMARA VIRTUAL */}
       {activeSubTab === "obs" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* GUÍA PASO A PASO CÁMARA VIRTUAL PARA VIDEOLLAMADAS */}
+          <VirtualCameraGuideTable />
+
           <div className="studio-dock-card">
             <div className="studio-dock-card-header">
               <div className="studio-dock-header-info">
