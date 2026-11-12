@@ -18,6 +18,7 @@ interface RealFeelLiveChatOverlayProps {
   maxVisible?: number;
   compactMode?: boolean;
   externalMessageToPush?: { nonce: number; text: string } | null;
+  hasPipCamera?: boolean;
 }
 
 type HeartParticle = {
@@ -173,6 +174,7 @@ export function RealFeelLiveChatOverlay({
   maxVisible = 4,
   compactMode = false,
   externalMessageToPush = null,
+  hasPipCamera = false,
 }: RealFeelLiveChatOverlayProps) {
   const [localMessages, setLocalMessages] = useState<UnifiedChatMessage[]>(() =>
     propMessages && propMessages.length > 0
@@ -317,19 +319,6 @@ export function RealFeelLiveChatOverlay({
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       }}
     >
-      {/* Viñeta inferior suave estilo TikTok Live (sólo en el tercio inferior para legibilidad sin cajas pesadas) */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: compactMode ? "40%" : "36%",
-          background: "linear-gradient(to top, rgba(0, 0, 0, 0.84) 0%, rgba(0, 0, 0, 0.42) 55%, rgba(0, 0, 0, 0) 100%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
 
       {/* 1. HEADER SUPERIOR CON METAS DE LIVE */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%", position: "relative", zIndex: 1 }}>
@@ -637,6 +626,7 @@ export function RealFeelLiveChatOverlay({
               gap: 6,
               pointerEvents: "auto",
               paddingBottom: 2,
+              marginBottom: hasPipCamera && !compactMode ? 114 : 0,
             }}
           >
             {/* Contenedor de partículas flotantes animadas */}

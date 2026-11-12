@@ -9518,7 +9518,17 @@ body {
 }
 
 .monitor-pip-camera {
-  z-index: 40 !important;
+  z-index: 50 !important;
+}
+
+.real-feel-live-chat-overlay {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* En escritorio cuando la cámara PiP está activa en la esquina inferior derecha, elevar la columna de likes para no solapar la cámara */
+.delulu-monitor-container:has(.monitor-pip-camera) .real-feel-hearts-col {
+  margin-bottom: 114px !important;
 }
 
 

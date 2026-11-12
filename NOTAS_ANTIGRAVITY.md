@@ -1184,3 +1184,25 @@
   3. Previsualización en vivo en la tarjeta del mensaje y en la cabina CAM.
 - Pendientes:
   - Respaldo automático en `origin/main` en ejecución.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:12
+- Resultado: Aprobado (score 10/10)
+- Resumen: Solución y verificación integral de los 5 elementos visuales reportados en pantalla para la cabina CAM, TRY ON y DUO:
+  1. **Insignia "Fondo Virtual Activo"**: Eliminada completamente de la pantalla del monitor. No se proyecta ningún cartel con nombre ni miniatura sobre la cámara.
+  2. **Insignia "Previsualización Local (0 Créditos)"**: Retirada al 100% de la vista del monitor en CAM, TRY ON y DUO.
+  3. **Insignia "Try-On: [Nombre de Prenda]"**: Ocultada del monitor para mantener la escena limpia y profesional para streaming.
+  4. **Barra de comentario "Add a comment..." y Sombra inferior**: Se eliminó la viñeta oscura que cubría la parte baja del monitor (`linear-gradient(to top, rgba(0,0,0,0.84)...)`). El formulario se acotó a un ancho máximo del 42% alineado estrictamente a la izquierda, dejando 144px de margen libre con la cámara PiP.
+  5. **Botón de Corazón y Likes (50.8K) vs Cámara PiP**: Se agregó la prop `hasPipCamera` y la regla CSS para elevar automáticamente la columna de likes (`margin-bottom: 114px !important`) cuando la cámara PiP está activa en la esquina inferior derecha. Esto garantiza una separación vertical limpia de 57.9px por encima de la cámara, con `overlap: False`.
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright en suite completa de 9 viewports -> 100% PASS; Búsqueda de términos prohibidos en monitor -> 0 coincidencias en CAM, TRY ON y DUO.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:12
+- Solicitud: Verificación y corrección de las 5 incidencias visuales en el monitor (Insignia de Fondo Virtual, Previsualización Local, Try-On, Sombra/barra de comentario sobre la cámara, y botón de likes sobre la cámara).
+- Decisiones clave:
+  1. Monitor completamente limpio de badges de estado internos ("Fondo Virtual Activo", "Previsualización Local", "Try-On").
+  2. Eliminación definitiva de la viñeta de sombra negra en `RealFeelLiveChatOverlay.tsx`.
+  3. Separación vertical garantizada de 57.9px entre el botón de likes y la cámara PiP vía prop `hasPipCamera` y CSS.
+- Pendientes:
+  - Commit y push inmediato a GitHub `origin/main` según la regla del usuario.

@@ -4190,6 +4190,12 @@ export default function StudioDeluluPage() {
                   bottomPadding={showPhoneMockupFrame ? 56 : 12}
                   maxVisible={showPhoneMockupFrame ? 3 : 4}
                   compactMode={showPhoneMockupFrame}
+                  hasPipCamera={
+                    bgPreviewEnabled &&
+                    !isConnectedLive &&
+                    selectedBgId !== "bg-none" &&
+                    bgPreviewMode === "pip_camera"
+                  }
                 />
               )}
 
