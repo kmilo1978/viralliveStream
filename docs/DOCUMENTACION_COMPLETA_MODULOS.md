@@ -43,6 +43,11 @@ Es el centro neurálgico de la transmisión. Controla la captura de video en viv
 - **Gestor de Capas en Pantalla (`studio-layers-manager-card`)**: Controla las capas activas con un límite inteligente de hasta 4 elementos simultáneos (Fondo Virtual, Shopping QR, Banners, Guion, WhatsApp Live, Chat IA) para evitar saturación visual.
 - **Rejilla de Herramientas de Escena Sin Scrollbar**: Barra lateral derecha organizada en cuadrícula simétrica que aloja accesos directos a Fondos, WhatsApp, Shop QR, Banners, Guion, Deck, Chat IA y Grabar.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Pausa o Descanso sin Cortar la Transmisión**: El streamer necesita tomar un receso de 5 minutos durante un directo de 3 horas. En lugar de finalizar la emisión o dejar la pantalla en negro, activa la fuente **Video MP4** con un clip pregrabado animado de *"Ya volvemos en 5 minutos"*, manteniendo la música de fondo y a toda la audiencia conectada en vivo.
+* **Transmisión de E-Commerce en Pantalla Completa sin Barras Negras**: Una tienda emite en YouTube y Twitch usando un monitor 16:9 ultra-ancho. Gracias a la ampliación automática a 1480px, la imagen llena por completo la ventana de video sin franjas negras laterales, proyectando un acabado televisivo de alta gama.
+* **Directo Compartido o Evento Público en Modo Streamer**: Durante una convención o transmisión colaborativa, el presentador activa `STREAMER MODE`. El sistema enmascara al instante los tokens de Decart AI, claves RTMP y URLs de webhook privadas, evitando cualquier filtración de seguridad ante miles de espectadores.
+
 ---
 
 ## 2. Fondos Virtuales & Chroma Key (Verde #00FF00)
@@ -56,6 +61,11 @@ Un motor de escenografía virtual que sustituye el fondo físico del streamer co
 - **Catálogo de Escenarios**: Oficina Ejecutiva, Penthouse Moderno, Estudio Neón Cyberpunk, Biblioteca Clásica, Playa Tropical y Espacio Profundo.
 - **Carga de Fondos Propios**: Admite fotos (`JPG`, `PNG`, `WebP`) y videos en bucle (`MP4`).
 - **Persistencia**: Marca con `⭐ Poner por Defecto` para recordar tu escenario favorito en cada transmisión.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Integración Limpia con OBS Studio y Pantallas de Videojuegos**: Un streamer de videojuegos activa el fondo verde sólido (`#00FF00`) por defecto. En OBS añade el filtro de *Chroma Key*, eliminando todo el fondo para superponer únicamente su silueta sobre la partida sin consumir créditos de inteligencia artificial.
+* **Webinar Ejecutivo desde una Habitación u Oficina en Casa**: Un consultor de negocios emite desde su recámara pero necesita proyectar una imagen corporativa formal. Selecciona el fondo *"Oficina Ejecutiva"* o *"Biblioteca Clásica"*; la plataforma lo previsualiza de inmediato sin costo y lo proyecta con iluminación coherente.
+* **Lanzamiento de Marca de Ropa Urbana**: Una tienda de moda juvenil utiliza el escenario *"Estudio Neón Cyberpunk"* con luces magentas y púrpuras para ambientar la presentación de su nueva colección de sudaderas y accesorios.
 
 ---
 
@@ -74,6 +84,11 @@ Un módulo de grabación local nativo en el navegador (`studio-recording-bar`) a
 - **Cronómetro e Indicador REC**: Muestra parpadeo rojo y tiempo transcurrido en minutos y segundos (`00:00`).
 - **Descarga Inmediata**: Al detener la grabación, se descarga automáticamente un archivo `grabacion_stream_*.webm` codificado en VP9/Opus sin marcas de agua.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Creación de Clips en 4K para Redes Sociales**: Un creador de contenido transmite durante 40 minutos en 1080p, pero activa la grabación local en **4K Ultra HD**. Al finalizar, cuenta con un archivo maestro de máxima resolución en su disco duro para recortar los mejores momentos en Premiere o CapCut y publicarlos en TikTok y Reels.
+* **Copia de Respaldo Local en Conexiones a Internet Inestables**: Un streamer que transmite en zonas con señal fluctuante activa la grabación local en **720p HD**. Si la transmisión sufre caídas de señal en YouTube, la grabación local conserva el programa completo de forma 100% nítida y sin interrupciones.
+* **Clase Virtual o Taller Privado para Alumnos**: Un profesor dicta un seminario web de 2 horas. Al concluir la sesión presiona `⏹ Detener` y de inmediato obtiene el archivo `grabacion_stream_*.webm` listo para subirlo a Google Drive o enviarlo a sus estudiantes sin marcas de agua ni conversiones lentas.
+
 ---
 
 ## 4. Live Shopping & Tarjetas de Compra con Código QR (Optimizado Móvil 9:16)
@@ -87,6 +102,11 @@ Un sistema de compras en vivo inspirado en TikTok Shop y OneStream Live que proy
 - **Código QR de Alto Contraste**: El QR de compra se renderiza en un recuadro blanco nítido con renderizado por píxeles para lectura instantánea desde cualquier teléfono.
 - **Datos del Producto**: Imagen en miniatura contenida (sin desbordamientos), título, precio actual en moneda local (`USD`, `EUR`, `MXN`, `COP`, `GBP`), precio tachado de oferta y botón de compra directa.
 - **Selector en Catálogo**: Switch individual `👁️ EN PANTALLA` y modal para agregar o editar productos al instante.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Venta Flash de Auriculares en TikTok Live (Móvil 9:16)**: El streamer presenta unos auriculares inalámbricos y activa la tarjeta de producto. En el formato vertical del teléfono, la tarjeta compacta estilo *TikTok Shop Pin* aparece a la izquierda con su precio tachado y código QR de alto contraste, dejando libres los corazones y comentarios para que los espectadores escaneen con otro celular y compren al instante.
+* **Desfile de Modas con Alternancia de Productos en Vivo**: Una marca de ropa va mostrando 5 prendas consecutivas. El operador simplemente pulsa en el Dock sobre el siguiente producto y en pantalla se actualiza inmediatamente la foto, el título, el precio en moneda local (`USD` o `COP`) y el QR de pago exacto sin recargar la página.
+* **Transmisiones Internacionales Multidivisa**: Un comercio con clientes en México, Estados Unidos y Colombia ajusta la moneda en el selector (`MXN`, `USD`, `COP`) para que los espectadores vean los precios en su divisa local con su respectivo símbolo oficial.
 
 ---
 
@@ -103,6 +123,11 @@ Un gestor publicitario que proyecta logotipos, banners de patrocinadores y cinti
 - **URLs Ejecutables**: Al hacer clic en el banner se abre la página web del patrocinador en una nueva pestaña.
 - **Cupón Copiable en 1 Clic**: Botón `📋 Copiar` para copiar códigos promocionales (ej. `PROMO2026`) al portapapeles.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Rotación Automática de Patrocinadores Cada 30 Segundos**: Un canal que cuenta con 3 marcas auspiciadoras configura los banners en modo *Cíclico Programado*. Cada logotipo aparece durante 10 segundos con animación de deslizamiento (`slide`) cada 30 segundos, cumpliendo con los contratos publicitarios sin saturar la pantalla.
+* **Cupón de Descuento con Botón Copiable en 1 Clic**: Se despliega un banner inferior con el texto *"20% OFF con código: VIRAL2026"*. El streamer o el co-anfitrión pulsa sobre el botón `📋 Copiar` del banner y el cupón queda en el portapapeles listo para pegarlo en el chat en vivo.
+* **Llamado Permanente a Suscribirse o Donar**: Colocación de un distintivo transparente permanente en la esquina superior con el enlace directo al Patreon o canal de membresías del streamer.
+
 ---
 
 ## 6. Teleprompter / Guion en Pantalla (Estilo OneStream Live)
@@ -114,6 +139,11 @@ Un apuntador digital semitransparente proyectado sobre el monitor de la cabina.
 - Permite leer discursos, fichas técnicas de productos o guiones comerciales mirando fijamente a la cámara.
 - **Visible exclusivamente para el streamer** (no se proyecta en la salida pública de OBS ni en las redes).
 - Control de desplazamiento continuo ajustable, modo espejo horizontal y editor de texto rápido.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Pitch Comercial Mirando Directamente al Lente**: Un presentador vende un suplemento nutricional. Lee las dosis, ingredientes y beneficios médicos en el teleprompter semitransparente ubicado justo sobre el monitor de la cámara, logrando un contacto visual perfecto con la audiencia sin parecer que está leyendo.
+* **Lectura de Guiones de Noticias con Pausas para Interacción**: Un periodista digital revisa las 5 noticias del día. Ajusta la velocidad de desplazamiento continuo a nivel 2 y cuando llega un comentario relevante en el chat, pulsa `Pausar`, interactúa con el público y luego pulsa `Reanudar` exactamente donde se quedó.
+* **Uso con Pantallas y Cristales Beamsplitter Físicos**: El creador activa el modo espejo horizontal (`mirror-mode`) para proyectar el texto invertido en un espejo apuntador profesional montado frente a su cámara réflex.
 
 ---
 
@@ -128,6 +158,11 @@ Una botonera virtual interactiva de accesos directos y macros de producción.
 - Ubicación: En la barra inferior del estudio o flotante en el monitor de video.
 - Dispara efectos de sonido, cambios de vestuario, cambios de cámara y alertas en OBS.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Disparo de Efectos de Sonido en Momentos Cumbre**: El streamer configura un botón grande (`lg`) de color amarillo con sonido de aplausos o fanfarria cada vez que entra un nuevo suscriptor o se logra una venta en vivo.
+* **Cambio de Atuendo o Efecto Visual al Instante**: Con un solo toque táctil en la botonera inferior, se dispara un macro que cambia el prompt de Decart AI para transformar el fondo y el vestuario a temática espacial.
+* **Botones Flotantes en Pantalla para Control con Pantalla Táctil**: Streamers con monitores táctiles o tablets ubican los botones de acción en los laterales de la pantalla para cambiar tomas con los dedos mientras conversan.
+
 ---
 
 ## 8. Multistreaming a 45+ Plataformas Simultáneas
@@ -140,6 +175,11 @@ Un motor de emisión multidestino que retransmite la señal a múltiples platafo
 - Contador de audiencia total agregada en vivo en la parte superior (`LIVE · 33.6K`).
 - Gestión cifrada y segura de claves de transmisión (`Stream Keys`) en almacenamiento local.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Máxima Cobertura en Lanzamientos de Producto**: Una empresa lanza un software y emite simultáneamente a YouTube Live, Facebook Live, LinkedIn Live, Twitter/X y Twitch. El presentador monitorea en un solo número la audiencia agregada total (`33.6K en vivo`).
+* **Transmisión de Concierto o Festival a Servidores Privados**: Retransmisión de un concierto tanto a redes abiertas (TikTok e Instagram) como a un servidor RTMP privado de pago por evento (PPV) corporativo.
+* **Gestión Segura de Cuentas de Clientes**: Una agencia de marketing maneja 10 clientes diferentes y guarda las *Stream Keys* cifradas localmente en el navegador para no tener que solicitarlas antes de cada transmisión.
+
 ---
 
 ## 9. TikTok Live con Marcas & Formato Vertical 9:16
@@ -151,6 +191,11 @@ Un estudio vertical optimizado para transmisiones en TikTok, Instagram Reels y Y
 - **Marco de Smartphone Realista**: Estilo iPhone con Dynamic Island, badge LIVE, reacciones flotantes animadas y muelle inferior de herramientas.
 - **4 Temas de Marca Profesionales**: Beauty & Skincare, Fitness & High Energy, Music & Club DJ, Travel & Adventure.
 - **Sincronización en 1 Clic**: Botón `🚀 APLICAR MARCO Y FONDO A CABINA CAM` para llevar la configuración a la cabina principal de inmediato.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Live Shopping de Maquillaje y Skincare**: Una creadora de belleza selecciona el tema *"Beauty & Skincare"*. El simulador de smartphone 9:16 adapta los márgenes, muestra los corazones animados y el botón de tienda estilo TikTok sin salirse de la zona segura de visualización móvil.
+* **Transmisión de DJ en Formato Vertical**: Un DJ emite una sesión nocturna con el tema *"Music & Club DJ"*, utilizando la barra inferior de acciones de TikTok y manteniendo la vista previa idéntica a lo que verán los usuarios en la app móvil.
+* **Aplicación Directa a la Cabina Principal**: El streamer diseña el marco vertical y con el botón `🚀 APLICAR MARCO Y FONDO A CABINA CAM` sincroniza la relación de aspecto 9:16 y los textos de cabecera en su monitor principal con un solo clic.
 
 ---
 
@@ -168,6 +213,11 @@ Un agregador universal de comentarios y chat en vivo que unifica la conversació
   - Botón `📋 Plantilla Google Sheets` para copiar las columnas requeridas.
   - **Auto-Lanzador Secuencial**: Dispara mensajes periódicos cada 5s, 8s, 15s o 30s para dinamizar el stream.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Moderación Centralizada de Múltiples Redes**: Durante un directo que recibe cientos de mensajes simultáneos en YouTube, Twitch y TikTok, el moderador lee todo en una única cascada de chat con los logos oficiales para responder mencionando la red social del usuario.
+* **Destacar la Mejor Pregunta de la Audiencia como Tercio Inferior**: Un espectador hace una pregunta clave (*"¿Hacen envíos a España?"*). El streamer pulsa `📌 FIJAR` y el comentario se convierte al instante en un gráfico estilizado en pantalla con el nombre y avatar del usuario.
+* **Simulación de Audiencia Activa para Nuevos Streamers**: Un canal que recién comienza importa una plantilla de Google Sheets con 15 comentarios y dudas frecuentes. Activa el *Auto-Lanzador Secuencial* cada 15 segundos para que los mensajes aparezcan de forma natural y el presentador tenga temas que responder dinámicamente.
+
 ---
 
 ## 11. Playlist Streaming (Transmisión Continua 24/7)
@@ -180,6 +230,11 @@ Un gestor automatizado de listas de reproducción de video para emisiones desate
 - Transición automática entre clips y repetición infinita.
 - Envío directo de la lista a la cabina CAM o a multistreaming.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Canal de Música Lo-Fi o Sonidos Relajantes 24 Horas al Día**: Una lista de 25 videos musicales con fondos animados que se reproducen de manera cíclica e ininterrumpida sin que el propietario tenga que estar frente a la computadora.
+* **Repetición Nocturna de Programas Diarios**: Una emisora digital transmite su noticiero en vivo al mediodía y programa la playlist para que repita el programa completo durante toda la noche, manteniendo el canal monetizando y sumando reproducciones.
+* **Catálogo de Infomerciales en Bucles Comerciales**: Tiendas de comercio electrónico que transmiten demostraciones de productos 24/7 en plataformas como TikTok o Twitch para captar compras nocturnas.
+
 ---
 
 ## 12. Schedule or Go Live (Programador & Botón 1-Clic)
@@ -191,6 +246,11 @@ El centro de control de lanzamientos en vivo y calendario de eventos futuros.
 - **Botón Hero `🔴 GO LIVE NOW`**: Conexión inmediata a todas las redes activadas.
 - **Reloj de Cuenta Regresiva**: Días, horas, minutos y segundos exactos para el próximo evento agendado.
 - **Calendario Integrado**: Organización de transmisiones con fecha, hora, título y destinos.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Lanzamiento de Black Friday con Reloj Regresivo en Pantalla**: El equipo de marketing agenda el evento de descuentos para el viernes a medianoche. La plataforma muestra la cuenta regresiva en días, horas, minutos y segundos, creando expectativa tanto en el equipo como en las redes.
+* **Transmisión de Emergencia o Cobertura de Última Hora**: Se produce una noticia de impacto; el periodista abre el software y presiona el botón heroico `🔴 GO LIVE NOW`, transmitiendo en vivo a 5 redes en menos de 4 segundos.
+* **Planificación Semanal de Cursos Online**: Un instructor programa sus directos de martes y jueves a las 7:00 PM, dejando listas las descripciones, títulos y plataformas asignadas de antemano.
 
 ---
 
@@ -207,6 +267,11 @@ Un probador de moda digital con IA que viste al presentador en tiempo real con p
   - Cada prenda puede ir acompañada de su título, precio, código de descuento y banner correspondiente.
 - **Grabación Integrada en Resoluciones 480p a 4K**: Registra las sesiones de prueba con descarga WebM inmediata.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Showroom Virtual de Ropa con Cambio Instantáneo**: Una modelo se para frente a la cámara web física. Con solo pulsar una prenda en el carrusel inferior (ej. chaqueta de cuero, vestido de noche o abrigo de invierno), la inteligencia artificial `lucy-vton-3.6` sustituye su ropa en tiempo real con caída de tela realista ante los espectadores.
+* **Programación de Tandas Multi-Prendas con Banners Sincronizados**: Una tienda de moda sube 10 prendas antes de la transmisión. Al pasar a la siguiente prenda, el sistema no solo viste digitalmente al streamer, sino que actualiza simultáneamente el banner publicitario en pantalla con el código de descuento y precio de esa prenda.
+* **Grabación de Catálogos de Video para Marcas**: Una boutique graba una sesión completa en calidad 4K cambiando 20 atuendos en 15 minutos, descargando clips listos para publicar en Instagram Reels sin necesidad de sesiones fotográficas costosas.
+
 ---
 
 ## 14. Voice Finance & Cambiador de Voz
@@ -217,6 +282,11 @@ Un procesador de modulación de voz en vivo y monitor de costos de infraestructu
 ### ¿Para qué sirve?
 - **Cambiador de Voz DSP**: Filtros como Robot, Cyberpunk, Radio Vintage, Voz Grave Masculina, Voz Femenina, Reverb y Cancelación de Ruido.
 - **Calculadora Financiera**: Auditoría en vivo de créditos por segundo de IA y alertas de límite de saldo.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Transmisión de Videojuegos Temáticos con Modulación de Voz**: Un streamer que juega un título de ciencia ficción o terror activa el filtro *"Voz de Robot"* o *"Voz Grave Masculina"* para sumergir a su audiencia en la narrativa de la partida.
+* **Auditoría Financiera para Evitar Sobrecostos de Transmisión**: Un creador de contenido supervisa la calculadora de créditos por segundo de Decart AI en tiempo real, recibiendo alertas visuales antes de que su cuota mensual alcance el límite establecido.
+* **Protección de Privacidad de Creadores Anónimos**: Presentadores que prefieren no divulgar su tono de voz real aplican modulación DSP para mantener el anonimato en debates o análisis en vivo.
 
 ---
 
@@ -231,6 +301,11 @@ El laboratorio de creación, personalización y almacenamiento de avatares, rost
 - **Biblioteca de Estilos**: Anime, Cyberpunk, Fotorealista, Pintura al Óleo, Escultura Clásica y Personajes Fantásticos.
 - **Guardado y Exportación**: Presets reutilizables almacenados en `localStorage` con exportación en JSON.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Creación de Avatares VTuber desde una Foto de Referencia**: Un creador sube una ilustración anime en la pestaña `CREATE`. El motor transfiere sus gestos, ojos y sonrisa al avatar animado de inmediato, listo para transmitir como personaje virtual.
+* **Biblioteca de Personajes Reutilizables para Creadores de Contenido**: Un educador infantil guarda presets con atuendos temáticos (Científico Loco, Explorador Espacial, Mago) y los carga en 1 segundo con su icono correspondiente de Dashicons.
+* **Eliminación de Menús Repetitivos en el Estudio**: Todo el guardarropa y personalización facial reside exclusivamente en `CREATE`, evitando que el usuario se confunda con opciones duplicadas en otras secciones.
+
 ---
 
 ## 16. OBS Studio WebSockets & Sistema de Alertas
@@ -242,6 +317,11 @@ El puente de comunicación bidireccional entre la plataforma web y Open Broadcas
 - Enlaces de fuentes de navegador: `/obs-overlay` (solo capas y gráficos) y `/obs-stage` (escenario completo).
 - **Sistema de Alertas en Tiempo Real (`alerts-bus.ts`)**: Notificaciones gráficas y sonoras de nuevos seguidores, suscripciones, donaciones y SuperChats.
 - Conexión WebSocket para cambiar de escena o conmutar fuentes en OBS automáticamente.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Celebración Visual de SuperChats y Donaciones en Vivo**: Un espectador dona $50 en YouTube. El bus de alertas de OBS dispara al instante una animación flotante con confeti en la pantalla y reproduce un sonido festivo de campana.
+* **Automatización de Escenas con Cámaras Múltiples**: Al activar la cabina de probador virtual Try-On, la integración por WebSocket ordena a OBS conmutar automáticamente de la cámara general a la cámara de cuerpo completo.
+* **Capas Gráficas Transparentes sobre Cámaras Profesionales**: El streamer que utiliza una cámara réflex DSLR por tarjeta capturadora añade `/obs-overlay` como fuente de navegador para sobreponer únicamente los gráficos y banners limpios sobre su video original.
 
 ---
 
@@ -273,6 +353,11 @@ Un módulo universal de atención y conversión comercial vía WhatsApp integrad
 - **En Escritorio (16:9 y Panorámico)**: Badge flotante en la esquina inferior izquierda con logo oficial, indicador de `IA`, número de teléfono y QR escaneable.
 - **En Móvil (9:16 Smartphone)**: Ubicado en la parte izquierda (`left: 10px; bottom: 310px`), apilado armoniosamente arriba de la tarjeta de Shop QR. No choca con los corazones flotantes, no tapa los comentarios de chat y no interfiere con la cámara secundaria PiP.
 
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Atención y Cierre de Ventas Automático con Agente IA 24/7**: Un espectador escanea el código QR de WhatsApp en la madrugada durante una retransmisión. El Agente IA oficial le responde en español de inmediato, le informa las tallas disponibles de la prenda mostrada en el stream, le calcula el costo de envío y le genera el link de pago sin intervención humana.
+* **Contacto Inmediato con Enlace Directo wa.me para Consultas Rápidas**: Durante un directo, el presentador indica: *"Toca el botón de WhatsApp en pantalla para hablar directamente con nosotros"*. El usuario hace clic y se le abre WhatsApp Web con el mensaje precargado *"Hola, quiero comprar el producto que vi en vivo"*.
+* **Descarga de Códigos QR para Afiches Físicos en Tiendas y Eventos**: El comerciante descarga el código QR oficial en formato PNG de alta resolución desde la pestaña `2. Código QR` y lo imprime en el mostrador de su tienda física para que los clientes que entran al local se sumen a la transmisión en vivo.
+
 ---
 
 ## 18. Cabina DÚO (Split Screen, Batallas PK & Invitados Co-Host)
@@ -289,6 +374,11 @@ La cabina especializada en transmisiones compartidas con invitados en vivo o pre
 - **Diálogos Interactivos Sincronizados**: Rótulos de diálogo con cambio automático (temporizador de 14s) o manual con botones de navegación.
 - **Fuentes Mixtas**: Permite combinar streamer en vivo + invitado MP4, streamer MP4 + invitado en vivo, o ambos en video pregrabado.
 - **Herramientas de Estudio Compartidas**: La cabina DÚO cuenta con acceso directo a Fondos Virtuales, WhatsApp Live, Shop QR, Banners y Chat IA.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Batalla PK en TikTok Live con Retador en Pantalla Dividida 50/50**: Dos streamers compiten en directo. La pantalla se divide en mitad superior y mitad inferior; ambos interactúan con sus respectivas audiencias mientras los corazones y regalos se acumulan en pantalla.
+* **Entrevista Co-Host con Personajes Interactivos Simulados**: Un streamer de entretenimiento activa a Cristiano Ronaldo o Mia como Co-Host. El invitado virtual responde con diálogos sincronizados en pantalla cada 14 segundos, dinamizando la charla para deleite de los espectadores.
+* **Webinar Corporativo con Dos Ponentes en Formato Lado a Lado**: Dos expertos debaten sobre finanzas en una distribución horizontal 50% / 50% con identificadores de nombre independientes y micrófonos ecualizados.
 
 ---
 
@@ -308,6 +398,11 @@ La capacidad de utilizar la cabina de streaming de Virallive como cámara web vi
    - Abre **Zoom**, **Google Meet**, **Microsoft Teams** o **WhatsApp Web / Desktop**.
    - En la configuración de video/cámara, selecciona como dispositivo de entrada: **`OBS Virtual Camera`**.
    - ¡Listo! Todo lo que hagas en tu cabina (avatares IA, probador de ropa, fondos chroma, banners, WhatsApp QR y tarjetas de shopping) se transmitirá con total fluidez en tu videollamada sin instalar controladores externos complicados.
+
+### Casos de Uso Reales (Ejemplos Prácticos):
+* **Reunión de Negocios de Alto Nivel en Zoom o Google Meet**: Un director ejecutivo ingresa a su junta trimestral en Zoom seleccionando como cámara **`OBS Virtual Camera`**. En lugar de una videollamada plana, sus colegas ven un fondo corporativo de alta gama, su logo en la esquina y un apuntador de guion invisible que le permite exponer sin titubeos.
+* **Clase Virtual Universitaria en Microsoft Teams**: Un profesor emite en Teams con tarjetas explicativas con código QR flotante para que los alumnos descarguen el PDF de la clase con sus celulares mientras él explica con un fondo de biblioteca académica.
+* **Demostración de Ventas Privada por WhatsApp Video**: Un asesor de ventas atiende a un cliente exclusivo por videollamada de WhatsApp Desktop y le muestra en tiempo real cómo le quedarían diferentes prendas usando el probador de ropa Try-On directamente en su cámara.
 
 ---
 
