@@ -182,3 +182,51 @@ export const OFFICIAL_PROMPT_PRESETS: PromptPreset[] = [
     requiresReferenceImage: true,
   },
 ];
+
+// =============================================================
+// MOTORES DE IA EN VIVO & FACE SWAP (DEEPFACELIVE & DEEP-LIVE-CAM)
+// =============================================================
+export type AiEngineProvider = "decart" | "deepfacelive" | "deeplivecam";
+
+export interface FaceSwapEngineConfig {
+  id: "deepfacelive" | "deeplivecam";
+  name: string;
+  tagline: string;
+  defaultServerUrl: string;
+  defaultPort: number;
+  protocol: "http" | "ws";
+  modelsSupported: string[];
+  enhancersSupported?: string[];
+  gpuBackends: string[];
+  latencyTypicalMs: string;
+  creditsPerSec: number;
+}
+
+export const REALTIME_FACE_ENGINES: FaceSwapEngineConfig[] = [
+  {
+    id: "deepfacelive",
+    name: "DeepFaceLive API",
+    tagline: "Motor de intercambio facial en tiempo real de ultrabaja latencia (Iperov DFM)",
+    defaultServerUrl: "http://127.0.0.1:8000/api",
+    defaultPort: 8000,
+    protocol: "http",
+    modelsSupported: ["Celebrity_HD.dfm", "MrBeast_v2.dfm", "Anime_Hero.dfm", "Custom_Trained.dfm"],
+    gpuBackends: ["DirectML (AMD/Intel/NVIDIA)", "CUDA (NVIDIA)", "TensorRT", "CPU"],
+    latencyTypicalMs: "15 - 35 ms",
+    creditsPerSec: 0,
+  },
+  {
+    id: "deeplivecam",
+    name: "Deep-Live-Cam API",
+    tagline: "Intercambio facial en directo con 1 sola imagen de referencia (InsightFace + GFPGAN)",
+    defaultServerUrl: "http://127.0.0.1:7860/api",
+    defaultPort: 7860,
+    protocol: "http",
+    modelsSupported: ["inswapper_128.onnx", "simswap_512.onnx"],
+    enhancersSupported: ["GFPGAN v1.4", "CodeFormer", "RestoreFormer", "Sin Enhancer (Máx FPS)"],
+    gpuBackends: ["CUDA 12.x", "DirectML", "CoreML (Apple Silicon)", "CPU"],
+    latencyTypicalMs: "25 - 50 ms",
+    creditsPerSec: 0,
+  },
+];
+

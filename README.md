@@ -7,7 +7,10 @@ Plataforma de última generación para creadores de contenido, streamers, marcas
 
 ## 🌟 Características Principales
 
-### 1. Cabina Central CAM & Monitor Panorámico
+### 1. Cabina Central CAM & Motores de IA (Decart, DeepFaceLive y Deep-Live-Cam)
+* **Selector de Motor en Vivo**: Alterna entre la nube de **Decart AI** y motores de Face Swap locales (**DeepFaceLive** y **Deep-Live-Cam**) con **0 créditos** de consumo y latencia de 15-35ms.
+* **DeepFaceLive API**: Soporte para modelos DFM preentrenados (`.dfm`) con aceleración DirectML y CUDA.
+* **Deep-Live-Cam API**: Intercambio facial en directo a partir de una sola foto de referencia (InsightFace) con restaurador facial **GFPGAN v1.4** y **CodeFormer**.
 * **Escenario Ampliado (1360px - 1480px)**: Aprovechamiento completo del ancho de pantalla sin barras negras laterales en monitores modernos 16:9, ultra-wide y pantallas 2K/4K.
 * **Alternancia en 1 Clic**: Emisión en vivo desde cámara web física o reproducción de videos de respaldo pregrabados (MP4/WebM) en bucle.
 * **Vúmetro de Audio & Modo Espejo**: Monitoreo visual de decibelios del micrófono y control de recorte en aspectos `16:9`, `9:16`, `1:1` y `4:3`.
@@ -60,6 +63,7 @@ Plataforma de última generación para creadores de contenido, streamers, marcas
 * **Librería de Interfaz**: [React 19](https://react.dev/)
 * **Tipado Estricto**: [TypeScript 5](https://www.typescriptlang.org/)
 * **Inteligencia Artificial de Video**: [@decartai/sdk](https://decart.ai/)
+* **Motores de Face Swap en Tiempo Real**: DeepFaceLive (DFM DirectML) & Deep-Live-Cam (InsightFace + GFPGAN)
 * **Códigos QR Dinámicos**: [qrcode](https://www.npmjs.com/package/qrcode)
 * **Iconografía Vectorial**: Dashicons SVG oficiales & Logos SVG auténticos
 * **Captura & Grabación**: MediaStream API & MediaRecorder nativo del navegador

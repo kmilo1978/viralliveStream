@@ -32,6 +32,8 @@ import {
   REFERENCE_SWAP_PROMPT,
   SPIKE_MODELS,
   type PromptPreset,
+  type AiEngineProvider,
+  REALTIME_FACE_ENGINES,
   type SpikeRealtimeModelId,
 } from "@/lib/models";
 import {
@@ -301,6 +303,7 @@ export default function StudioDeluluPage() {
 
   // Parámetros de IA
   const [selectedModelId, setSelectedModelId] = useState<SpikeRealtimeModelId>("lucy-2.6");
+  const [activeAiEngine, setActiveAiEngine] = useState<AiEngineProvider>("decart");
   const [promptText, setPromptText] = useState<string>(REFERENCE_SWAP_PROMPT);
   const [refImageFile, setRefImageFile] = useState<File | null>(null);
   const [refImageDataUrl, setRefImageDataUrl] = useState<string | null>(null);
@@ -2989,6 +2992,40 @@ export default function StudioDeluluPage() {
                       aria-label="Mejorar prompt"
                     >
                       <Dashicon name="star-filled" size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selector de Motor de IA en Vivo (Decart, DeepFaceLive o Deep-Live-Cam) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, margin: "4px 0 6px" }}>
+                  <span style={{ fontSize: "0.66rem", color: "#94A3B8", fontWeight: 800 }}>MOTOR IA:</span>
+                  <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className={`pill-ctrl-button ${activeAiEngine === "decart" ? "active-pink" : ""}`}
+                      style={{ padding: "3px 8px", fontSize: "0.66rem", fontWeight: 700 }}
+                      onClick={() => setActiveAiEngine("decart")}
+                      title="Decart AI Cloud Realtime (Lucy 2.6)"
+                    >
+                      Decart
+                    </button>
+                    <button
+                      type="button"
+                      className={`pill-ctrl-button ${activeAiEngine === "deepfacelive" ? "active-pink" : ""}`}
+                      style={{ padding: "3px 8px", fontSize: "0.66rem", fontWeight: 700 }}
+                      onClick={() => setActiveAiEngine("deepfacelive")}
+                      title="DeepFaceLive Local Engine (DFM Models · 0 CR · 15-35ms)"
+                    >
+                      DeepFaceLive
+                    </button>
+                    <button
+                      type="button"
+                      className={`pill-ctrl-button ${activeAiEngine === "deeplivecam" ? "active-pink" : ""}`}
+                      style={{ padding: "3px 8px", fontSize: "0.66rem", fontWeight: 700 }}
+                      onClick={() => setActiveAiEngine("deeplivecam")}
+                      title="Deep-Live-Cam 1-Click Face Swap (InsightFace + GFPGAN · 0 CR)"
+                    >
+                      Deep-Live-Cam
                     </button>
                   </div>
                 </div>

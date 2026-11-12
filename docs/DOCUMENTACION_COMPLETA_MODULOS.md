@@ -26,6 +26,7 @@ Bienvenido a la documentación oficial y exhaustiva de **Viralive (MiPlataformaS
 17. [Integración Universal de WhatsApp por Defecto (QR, Número y Agente IA)](#17-integración-universal-de-whatsapp-por-defecto-qr-número-y-agente-ia)
 18. [Cabina DÚO (Split Screen, Batallas PK & Invitados Co-Host)](#18-cabina-dúo-split-screen-batallas-pk--invitados-co-host)
 19. [Transmisión en Zoom, Google Meet, Microsoft Teams y WhatsApp Video](#19-transmisión-en-zoom-google-meet-microsoft-teams-y-whatsapp-video)
+20. [Motores de Face Swap en Tiempo Real (DeepFaceLive & Deep-Live-Cam APIs)](#20-motores-de-face-swap-en-tiempo-real-deepfacelive--deep-live-cam-apis)
 
 ---
 
