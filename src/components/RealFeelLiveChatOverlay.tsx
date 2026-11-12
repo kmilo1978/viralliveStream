@@ -417,16 +417,16 @@ export function RealFeelLiveChatOverlay({
             gap: 10,
           }}
         >
-          {/* COLUMNA IZQUIERDA: FEED COMPACTO DE COMENTARIOS ESTILO TIKTOK LIVE */}
+          {/* COLUMNA IZQUIERDA: FEED DE COMENTARIOS TIKTOK LIVE (PROPORCIONAL EN 16:9 Y COMPACTO EN MÓVIL) */}
           <div
             className="real-feel-chat-feed-col"
             style={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-end",
-              gap: 5,
-              maxWidth: compactMode || hasPipCamera ? "calc(100% - 132px)" : "48%",
-              maxHeight: compactMode ? 235 : 210,
+              gap: compactMode ? 5 : 8,
+              maxWidth: compactMode ? (hasPipCamera ? "calc(100% - 132px)" : "85%") : "480px",
+              maxHeight: compactMode ? 235 : 320,
               overflow: "hidden",
               pointerEvents: "auto",
               maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 4%, #000 10%, #000 100%)",
@@ -442,21 +442,21 @@ export function RealFeelLiveChatOverlay({
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: 6,
+                  gap: compactMode ? 6 : 9,
                   background: isPinned
                     ? "linear-gradient(90deg, rgba(236, 72, 153, 0.42) 0%, rgba(15, 15, 25, 0.62) 100%)"
                     : msg.isDonation
                     ? "linear-gradient(90deg, rgba(16, 185, 129, 0.32) 0%, rgba(15, 15, 25, 0.5) 100%)"
-                    : "rgba(0, 0, 0, 0.22)",
-                  backdropFilter: "blur(4px)",
-                  WebkitBackdropFilter: "blur(4px)",
+                    : "rgba(0, 0, 0, 0.32)",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
                   border: isPinned
                     ? "1px solid rgba(236, 72, 153, 0.72)"
                     : msg.isDonation
                     ? "1px solid rgba(16, 185, 129, 0.52)"
-                    : "none",
-                  borderRadius: 11,
-                  padding: "4px 8px 4px 5px",
+                    : "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: compactMode ? 11 : 14,
+                  padding: compactMode ? "4px 8px 4px 5px" : "7px 12px 7px 8px",
                   transition: "all 0.22s ease",
                   animation: "slideUpFade 0.28s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
@@ -465,19 +465,19 @@ export function RealFeelLiveChatOverlay({
                 <div
                   className="chat-face-avatar-circle"
                   style={{
-                    width: compactMode ? 20 : 24,
-                    height: compactMode ? 20 : 24,
-                    minWidth: compactMode ? 20 : 24,
+                    width: compactMode ? 20 : 32,
+                    height: compactMode ? 20 : 32,
+                    minWidth: compactMode ? 20 : 32,
                     borderRadius: "50%",
                     backgroundColor: msg.avatarColor || "#1E293B",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    border: "1.5px solid rgba(255, 255, 255, 0.45)",
+                    border: compactMode ? "1.5px solid rgba(255, 255, 255, 0.45)" : "2px solid rgba(255, 255, 255, 0.65)",
                     marginTop: 1,
                     overflow: "hidden",
                     flexShrink: 0,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.55)",
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -490,7 +490,7 @@ export function RealFeelLiveChatOverlay({
                       target.style.display = "none";
                       if (target.parentElement) {
                         target.parentElement.innerText = (msg.avatarLetter || msg.author.charAt(0)).toUpperCase();
-                        target.parentElement.style.fontSize = "0.62rem";
+                        target.parentElement.style.fontSize = compactMode ? "0.62rem" : "0.82rem";
                         target.parentElement.style.fontWeight = "900";
                         target.parentElement.style.color = "#FFFFFF";
                       }
@@ -500,7 +500,7 @@ export function RealFeelLiveChatOverlay({
 
                 {/* Contenido del comentario con estilo TikTok Live limpio */}
                 <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: compactMode ? 4 : 6, flexWrap: "wrap" }}>
                     {msg.userLevel && (
                       <span
                         style={{
@@ -509,9 +509,9 @@ export function RealFeelLiveChatOverlay({
                             : "rgba(56, 189, 248, 0.24)",
                           border: "1px solid rgba(255, 255, 255, 0.2)",
                           color: "#FFFFFF",
-                          fontSize: "0.54rem",
+                          fontSize: compactMode ? "0.54rem" : "0.68rem",
                           fontWeight: 800,
-                          padding: "0px 4px",
+                          padding: compactMode ? "0px 4px" : "1px 6px",
                           borderRadius: 5,
                           lineHeight: 1.35,
                         }}
@@ -521,16 +521,16 @@ export function RealFeelLiveChatOverlay({
                     )}
 
                     {msg.platform !== "tiktok" && (
-                      <PlatformLogo platform={msg.platform} size={11} />
+                      <PlatformLogo platform={msg.platform} size={compactMode ? 11 : 14} />
                     )}
 
                     <span
                       style={{
-                        fontSize: "0.67rem",
+                        fontSize: compactMode ? "0.67rem" : "0.92rem",
                         fontWeight: 700,
-                        color: msg.isVerified ? "#7DD3FC" : "rgba(255, 255, 255, 0.78)",
+                        color: msg.isVerified ? "#7DD3FC" : "rgba(255, 255, 255, 0.88)",
                         letterSpacing: "-0.01em",
-                        textShadow: "0 1px 2px rgba(0,0,0,0.9)",
+                        textShadow: "0 1px 3px rgba(0,0,0,0.95)",
                       }}
                     >
                       {msg.author}
@@ -543,12 +543,12 @@ export function RealFeelLiveChatOverlay({
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          width: 11,
-                          height: 11,
+                          width: compactMode ? 11 : 15,
+                          height: compactMode ? 11 : 15,
                           borderRadius: "50%",
                           backgroundColor: "#3B82F6",
                           color: "#FFFFFF",
-                          fontSize: "0.5rem",
+                          fontSize: compactMode ? "0.5rem" : "0.65rem",
                           fontWeight: 900,
                         }}
                         title="Usuario Verificado"
@@ -562,9 +562,9 @@ export function RealFeelLiveChatOverlay({
                         style={{
                           background: "linear-gradient(90deg, #10B981, #059669)",
                           color: "#FFFFFF",
-                          padding: "0px 5px",
+                          padding: compactMode ? "0px 5px" : "2px 7px",
                           borderRadius: 6,
-                          fontSize: "0.55rem",
+                          fontSize: compactMode ? "0.55rem" : "0.72rem",
                           fontWeight: 800,
                         }}
                       >
@@ -575,10 +575,10 @@ export function RealFeelLiveChatOverlay({
 
                   <span
                     style={{
-                      fontSize: "0.72rem",
+                      fontSize: compactMode ? "0.72rem" : "0.98rem",
                       color: "#FFFFFF",
-                      marginTop: 1,
-                      lineHeight: 1.24,
+                      marginTop: 2,
+                      lineHeight: compactMode ? 1.24 : 1.34,
                       fontWeight: 500,
                       textShadow: "0 1px 3px rgba(0,0,0,0.95)",
                       wordBreak: "break-word",
@@ -597,7 +597,7 @@ export function RealFeelLiveChatOverlay({
                       background: "transparent",
                       border: "none",
                       color: isPinned ? "#EC4899" : "rgba(255,255,255,0.28)",
-                      fontSize: "0.62rem",
+                      fontSize: compactMode ? "0.62rem" : "0.82rem",
                       cursor: "pointer",
                       padding: 1,
                       marginLeft: "auto",
@@ -626,7 +626,7 @@ export function RealFeelLiveChatOverlay({
               gap: 6,
               pointerEvents: "auto",
               paddingBottom: 2,
-              marginBottom: hasPipCamera && !compactMode ? 114 : 0,
+              marginBottom: hasPipCamera && !compactMode ? 215 : 0,
             }}
           >
             {/* Contenedor de partículas flotantes animadas */}
@@ -673,15 +673,15 @@ export function RealFeelLiveChatOverlay({
             >
               <div
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: compactMode ? 36 : 44,
+                  height: compactMode ? 36 : 44,
                   borderRadius: "50%",
                   background: "linear-gradient(135deg, rgba(236, 72, 153, 0.92) 0%, rgba(220, 38, 38, 0.92) 100%)",
-                  boxShadow: "0 3px 12px rgba(236, 72, 153, 0.55)",
+                  boxShadow: "0 4px 16px rgba(236, 72, 153, 0.65)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "1.05rem",
+                  fontSize: compactMode ? "1.05rem" : "1.3rem",
                   transition: "transform 0.15s ease",
                 }}
                 onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.88)")}
@@ -691,12 +691,12 @@ export function RealFeelLiveChatOverlay({
               </div>
               <span
                 style={{
-                  fontSize: "0.6rem",
+                  fontSize: compactMode ? "0.6rem" : "0.74rem",
                   fontWeight: 800,
                   color: "#FFFFFF",
                   textShadow: "0 1px 3px rgba(0,0,0,0.9)",
-                  background: "rgba(0,0,0,0.42)",
-                  padding: "1px 5px",
+                  background: "rgba(0,0,0,0.48)",
+                  padding: compactMode ? "1px 5px" : "2px 7px",
                   borderRadius: 8,
                 }}
               >
@@ -717,7 +717,7 @@ export function RealFeelLiveChatOverlay({
               alignItems: "center",
               gap: 8,
               width: "100%",
-              maxWidth: compactMode ? "74%" : "42%",
+              maxWidth: compactMode ? "74%" : "480px",
               alignSelf: "flex-start",
               marginTop: 2,
               pointerEvents: "auto",

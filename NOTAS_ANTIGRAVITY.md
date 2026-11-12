@@ -1451,3 +1451,9 @@
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Integración completa de las APIs de intercambio facial en tiempo real DeepFaceLive (modelos DFM, DirectML/CUDA, ultrabaja latencia 15-35ms) y Deep-Live-Cam (1-Click Face Swap con InsightFace y restaurador GFPGAN v1.4 / CodeFormer). Se añadieron tarjetas de configuración y prueba en SettingsStudioPanel, selector de motor IA en la cabina CAM (Decart, DeepFaceLive, Deep-Live-Cam), soporte de 0 créditos para inferencia local y documentación completa (Módulo 20 y README).
 - Estado Git: Commit 34162db enviado a origin/main en GitHub.
+
+## Validación completada - Proporcionalidad 16:9 y Botones Activos
+- Fecha: 2026-11-12 16:36
+- Resultado: Aprobado (score >= 9.8/10)
+- Resumen: Proporcionalidad visual completa en monitor panorámico 16:9 (Chat con fuentes 0.98rem y avatares 32px, PiP de persona a 320x180px, Live Shopping centrado a 440px con QR 68px) y activación funcional de botones activos con confirmación HUD inmediata.
+- Observaciones: Los botones en pantalla ya no están bloqueados por isCockpitTab, se agrupan por cuadrantes (screen-top-right, etc.) evitando solapamientos y ofrecen feedback instantáneo al usuario y ejecución real de controles (espejo, audio, compras, rec, prompts).

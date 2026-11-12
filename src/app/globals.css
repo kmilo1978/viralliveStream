@@ -5754,21 +5754,97 @@ button {
   opacity: 1 !important;
 }
 
-/* Tarjeta Live Shopping en modo escritorio (16:9 / 1:1) compacta a la derecha sin tapar el chat */
-.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-center,
-.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-left,
-.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-right {
-  bottom: 62px !important;
-  right: 70px !important;
-  left: auto !important;
-  transform: none !important;
-  max-width: 270px !important;
-  padding: 8px 10px !important;
-  gap: 10px !important;
+/* Tarjeta Live Shopping en modo escritorio (16:9 / 1:1) - Proporcional, centrada y sin solapar chat ni PiP */
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-center {
+  bottom: 24px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  max-width: 440px !important;
+  width: auto !important;
+  min-width: 380px !important;
+  padding: 12px 18px !important;
+  gap: 14px !important;
+  border-radius: 18px !important;
+  background: rgba(18, 18, 28, 0.94) !important;
+  border: 1.5px solid rgba(236, 72, 153, 0.55) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 24px rgba(236, 72, 153, 0.3) !important;
+  z-index: 75 !important;
 }
 
-.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage:hover {
-  transform: translateY(-2px) !important;
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-center:hover {
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-left {
+  bottom: 330px !important;
+  left: 20px !important;
+  right: auto !important;
+  transform: none !important;
+  max-width: 400px !important;
+  padding: 10px 16px !important;
+  z-index: 75 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage.pos-bottom-right {
+  bottom: 215px !important;
+  right: 24px !important;
+  left: auto !important;
+  transform: none !important;
+  max-width: 400px !important;
+  padding: 10px 16px !important;
+  z-index: 75 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-thumb-wrap,
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-thumb-inner {
+  width: 62px !important;
+  height: 62px !important;
+  min-width: 62px !important;
+  flex: 0 0 62px !important;
+  border-radius: 12px !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-title {
+  font-size: 0.98rem !important;
+  max-width: 220px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-subtitle {
+  display: block !important;
+  font-size: 0.74rem !important;
+  color: #94A3B8 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-price-current {
+  font-size: 1.15rem !important;
+  font-weight: 900 !important;
+  color: #10B981 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-price-compare {
+  font-size: 0.82rem !important;
+  color: #94A3B8 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-card-qr-box {
+  width: 68px !important;
+  height: 68px !important;
+  min-width: 68px !important;
+  padding: 4px !important;
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  border: 2px solid #10B981 !important;
+}
+
+.delulu-monitor-container:not(.in-phone-mockup) .shoppable-product-card-stage .shoppable-close-btn {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 0.72rem !important;
+  top: -8px !important;
+  right: -8px !important;
 }
 
 /* Evitar solapamiento con Dynamic Island en simulador PRO TikTok */
@@ -9562,6 +9638,68 @@ body {
 .delulu-monitor-container.aspect-9-16:has(.monitor-pip-camera) .real-feel-hearts-col,
 .delulu-monitor-container.in-phone-mockup:has(.monitor-pip-camera) .real-feel-hearts-col {
   margin-bottom: 154px !important;
+}
+
+/* Cámara secundaria de la persona (PiP) en monitor 16:9 panorámico de escritorio - Proporcional y nítida */
+.delulu-monitor-container:not(.in-phone-mockup) .monitor-pip-camera {
+  position: absolute !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  top: auto !important;
+  left: auto !important;
+  width: 320px !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 16px !important;
+  border: 2.5px solid var(--accent-pink) !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85), 0 0 24px rgba(236, 72, 153, 0.35) !important;
+  overflow: hidden !important;
+  z-index: 80 !important;
+}
+
+/* Columna de likes y corazones por encima del recuadro PiP de 320px en monitor de escritorio */
+.delulu-monitor-container:not(.in-phone-mockup):has(.monitor-pip-camera) .real-feel-hearts-col {
+  margin-bottom: 215px !important;
+}
+
+/* Grupos de botones flotantes interactivos en pantalla organizados sin solapamientos */
+.screen-floating-actions-group {
+  position: absolute;
+  z-index: 60;
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.screen-floating-actions-group .screen-floating-action-btn {
+  position: static !important;
+}
+
+.screen-floating-actions-group.pos-screen-top-right {
+  top: 18px;
+  right: 18px;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.screen-floating-actions-group.pos-screen-top-left {
+  top: 18px;
+  left: 18px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.screen-floating-actions-group.pos-screen-bottom-right {
+  bottom: 215px;
+  right: 24px;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.screen-floating-actions-group.pos-screen-bottom-left {
+  bottom: 340px;
+  left: 20px;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 

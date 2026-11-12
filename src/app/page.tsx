@@ -367,6 +367,8 @@ export default function StudioDeluluPage() {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingDuration, setRecordingDuration] = useState<number>(0);
   const [recordingResolution, setRecordingResolution] = useState<RecordingResolution>("720p");
+  const startRecordingRef = useRef<() => void>(() => {});
+  const stopRecordingRef = useRef<() => void>(() => {});
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
@@ -455,7 +457,7 @@ export default function StudioDeluluPage() {
   // Previsualización de Fondos en el momento sin gastar créditos
   const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(true);
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
-  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
+  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(true);
   const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(true);
   const [showPhoneMockupBottomDock, setShowPhoneMockupBottomDock] = useState<boolean>(false);
 
@@ -1927,11 +1929,16 @@ export default function StudioDeluluPage() {
       if (stored) {
         const parsed = JSON.parse(stored) as CustomActionButton[];
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const sanitized = parsed.map((b) =>
-            b.id === "act-screen-magic" || b.label === "Destello Mágico" || b.placement === "screen-bottom-left"
-              ? { ...b, placement: "deck" as const }
-              : b
-          );
+          const hasOnScreen = parsed.some((b) => b.placement && b.placement !== "deck");
+          const sanitized = parsed.map((b) => {
+            if (!hasOnScreen && (b.id === "act-screen-magic" || b.id === "act-turbo-boost")) {
+              return { ...b, placement: "screen-top-right" as const };
+            }
+            if (b.placement === "screen-bottom-left") {
+              return { ...b, placement: "screen-top-right" as const };
+            }
+            return b;
+          });
           setActionButtons(sanitized);
           try {
             window.localStorage.setItem(BUTTONS_STORAGE_KEY, JSON.stringify(sanitized));
@@ -1951,8 +1958,17 @@ export default function StudioDeluluPage() {
 
   const handleExecuteActionButton = useCallback(
     async (btn: CustomActionButton) => {
+      // 1. Confirmación visual inmediata en monitor (HUD)
+      setLastActionFeedback({
+        badge: btn.icon || "⚡",
+        text: `${btn.label}: ¡Acción ejecutada!`,
+      });
+      setTimeout(() => setLastActionFeedback(null), 3500);
+
+      // 2. Ejecutar según tipo de acción
       if (btn.actionType === "prompt") {
         setPromptText(btn.payload);
+        setStreamInfo(`Prompt aplicado: ${btn.label}`);
         if (isConnectedLive && realtimeClientRef.current?.isConnected()) {
           try {
             await realtimeClientRef.current.set({
@@ -1960,17 +1976,25 @@ export default function StudioDeluluPage() {
               enhance: enhancePrompt,
               image: refImageFile ?? undefined,
             });
-            setStreamInfo(`Acción ejecutada: ${btn.label}`);
           } catch (e) {
             console.error("Error ejecutando acción de prompt:", e);
           }
+        } else if (isLive) {
+          void applyLiveChanges();
         }
       } else if (btn.actionType === "tryon") {
         const garment = tryOnGarments.find((g) => g.id === btn.payload);
-        if (garment) void handleSelectGarment(garment);
+        if (garment) {
+          void handleSelectGarment(garment);
+          setStreamInfo(`Prenda Try-On aplicada: ${garment.name}`);
+        }
       } else if (btn.actionType === "control") {
         if (btn.payload === "toggle_mirror") {
-          setMirrorInput((prev) => !prev);
+          setMirrorInput((prev) => {
+            const next = !prev;
+            setStreamInfo(`Modo espejo: ${next ? "Activado" : "Desactivado"}`);
+            return next;
+          });
         } else if (btn.payload === "toggle_audio") {
           setListenRemoteAudio((prev) => {
             const next = !prev;
@@ -1978,14 +2002,47 @@ export default function StudioDeluluPage() {
               remoteVideoRef.current.muted = !next;
               remoteVideoRef.current.volume = 1.0;
             }
+            setStreamInfo(`Audio retorno: ${next ? "Activado" : "Silenciado"}`);
             return next;
           });
         } else if (btn.payload === "toggle_split") {
           setSplitView((prev) => !prev);
+        } else if (btn.payload === "toggle_shop") {
+          setActiveProductId((prev) => {
+            const next = prev ? null : (shoppableProducts[0]?.id || null);
+            setStreamInfo(`Live Shopping: ${next ? "Mostrado en pantalla" : "Ocultado"}`);
+            return next;
+          });
+        } else if (btn.payload === "toggle_whatsapp") {
+          setWhatsappConfig((prev) => {
+            const next = !prev.showOnScreen;
+            setStreamInfo(`WhatsApp QR: ${next ? "Mostrado en pantalla" : "Ocultado"}`);
+            return { ...prev, showOnScreen: next };
+          });
+        } else if (btn.payload === "toggle_rec") {
+          if (isRecording) {
+            stopRecordingRef.current?.();
+            setStreamInfo("Grabación finalizada y guardada");
+          } else {
+            startRecordingRef.current?.();
+            setStreamInfo("Grabación iniciada");
+          }
         }
+      } else if (btn.actionType === "alert") {
+        setStreamInfo(`Alerta en vivo: ${btn.label}`);
       }
     },
-    [enhancePrompt, handleSelectGarment, isConnectedLive, refImageFile, tryOnGarments],
+    [
+      applyLiveChanges,
+      enhancePrompt,
+      handleSelectGarment,
+      isConnectedLive,
+      isLive,
+      isRecording,
+      refImageFile,
+      shoppableProducts,
+      tryOnGarments,
+    ],
   );
 
   const handleCreateCustomButton = useCallback(() => {
@@ -2211,10 +2268,22 @@ export default function StudioDeluluPage() {
       setStreamInfo("Botones flotantes ocultados");
     } else {
       if (!requestEnableOnScreen()) return;
+      setActionButtons((prev) => {
+        const hasOnScreen = prev.some((b) => b.placement && b.placement !== "deck");
+        if (hasOnScreen) return prev;
+        const updated = prev.map((b) => {
+          if (b.id === "act-screen-magic" || b.id === "act-turbo-boost") {
+            return { ...b, placement: "screen-top-right" as const };
+          }
+          return b;
+        });
+        persistActionButtons(updated);
+        return updated;
+      });
       setScreenButtonsVisible(true);
-      setStreamInfo("Botones flotantes activados");
+      setStreamInfo("Botones flotantes activados en pantalla");
     }
-  }, [requestEnableOnScreen, screenButtonsVisible]);
+  }, [persistActionButtons, requestEnableOnScreen, screenButtonsVisible]);
 
   const handleDeleteOverlay = useCallback(
     (id: string, e: React.MouseEvent) => {
@@ -2398,6 +2467,9 @@ export default function StudioDeluluPage() {
     }
     setIsRecording(false);
   }, []);
+
+  startRecordingRef.current = startRecording;
+  stopRecordingRef.current = stopRecording;
 
   // Timer de duración de grabación
   useEffect(() => {
@@ -3840,30 +3912,42 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
-              {/* BOTONES INTERACTIVOS FLOTANTES UBICADOS EN PANTALLA (ocultos en CAM, TRY ON y DUO para escena 100% limpia) */}
-              {screenButtonsVisible && !isCockpitTab && actionButtons
-                .filter((btn) => btn.placement && btn.placement !== "deck")
-                .map((btn) => {
-                  const btnSize = btn.size || "md";
-                  return (
-                    <button
-                      key={btn.id}
-                      type="button"
-                      className={`screen-floating-action-btn pos-${btn.placement} size-${btnSize}`}
-                      style={{ borderColor: btn.color }}
-                      onClick={() => void handleExecuteActionButton(btn)}
-                      title={`Botón en pantalla: ${btn.label}`}
-                    >
-                      {btn.customImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={btn.customImageUrl} alt={btn.label} />
-                      ) : (
-                        <span className="floating-icon">{btn.icon}</span>
-                      )}
-                      <span>{btn.label}</span>
-                    </button>
-                  );
-                })}
+              {/* BOTONES INTERACTIVOS FLOTANTES UBICADOS EN PANTALLA (agrupados por cuadrante para evitar solapamientos) */}
+              {screenButtonsVisible && (
+                <>
+                  {(["screen-top-right", "screen-top-left", "screen-bottom-right", "screen-bottom-left"] as const).map(
+                    (placementKey) => {
+                      const placedButtons = actionButtons.filter((btn) => btn.placement === placementKey);
+                      if (placedButtons.length === 0) return null;
+                      return (
+                        <div key={placementKey} className={`screen-floating-actions-group pos-${placementKey}`}>
+                          {placedButtons.map((btn) => {
+                            const btnSize = btn.size || "md";
+                            return (
+                              <button
+                                key={btn.id}
+                                type="button"
+                                className={`screen-floating-action-btn size-${btnSize}`}
+                                style={{ borderColor: btn.color }}
+                                onClick={() => void handleExecuteActionButton(btn)}
+                                title={`Botón en pantalla: ${btn.label}`}
+                              >
+                                {btn.customImageUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={btn.customImageUrl} alt={btn.label} />
+                                ) : (
+                                  <span className="floating-icon">{btn.icon}</span>
+                                )}
+                                <span>{btn.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+                  )}
+                </>
+              )}
 
               {/* Badge de estado en monitor con audiencia sincronizada (sólo en modo estudio panorámico) */}
               {!showPhoneMockupFrame && (

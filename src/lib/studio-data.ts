@@ -854,8 +854,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     actionType: "prompt",
     payload: "Dramatic fiery action hero cinematic lighting, dynamic embers, high octane streaming studio",
     description: "Botón con imagen PNG de fuego y efecto furia",
-    size: "lg",
-    placement: "deck",
+    size: "md",
+    placement: "screen-top-right",
   },
   {
     id: "act-screen-magic",
@@ -867,7 +867,7 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     payload: "Magical glowing particles, sparkling neon aura, fantasy lighting",
     description: "Efecto de destello mágico y partículas brillantes",
     size: "md",
-    placement: "deck",
+    placement: "screen-top-right",
   },
   {
     id: "act-anime-style",
