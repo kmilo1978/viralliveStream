@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="f5_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#FCD34D"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#f5_bg)"/>
+  <!-- Auburn Red Hair Back -->
+  <path d="M23 45 C20 72 26 86 34 92 L66 92 C74 86 80 72 77 45 C75 22 25 22 23 45 Z" fill="#9A3412"/>
+  <!-- Clothes -->
+  <path d="M22 92 C26 77 38 75 50 75 C62 75 74 77 78 92 Z" fill="#8B5CF6"/>
+  <!-- Neck -->
+  <rect x="44" y="58" width="12" height="14" rx="4" fill="#FEF08A"/>
+  <!-- Face -->
+  <ellipse cx="50" cy="48" rx="19" ry="22" fill="#FFEDD5"/>
+  <!-- Eyes -->
+  <ellipse cx="43" cy="47" rx="2.5" ry="3" fill="#15803D"/>
+  <circle cx="42" cy="46" r="0.8" fill="#FFFFFF"/>
+  <ellipse cx="57" cy="47" rx="2.5" ry="3" fill="#15803D"/>
+  <circle cx="56" cy="46" r="0.8" fill="#FFFFFF"/>
+  <!-- Freckles -->
+  <circle cx="40" cy="52" r="0.8" fill="#C2410C" opacity="0.6"/>
+  <circle cx="43" cy="53" r="0.8" fill="#C2410C" opacity="0.6"/>
+  <circle cx="57" cy="53" r="0.8" fill="#C2410C" opacity="0.6"/>
+  <circle cx="60" cy="52" r="0.8" fill="#C2410C" opacity="0.6"/>
+  <!-- Lips -->
+  <path d="M44 59 Q50 65 56 59" stroke="#EA580C" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- Auburn Wavy Hair Front -->
+  <path d="M25 43 C28 26 72 26 75 43 C70 34 58 34 50 36 C42 34 30 34 25 43 Z" fill="#C2410C"/>
+  <path d="M24 45 C25 60 28 74 34 82 C31 70 29 55 28 46 Z" fill="#C2410C"/>
+  <path d="M76 45 C75 60 72 74 66 82 C69 70 71 55 72 46 Z" fill="#C2410C"/>
+</svg>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { type UnifiedChatMessage, type ViewerRangeOption, DEFAULT_VIEWER_RANGES } from "@/lib/studio-data";
 import { PlatformLogo } from "@/components/PlatformLogos";
+import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 
 interface RealFeelLiveChatOverlayProps {
   messages?: UnifiedChatMessage[];
@@ -33,6 +34,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "JustHereToDance",
     avatarLetter: "J",
     avatarColor: "#EC4899",
+    avatarUrl: "/avatars/female_1.svg",
+    gender: "female",
     isVerified: false,
     badgeIcon: "✨",
     userLevel: 18,
@@ -44,6 +47,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "ShotCaller",
     avatarLetter: "S",
     avatarColor: "#3B82F6",
+    avatarUrl: "/avatars/male_1.svg",
+    gender: "male",
     isVerified: true,
     badgeIcon: "🔥",
     userLevel: 42,
@@ -55,6 +60,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "LightShowLaura",
     avatarLetter: "L",
     avatarColor: "#F59E0B",
+    avatarUrl: "/avatars/female_2.svg",
+    gender: "female",
     isVerified: false,
     badgeIcon: "✨",
     userLevel: 25,
@@ -66,6 +73,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "HappyHourHarry",
     avatarLetter: "H",
     avatarColor: "#EF4444",
+    avatarUrl: "/avatars/male_2.svg",
+    gender: "male",
     isVerified: false,
     badgeIcon: "👍",
     userLevel: 31,
@@ -77,6 +86,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "SongSeeker",
     avatarLetter: "S",
     avatarColor: "#A855F7",
+    avatarUrl: "/avatars/female_3.svg",
+    gender: "female",
     isVerified: false,
     badgeIcon: "🎶",
     message: "What's the name of this track? It's a banger!",
@@ -87,6 +98,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "DJ_Fan",
     avatarLetter: "D",
     avatarColor: "#10B981",
+    avatarUrl: "/avatars/male_3.svg",
+    gender: "male",
     isVerified: true,
     badgeIcon: "🎧",
     message: "You're the best DJ on this platform! 🎧🔥",
@@ -97,6 +110,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "GlobalGuest",
     avatarLetter: "G",
     avatarColor: "#EAB308",
+    avatarUrl: "/avatars/male_4.svg",
+    gender: "male",
     isVerified: false,
     badgeIcon: "🇪🇸",
     message: "Checking in from Spain! ¡Hola! 🇪🇸❤️",
@@ -107,6 +122,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "SofiaModaStudio",
     avatarLetter: "S",
     avatarColor: "#F43F5E",
+    avatarUrl: "/avatars/female_4.svg",
+    gender: "female",
     isVerified: true,
     badgeIcon: "🛍️",
     userLevel: 34,
@@ -118,6 +135,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "CarlosGamer_99",
     avatarLetter: "C",
     avatarColor: "#06B6D4",
+    avatarUrl: "/avatars/male_5.svg",
+    gender: "male",
     isVerified: false,
     badgeIcon: "🚀",
     userLevel: 21,
@@ -129,6 +148,8 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     author: "Lucas_Trends",
     avatarLetter: "L",
     avatarColor: "#8B5CF6",
+    avatarUrl: "/avatars/male_6.svg",
+    gender: "male",
     isVerified: false,
     badgeIcon: "🌹",
     userLevel: 49,
@@ -183,6 +204,7 @@ export function RealFeelLiveChatOverlay({
       author: streamerName || "Tú (Streamer)",
       avatarLetter: (streamerName || "T").charAt(0).toUpperCase(),
       avatarColor: "#EC4899",
+      avatarUrl: getFaceAvatarUrl(streamerName || "Tú (Streamer)"),
       isVerified: true,
       badgeIcon: "👑",
       message: externalMessageToPush.text.trim(),
@@ -198,6 +220,7 @@ export function RealFeelLiveChatOverlay({
       const newComment: UnifiedChatMessage = {
         ...randomItem,
         id: `stream-msg-${Date.now()}-${Math.random()}`,
+        avatarUrl: randomItem.avatarUrl || getFaceAvatarUrl(randomItem.author, randomItem.gender),
         timestamp: "Ahora",
       };
 
@@ -267,6 +290,7 @@ export function RealFeelLiveChatOverlay({
       author: streamerName || "Tú (Streamer)",
       avatarLetter: (streamerName || "T").charAt(0).toUpperCase(),
       avatarColor: "#EC4899",
+      avatarUrl: getFaceAvatarUrl(streamerName || "Tú (Streamer)"),
       isVerified: true,
       badgeIcon: "👑",
       message: chatInputText.trim(),
@@ -448,25 +472,41 @@ export function RealFeelLiveChatOverlay({
                   animation: "slideUpFade 0.28s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
-                {/* Avatar circular compacto */}
+                {/* Avatar circular con cara real (Hombre / Mujer) */}
                 <div
+                  className="chat-face-avatar-circle"
                   style={{
-                    width: 22,
-                    height: 22,
-                    minWidth: 22,
+                    width: compactMode ? 20 : 24,
+                    height: compactMode ? 20 : 24,
+                    minWidth: compactMode ? 20 : 24,
                     borderRadius: "50%",
-                    backgroundColor: msg.avatarColor || "#EC4899",
+                    backgroundColor: msg.avatarColor || "#1E293B",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "0.64rem",
-                    fontWeight: 900,
-                    color: "#FFFFFF",
-                    border: "1px solid rgba(255, 255, 255, 0.45)",
+                    border: "1.5px solid rgba(255, 255, 255, 0.45)",
                     marginTop: 1,
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
                   }}
                 >
-                  {msg.avatarLetter || msg.author.charAt(0).toUpperCase()}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={msg.avatarUrl || getFaceAvatarUrl(msg.author, msg.gender)}
+                    alt={msg.author}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = "none";
+                      if (target.parentElement) {
+                        target.parentElement.innerText = (msg.avatarLetter || msg.author.charAt(0)).toUpperCase();
+                        target.parentElement.style.fontSize = "0.62rem";
+                        target.parentElement.style.fontWeight = "900";
+                        target.parentElement.style.color = "#FFFFFF";
+                      }
+                    }}
+                  />
                 </div>
 
                 {/* Contenido del comentario con estilo TikTok Live limpio */}

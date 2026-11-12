@@ -9520,3 +9520,25 @@ body {
 .monitor-pip-camera {
   z-index: 40 !important;
 }
+
+
+/* -------------------------------------------------------------
+   AVATARES DE ROSTRO EN COMENTARIOS (HOMBRE / MUJER)
+   ------------------------------------------------------------- */
+.chat-face-avatar-circle img,
+.chat-avatar img,
+.monitor-pinned-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.avatar-face-selector-card {
+  transition: all 0.2s ease;
+}
+
+.avatar-face-selector-card:hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}

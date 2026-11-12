@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="m4_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#m4_bg)"/>
+  <!-- Afro Curls Hair -->
+  <ellipse cx="50" cy="42" rx="24" ry="22" fill="#18181B"/>
+  <!-- Streamer Headset Band -->
+  <path d="M24 45 C24 24 76 24 76 45" stroke="#10B981" stroke-width="4" fill="none"/>
+  <rect x="21" y="42" width="7" height="14" rx="3" fill="#059669"/>
+  <rect x="72" y="42" width="7" height="14" rx="3" fill="#059669"/>
+  <!-- Clothes -->
+  <path d="M18 92 C22 75 36 72 50 72 C64 72 78 75 82 92 Z" fill="#1E293B"/>
+  <!-- Neck -->
+  <rect x="43" y="58" width="14" height="16" rx="4" fill="#9A3412"/>
+  <!-- Face -->
+  <path d="M31 44 C31 34 69 34 69 44 C69 58 63 68 50 68 C37 68 31 58 31 44 Z" fill="#B45309"/>
+  <!-- Goatee Beard -->
+  <ellipse cx="50" cy="63" rx="6" ry="4" fill="#18181B"/>
+  <!-- Eyes -->
+  <ellipse cx="42" cy="46" rx="2.5" ry="2.8" fill="#18181B"/>
+  <circle cx="41" cy="45" r="0.8" fill="#FFFFFF"/>
+  <ellipse cx="58" cy="46" rx="2.5" ry="2.8" fill="#18181B"/>
+  <circle cx="57" cy="45" r="0.8" fill="#FFFFFF"/>
+  <!-- Eyebrows -->
+  <path d="M37 40 L46 41" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M54 41 L63 40" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Smile -->
+  <path d="M45 56 Q50 60 55 56" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1477,6 +1477,7 @@ export type UnifiedChatMessage = {
   avatarLetter: string;
   avatarColor: string;
   avatarUrl?: string;
+  gender?: "male" | "female";
   badgeIcon?: string;
   isVerified?: boolean;
   userLevel?: number;
@@ -1497,6 +1498,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "JustHereToDance",
     avatarLetter: "J",
     avatarColor: "#EC4899",
+    avatarUrl: "/avatars/female_1.svg",
+    gender: "female",
     isVerified: false,
     badgeIcon: "✨",
     userLevel: 18,
@@ -1509,6 +1512,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "ShotCaller",
     avatarLetter: "S",
     avatarColor: "#3B82F6",
+    avatarUrl: "/avatars/male_1.svg",
+    gender: "male",
     isVerified: true,
     badgeIcon: "🔥",
     userLevel: 42,
@@ -1521,6 +1526,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "LightShowLaura",
     avatarLetter: "L",
     avatarColor: "#F59E0B",
+    avatarUrl: "/avatars/female_2.svg",
+    gender: "female",
     isVerified: false,
     badgeIcon: "✨",
     userLevel: 25,
@@ -1533,6 +1540,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "HappyHourHarry",
     avatarLetter: "H",
     avatarColor: "#EF4444",
+    avatarUrl: "/avatars/male_2.svg",
+    gender: "male",
     isVerified: false,
     badgeIcon: "👍",
     userLevel: 31,
@@ -1545,6 +1554,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "SongSeeker",
     avatarLetter: "S",
     avatarColor: "#A855F7",
+    avatarUrl: "/avatars/female_3.svg",
+    gender: "female",
     isVerified: false,
     badgeIcon: "🎶",
     message: "What's the name of this track? It's a banger!",
@@ -1556,6 +1567,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "DJ_Fan",
     avatarLetter: "D",
     avatarColor: "#10B981",
+    avatarUrl: "/avatars/male_3.svg",
+    gender: "male",
     isVerified: true,
     badgeIcon: "🎧",
     message: "You're the best DJ on this platform! 🎧🔥",
@@ -1567,6 +1580,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "GlobalGuest",
     avatarLetter: "G",
     avatarColor: "#EAB308",
+    avatarUrl: "/avatars/male_4.svg",
+    gender: "male",
     isVerified: false,
     badgeIcon: "🇪🇸",
     message: "Checking in from Spain! ¡Hola a todos! 🇪🇸❤️",
@@ -1578,6 +1593,8 @@ export const DEFAULT_UNIFIED_CHAT_MESSAGES: UnifiedChatMessage[] = [
     author: "Carlos Tech Reviews",
     avatarLetter: "C",
     avatarColor: "#EF4444",
+    avatarUrl: "/avatars/male_5.svg",
+    gender: "male",
     isVerified: true,
     badgeIcon: "✓",
     message: "¡SuperChat $10 enviado! Excelente transmisión y calidad 1080p 60fps",

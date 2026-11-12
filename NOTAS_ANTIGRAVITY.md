@@ -1163,3 +1163,24 @@
   3. Bounding box auditado con Playwright: Formulario [x=331, y=476, w=240, h=45] vs PiP [x=716, y=412, w=180, h=101] -> Overlap: False (144.3px de espacio libre).
 - Pendientes:
   - Respaldo automático en `origin/main` en ejecución.
+
+
+## Validación completada
+- Fecha: 2026-11-12 12:55
+- Resultado: Aprobado (score 10/10)
+- Resumen: Implementación del sistema de **Avatares de Rostro Reales (Caras)** en lugar de letras simples en todos los comentarios de la plataforma, con estricta distinción y cuidado entre **Hombre y Mujer**:
+  1. **Catálogo de Rostros de Alta Calidad**: Creados 14 avatares vectoriales nítidos (`public/avatars/female_1..6.svg`, `male_1..6.svg`, `streamer_bot.svg` y `streamer_vip.svg`) con rasgos faciales, peinados, accesorios y tonos diversos.
+  2. **Motor de Detección de Género**: Módulo inteligente `src/lib/avatar-helper.ts` con diccionario de nombres y patrones morfológicos para asignar con precisión rostros femeninos a mujeres y masculinos a hombres.
+  3. **Selector y Subida de Fotos en Modo Manual**: En el compositor manual de chat, se agregaron botones de género (`👩 Mujer` / `👨 Hombre`), carrusel visual de 6 rostros seleccionables con aro neón de previsualización activa, y botón para **Subir Foto** personalizada desde el computador.
+  4. **Chat en Pantalla y Dock Lateral**: Actualizados tanto el overlay de TikTok Live sobre el monitor (`RealFeelLiveChatOverlay.tsx`), como el feed del chat unificado (`UnifiedLiveChatPanel.tsx`), el comentario fijado en tercio inferior (`src/app/page.tsx`) y los comentarios pregrabados de Sheets.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; Verificación Playwright automatizada -> 100% PASS (`0` console_errors, `0` page_errors, avatares de rostro confirmados en overlay y feed). Subiendo automáticamente a GitHub según regla del usuario.
+
+## Nueva sesión
+- Fecha: 2026-11-12 12:55
+- Solicitud: En los comentarios subir avatares tipo caras en vez de letras, con especial cuidado de distinguir hombre o mujer.
+- Decisiones clave:
+  1. Biblioteca local en `public/avatars/` con 6 caras femeninas y 6 masculinas.
+  2. Detección automática en `detectAvatarGender` + selector manual directo con opción de subir foto propia.
+  3. Previsualización en vivo en la tarjeta del mensaje y en la cabina CAM.
+- Pendientes:
+  - Respaldo automático en `origin/main` en ejecución.

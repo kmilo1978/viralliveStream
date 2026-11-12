@@ -17,6 +17,7 @@ import { UnifiedLiveChatPanel, UnifiedLiveChatProvider } from "@/components/Unif
 import { ScheduleLivePanel } from "@/components/ScheduleLivePanel";
 import { SettingsStudioPanel } from "@/components/SettingsStudioPanel";
 import { RealFeelLiveChatOverlay } from "@/components/RealFeelLiveChatOverlay";
+import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 import { GuestSplitScreenPanel, type GuestSplitScreenConfig } from "@/components/GuestSplitScreenPanel";
 import { StreamConfigModal } from "@/components/StreamConfigModal";
 import { ViewerRangeControl } from "@/components/ViewerRangeControl";
@@ -4129,9 +4130,25 @@ export default function StudioDeluluPage() {
                       className="chat-avatar monitor-pinned-avatar"
                       style={{
                         backgroundColor: pinnedChatMessage.avatarColor,
+                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      {pinnedChatMessage.avatarLetter}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={pinnedChatMessage.avatarUrl || getFaceAvatarUrl(pinnedChatMessage.author, pinnedChatMessage.gender)}
+                        alt={pinnedChatMessage.author}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = "none";
+                          if (target.parentElement) {
+                            target.parentElement.innerText = pinnedChatMessage.avatarLetter;
+                          }
+                        }}
+                      />
                     </div>
                     <div className="monitor-pinned-text-col">
                       <div className="monitor-pinned-meta-row">

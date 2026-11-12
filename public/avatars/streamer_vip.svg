@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="sv_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EC4899"/>
+      <stop offset="100%" stop-color="#F43F5E"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#sv_bg)"/>
+  <!-- Golden Crown -->
+  <polygon points="32,32 40,42 50,30 60,42 68,32 66,48 34,48" fill="#FBBF24" stroke="#D97706" stroke-width="1"/>
+  <!-- Face -->
+  <ellipse cx="50" cy="54" rx="18" ry="19" fill="#FFEDD5"/>
+  <!-- Sunglasses VIP -->
+  <polygon points="35,48 48,48 46,56 37,56" fill="#0F172A"/>
+  <polygon points="52,48 65,48 63,56 54,56" fill="#0F172A"/>
+  <line x1="48" y1="51" x2="52" y2="51" stroke="#FBBF24" stroke-width="2"/>
+  <!-- Smile -->
+  <path d="M44 63 Q50 67 56 63" stroke="#BE185D" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Shoulders -->
+  <path d="M20 92 C24 78 38 76 50 76 C62 76 76 78 80 92 Z" fill="#1E1B4B"/>
+</svg>

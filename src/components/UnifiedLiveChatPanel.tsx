@@ -7,6 +7,14 @@ import {
 } from "@/lib/studio-data";
 import { PlatformLogo } from "@/components/PlatformLogos";
 import { Dashicon } from "@/components/Dashicons";
+import {
+  getFaceAvatarUrl,
+  detectAvatarGender,
+  FEMALE_AVATARS,
+  MALE_AVATARS,
+  SPECIAL_AVATARS,
+  type AvatarGender,
+} from "@/lib/avatar-helper";
 
 export type MonitorCropMode = "16:9" | "9:16" | "1:1" | "4:3" | "zoom";
 export type UnifiedChatSectionMode = "all" | "feed" | "composer";
@@ -38,6 +46,8 @@ export type PreRecordedComment = {
   author: string;
   message: string;
   platform: "tiktok" | "youtube" | "twitch" | "facebook" | "instagram";
+  avatarUrl?: string;
+  gender?: AvatarGender;
   isDonation?: boolean;
   donationAmount?: string;
   sent?: boolean;
@@ -47,6 +57,8 @@ const DEFAULT_PRE_RECORDED: PreRecordedComment[] = [
   {
     id: "pr-1",
     author: "@mariana_fit",
+    gender: "female",
+    avatarUrl: "/avatars/female_1.svg",
     message: "¿Qué iluminación y cámara usas? ¡La calidad de imagen se ve increíble!",
     platform: "tiktok",
     isDonation: false,
@@ -54,6 +66,8 @@ const DEFAULT_PRE_RECORDED: PreRecordedComment[] = [
   {
     id: "pr-2",
     author: "CarlosGamer_99",
+    gender: "male",
+    avatarUrl: "/avatars/male_1.svg",
     message: "¡Ese micrófono se escucha súper limpio! Saludos desde Colombia 🇨🇴",
     platform: "twitch",
     isDonation: true,
@@ -62,6 +76,8 @@ const DEFAULT_PRE_RECORDED: PreRecordedComment[] = [
   {
     id: "pr-3",
     author: "Elena_TechReview",
+    gender: "female",
+    avatarUrl: "/avatars/female_2.svg",
     message: "¿Dónde puedo comprar los audífonos con cancelación de ruido que mostraste?",
     platform: "youtube",
     isDonation: false,
@@ -69,6 +85,8 @@ const DEFAULT_PRE_RECORDED: PreRecordedComment[] = [
   {
     id: "pr-4",
     author: "SofiaModaStudio",
+    gender: "female",
+    avatarUrl: "/avatars/female_3.svg",
     message: "¡El outfit te queda perfecto! ¿El código de descuento sigue activo?",
     platform: "instagram",
     isDonation: true,
@@ -77,6 +95,8 @@ const DEFAULT_PRE_RECORDED: PreRecordedComment[] = [
   {
     id: "pr-5",
     author: "PedroLiveStream",
+    gender: "male",
+    avatarUrl: "/avatars/male_2.svg",
     message: "Apoyando el directo como siempre crack, ¡sigue así!",
     platform: "facebook",
     isDonation: false,
@@ -134,6 +154,47 @@ function useUnifiedLiveChatController({
   const [isSuperChat, setIsSuperChat] = useState<boolean>(false);
   const [donationAmount, setDonationAmount] = useState<string>("$5.00");
 
+  // Selección y personalización de Avatar de Rostro (Hombre / Mujer)
+  const [simulatedGender, setSimulatedGender] = useState<AvatarGender>("female");
+  const [simulatedAvatarUrl, setSimulatedAvatarUrl] = useState<string>("/avatars/female_1.svg");
+  const [hasManuallyChosenAvatar, setHasManuallyChosenAvatar] = useState<boolean>(false);
+
+  // Auto-detección inteligente del género al escribir el usuario (si no fue fijado manualmente)
+  useEffect(() => {
+    if (!hasManuallyChosenAvatar && simulatedAuthor.trim().length > 0) {
+      const detected = detectAvatarGender(simulatedAuthor);
+      setSimulatedGender(detected);
+      setSimulatedAvatarUrl(getFaceAvatarUrl(simulatedAuthor, detected));
+    }
+  }, [simulatedAuthor, hasManuallyChosenAvatar]);
+
+  const handleSelectGender = (gender: AvatarGender) => {
+    setSimulatedGender(gender);
+    setHasManuallyChosenAvatar(true);
+    const list = gender === "female" ? FEMALE_AVATARS : MALE_AVATARS;
+    setSimulatedAvatarUrl(list[0].url);
+  };
+
+  const handleSelectAvatarUrl = (url: string) => {
+    setSimulatedAvatarUrl(url);
+    setHasManuallyChosenAvatar(true);
+  };
+
+  const handleUploadCustomFaceImage = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setSimulatedAvatarUrl(dataUrl);
+        setHasManuallyChosenAvatar(true);
+        setToastMessage("📸 ¡Foto de rostro cargada con éxito para el avatar!");
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Sincroniza referencia local del último mensaje fijado para re-fijarlo con 1 switch
   useEffect(() => {
     if (pinnedMessage) {
@@ -175,12 +236,16 @@ function useUnifiedLiveChatController({
 
   const buildCustomChatMessage = (customId?: string): UnifiedChatMessage => {
     const cleanAuthor = simulatedAuthor.trim() || `@usuario_${Math.floor(Math.random() * 899 + 100)}`;
+    const effectiveGender = simulatedGender || detectAvatarGender(cleanAuthor);
+    const effectiveAvatar = simulatedAvatarUrl || getFaceAvatarUrl(cleanAuthor, effectiveGender);
     return {
       id: customId || `chat-${Date.now()}`,
       platform: simulatedPlatform,
       author: cleanAuthor,
       avatarLetter: cleanAuthor.replace("@", "").charAt(0).toUpperCase() || "U",
       avatarColor: platformMeta[simulatedPlatform].color,
+      avatarUrl: effectiveAvatar,
+      gender: effectiveGender,
       message: simulatedText.trim().slice(0, PINNED_MAX_CHARS),
       timestamp: "Ahora",
       isDonation: isSuperChat,
@@ -196,6 +261,10 @@ function useUnifiedLiveChatController({
     if (msg.donationAmount) setDonationAmount(msg.donationAmount);
     setEditingPinnedId(msg.id);
     setPinOnPublish(true);
+    const g = msg.gender || detectAvatarGender(msg.author);
+    setSimulatedGender(g);
+    setSimulatedAvatarUrl(msg.avatarUrl || getFaceAvatarUrl(msg.author, g));
+    setHasManuallyChosenAvatar(true);
     setComposerTab("write_live");
   };
 
@@ -302,6 +371,7 @@ function useUnifiedLiveChatController({
       author: aiBotName,
       avatarLetter: "🤖",
       avatarColor: "#8B5CF6",
+      avatarUrl: SPECIAL_AVATARS.bot,
       message: reply,
       timestamp: "Ahora mismo",
       isAiResponse: true,
@@ -396,12 +466,16 @@ function useUnifiedLiveChatController({
         const isDon = Math.random() > 0.65 || pLower.includes("donac") || pLower.includes("superchat");
         const donAmount = isDon ? donationOptions[Math.floor(Math.random() * donationOptions.length)] : undefined;
 
+        const g = detectAvatarGender(username);
+        const avUrl = getFaceAvatarUrl(username, g);
         generatedList.push({
           id: `ai-gen-${Date.now()}-${i}`,
           platform: plat,
           author: username,
           avatarLetter: username.replace("@", "").charAt(0).toUpperCase(),
           avatarColor: platformMeta[plat]?.color || "#6366F1",
+          avatarUrl: avUrl,
+          gender: g,
           message: text,
           timestamp: `Hace ${i * 3 + 2}s`,
           isDonation: isDon,
@@ -433,12 +507,16 @@ function useUnifiedLiveChatController({
       return;
     }
 
+    const g = item.gender || detectAvatarGender(item.author);
+    const avUrl = item.avatarUrl || getFaceAvatarUrl(item.author, g);
     const newMsg: UnifiedChatMessage = {
       id: pinToScreen ? sheetMsgId : `chat-${Date.now()}-${item.id}`,
       platform: item.platform,
       author: item.author,
       avatarLetter: item.author.replace("@", "").charAt(0).toUpperCase() || "U",
       avatarColor: platformMeta[item.platform]?.color || "#3B82F6",
+      avatarUrl: avUrl,
+      gender: g,
       message: item.message,
       timestamp: "Ahora",
       isDonation: item.isDonation,
@@ -462,17 +540,23 @@ function useUnifiedLiveChatController({
 
   // Lanzar todos los pregrabados
   const handleLaunchAllPreRecorded = () => {
-    const newItems: UnifiedChatMessage[] = preRecordedList.map((item, idx) => ({
-      id: `chat-bulk-${Date.now()}-${idx}`,
-      platform: item.platform,
-      author: item.author,
-      avatarLetter: item.author.replace("@", "").charAt(0).toUpperCase() || "U",
-      avatarColor: platformMeta[item.platform]?.color || "#3B82F6",
-      message: item.message,
-      timestamp: `Hace ${idx * 15 + 5}s`,
-      isDonation: item.isDonation,
-      donationAmount: item.donationAmount,
-    }));
+    const newItems: UnifiedChatMessage[] = preRecordedList.map((item, idx) => {
+      const g = item.gender || detectAvatarGender(item.author);
+      const avUrl = item.avatarUrl || getFaceAvatarUrl(item.author, g);
+      return {
+        id: `chat-bulk-${Date.now()}-${idx}`,
+        platform: item.platform,
+        author: item.author,
+        avatarLetter: item.author.replace("@", "").charAt(0).toUpperCase() || "U",
+        avatarColor: platformMeta[item.platform]?.color || "#3B82F6",
+        avatarUrl: avUrl,
+        gender: g,
+        message: item.message,
+        timestamp: `Hace ${idx * 15 + 5}s`,
+        isDonation: item.isDonation,
+        donationAmount: item.donationAmount,
+      };
+    });
 
     setMessages((prev) => [...newItems, ...prev]);
     setPreRecordedList((prev) => prev.map((c) => ({ ...c, sent: true })));
@@ -490,12 +574,16 @@ function useUnifiedLiveChatController({
             // Reiniciar para seguir ciclando
             const first = currentList[0];
             if (first) {
+              const g = first.gender || detectAvatarGender(first.author);
+              const avUrl = first.avatarUrl || getFaceAvatarUrl(first.author, g);
               const msg: UnifiedChatMessage = {
                 id: `chat-auto-${Date.now()}`,
                 platform: first.platform,
                 author: first.author,
                 avatarLetter: first.author.replace("@", "").charAt(0).toUpperCase() || "U",
                 avatarColor: platformMeta[first.platform]?.color || "#3B82F6",
+                avatarUrl: avUrl,
+                gender: g,
                 message: first.message,
                 timestamp: "Ahora",
                 isDonation: first.isDonation,
@@ -506,12 +594,16 @@ function useUnifiedLiveChatController({
             return currentList.map((c, i) => (i === 0 ? { ...c, sent: true } : { ...c, sent: false }));
           }
           const next = unsent[0];
+          const g = next.gender || detectAvatarGender(next.author);
+          const avUrl = next.avatarUrl || getFaceAvatarUrl(next.author, g);
           const msg: UnifiedChatMessage = {
             id: `chat-auto-${Date.now()}`,
             platform: next.platform,
             author: next.author,
             avatarLetter: next.author.replace("@", "").charAt(0).toUpperCase() || "U",
             avatarColor: platformMeta[next.platform]?.color || "#3B82F6",
+            avatarUrl: avUrl,
+            gender: g,
             message: next.message,
             timestamp: "Ahora",
             isDonation: next.isDonation,
@@ -558,11 +650,15 @@ function useUnifiedLiveChatController({
         else if (platformRaw.includes("face") || platformRaw.includes("fb")) validPlatform = "facebook";
         else if (platformRaw.includes("insta") || platformRaw.includes("ig")) validPlatform = "instagram";
 
+        const g = detectAvatarGender(author);
+        const avUrl = getFaceAvatarUrl(author, g);
         parsed.push({
           id: `sheet-${Date.now()}-${index}`,
           author,
           message,
           platform: validPlatform,
+          gender: g,
+          avatarUrl: avUrl,
           isDonation: donationRaw.length > 0 && donationRaw !== "0" && donationRaw !== "-",
           donationAmount: donationRaw || undefined,
           sent: false,
@@ -639,6 +735,11 @@ PedroLiveStream\tApoyando la transmisión desde México, ¡sigue así crack!\tfa
     setSimulatedAuthor,
     simulatedText,
     setSimulatedText,
+    simulatedGender,
+    simulatedAvatarUrl,
+    handleSelectGender,
+    handleSelectAvatarUrl,
+    handleUploadCustomFaceImage,
     pinOnPublish,
     setPinOnPublish,
     editingPinnedId,
@@ -739,6 +840,11 @@ function StandaloneChatPanelView({
     setSimulatedAuthor,
     simulatedText,
     setSimulatedText,
+    simulatedGender,
+    simulatedAvatarUrl,
+    handleSelectGender,
+    handleSelectAvatarUrl,
+    handleUploadCustomFaceImage,
     pinOnPublish,
     setPinOnPublish,
     editingPinnedId,
@@ -1038,9 +1144,28 @@ function StandaloneChatPanelView({
                 >
                   <div
                     className="chat-avatar"
-                    style={{ backgroundColor: msg.avatarColor || meta.color }}
+                    style={{
+                      backgroundColor: msg.avatarColor || meta.color,
+                      overflow: "hidden",
+                      border: "1.5px solid rgba(255, 255, 255, 0.28)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
-                    {msg.avatarLetter}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={msg.avatarUrl || getFaceAvatarUrl(msg.author, msg.gender)}
+                      alt={msg.author}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        if (target.parentElement) {
+                          target.parentElement.innerText = msg.avatarLetter || msg.author.charAt(0).toUpperCase();
+                        }
+                      }}
+                    />
                   </div>
 
                   <div className="chat-content-wrap">
@@ -1409,6 +1534,116 @@ function StandaloneChatPanelView({
                   </div>
                 </div>
 
+                {/* SELECTOR DE GÉNERO Y ROSTRO DEL AVATAR (HOMBRE / MUJER) */}
+                <div
+                  className="avatar-face-selector-card"
+                  style={{
+                    background: "rgba(15, 23, 42, 0.65)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    borderRadius: 10,
+                    padding: "8px 10px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#FFFFFF" }}>
+                        Avatar del Comentario (Cara):
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.68rem",
+                          color: simulatedGender === "female" ? "#F472B6" : "#60A5FA",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {simulatedGender === "female" ? "👩 Mujer" : "👨 Hombre"}
+                      </span>
+                    </div>
+
+                    {/* Botones de Selección de Género */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <button
+                        type="button"
+                        className={`pill-ctrl-button ${simulatedGender === "female" ? "active-pink" : ""}`}
+                        style={{ padding: "3px 8px", fontSize: "0.68rem", fontWeight: 700 }}
+                        onClick={() => handleSelectGender("female")}
+                      >
+                        👩 Mujer
+                      </button>
+                      <button
+                        type="button"
+                        className={`pill-ctrl-button ${simulatedGender === "male" ? "active-cyan" : ""}`}
+                        style={{ padding: "3px 8px", fontSize: "0.68rem", fontWeight: 700 }}
+                        onClick={() => handleSelectGender("male")}
+                      >
+                        👨 Hombre
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Galería de 6 Caras según el género + Botón Subir Foto */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {(simulatedGender === "female" ? FEMALE_AVATARS : MALE_AVATARS).map((av) => (
+                        <button
+                          key={av.id}
+                          type="button"
+                          onClick={() => handleSelectAvatarUrl(av.url)}
+                          title={av.label}
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            padding: 0,
+                            border: simulatedAvatarUrl === av.url ? "2px solid #00F0FF" : "1.5px solid rgba(255,255,255,0.2)",
+                            boxShadow: simulatedAvatarUrl === av.url ? "0 0 8px #00F0FF" : "none",
+                            background: "transparent",
+                            cursor: "pointer",
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={av.url} alt={av.label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Botón para subir foto propia */}
+                    <label
+                      className="pill-ctrl-button"
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "0.68rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        marginLeft: "auto",
+                      }}
+                      title="Subir foto o imagen de rostro para este comentario"
+                    >
+                      <Dashicon name="format-image" size={13} />
+                      <span>Subir Foto</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleUploadCustomFaceImage(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
                     <label htmlFor="manual-pin-message-input" style={{ fontSize: "0.72rem", color: "var(--text-secondary)", fontWeight: 700 }}>
@@ -1658,10 +1893,38 @@ function StandaloneChatPanelView({
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                      <div
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          overflow: "hidden",
+                          flexShrink: 0,
+                          border: "1px solid rgba(255,255,255,0.3)",
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.avatarUrl || getFaceAvatarUrl(item.author, item.gender)}
+                          alt={item.author}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </div>
                       <PlatformLogo platform={item.platform} size={18} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#FFFFFF" }}>{item.author}</span>
+                          <span
+                            style={{
+                              fontSize: "0.6rem",
+                              padding: "1px 4px",
+                              borderRadius: 4,
+                              background: item.gender === "female" ? "rgba(236,72,153,0.2)" : "rgba(59,130,246,0.2)",
+                              color: item.gender === "female" ? "#F472B6" : "#60A5FA",
+                            }}
+                          >
+                            {item.gender === "female" ? "👩" : "👨"}
+                          </span>
                           {item.isDonation && (
                             <span className="donation-amount-badge" style={{ fontSize: "0.65rem", padding: "1px 4px", display: "inline-flex", alignItems: "center", gap: 3 }}>
                               <Dashicon name="money-alt" size={10} /> {item.donationAmount}
