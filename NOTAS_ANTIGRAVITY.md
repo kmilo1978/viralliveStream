@@ -1445,3 +1445,9 @@
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Se incorporó la sección [Casos de Uso Reales (Ejemplos Prácticos)] en cada uno de los 19 módulos de [docs/DOCUMENTACION_COMPLETA_MODULOS.md], brindando entre 2 y 3 escenarios de aplicación en el mundo real por módulo (comercio en vivo, moda digital, webinars ejecutivos, gaming, educación, batallas PK y atención automática con Agentes IA).
 - Estado Git: Commit f57c424 enviado a origin/main en GitHub.
+
+## Validación completada - Integración de APIs DeepFaceLive y Deep-Live-Cam
+- Fecha: 2026-11-12
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Integración completa de las APIs de intercambio facial en tiempo real DeepFaceLive (modelos DFM, DirectML/CUDA, ultrabaja latencia 15-35ms) y Deep-Live-Cam (1-Click Face Swap con InsightFace y restaurador GFPGAN v1.4 / CodeFormer). Se añadieron tarjetas de configuración y prueba en SettingsStudioPanel, selector de motor IA en la cabina CAM (Decart, DeepFaceLive, Deep-Live-Cam), soporte de 0 créditos para inferencia local y documentación completa (Módulo 20 y README).
+- Estado Git: Commit 34162db enviado a origin/main en GitHub.
