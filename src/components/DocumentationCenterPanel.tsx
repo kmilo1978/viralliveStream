@@ -35,7 +35,7 @@ interface DocItem {
   icon: DashiconName;
   shortDesc: string;
   badge?: string;
-  targetTab: "CAM" | "TRY_ON" | "DUO" | "PRO";
+  targetTab: "CAM" | "TRY_ON" | "DUO" | "PRO" | "CREATE";
   targetProSubTab?: string;
   content: {
     whatIs: string;
@@ -586,32 +586,32 @@ const DOC_ITEMS: DocItem[] = [
   },
   {
     id: "skins_studio",
-    title: "Skins Studio & Generador de Personajes con IA",
-    category: "Módulos PRO",
+    title: "Gestor de Skins & Colección de Personajes",
+    category: "Herramientas de Estudio",
     icon: "art",
-    badge: "Lucy-2.6",
-    targetTab: "PRO",
-    targetProSubTab: "skins",
-    shortDesc: "Creación de skins visuales con Lucy-2.6, extracción de ropa con IA y biblioteca de presets.",
+    badge: "CREATE",
+    targetTab: "CREATE",
+    shortDesc: "Catálogo de avatares, vestuarios y presets guardados en CREATE, listos para aplicar a CAM o probar en Try-On.",
     content: {
       whatIs:
-        "Un taller de avatares digitales donde puedes cambiar tu rostro, peinado o estilo gráfico utilizando los modelos `lucy-2.6` y `lucy-vton`.",
+        "Un centro de gestión y colección de personajes, vestuarios y estilos generados con Google Gemini, ChatGPT o subidos desde imagen.",
       whatIsFor:
-        "Crear personajes temáticos para streamers que prefieren no mostrar su rostro real o para eventos especiales de rol y gaming.",
+        "Guardar y organizar tus skins favoritos para activarlos con 1 solo clic en tu cámara en vivo o en el probador de ropa.",
       howTo: [
-        "En 'MODULOS PRO', entra en '🎨 Skins Studio'.",
-        "Sube una foto de referencia en 'Reference Image' con el personaje que quieres encarnar.",
-        "Usa el botón de extracción de prendas para aislar solo la ropa si deseas ponértela en CAM.",
-        "Haz clic en 'Guardar como Skin' para conservarlo en tu biblioteca de favoritos.",
+        "Entra a la cabina 'CREATE' desde la barra de navegación superior.",
+        "Selecciona 'Mis Skins' para ver tu colección, buscar por nombre o filtrar por categoría.",
+        "Diseña nuevos personajes con Gemini o ChatGPT y pulsa 'Guardar en Mis Skins'.",
+        "Haz clic en 'Aplicar a CAM' en cualquier skin para encarnarlo al instante en tu transmisión.",
       ],
       technicalDetails: [
-        { label: "Modelos", value: "lucy-2.6 (Face & Style Transfer) y lucy-vton (Garments)" },
-        { label: "Prompt de Extracción", value: "GARMENT_EXTRACT_PROMPT preconfigurado para máxima nitidez" },
+        { label: "Ubicación", value: "Cabina CREATE -> Pestaña 'Mis Skins'" },
+        { label: "Capacidad", value: "Almacenamiento local ilimitado en tu navegador" },
+        { label: "Integración Directa", value: "1 Clic a CAM en vivo o a cabina Try-On" },
       ],
       commonMistakes: [
         {
-          mistake: "El rostro del personaje no se parece a la foto.",
-          solution: "Sube imágenes de referencia nítidas, en primer plano y sin gafas de sol ni sombras duras.",
+          mistake: "Buscar skins en el módulo PRO.",
+          solution: "Ahora están centralizados en 'CREATE' junto a las herramientas de diseño de personajes y vestuario.",
         },
       ],
     },

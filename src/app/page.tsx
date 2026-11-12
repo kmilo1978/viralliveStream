@@ -180,8 +180,7 @@ type ProSubTab =
   | "unified_chat"
   | "schedule_live"
   | "obs_alerts"
-  | "voice_finance"
-  | "skins";
+  | "voice_finance";
 type StudioDockTab =
   | "backgrounds"
   | "shopping"
@@ -535,6 +534,22 @@ export default function StudioDeluluPage() {
 
   // Local storage
   const [savedSkins, setSavedSkins] = useState<SavedSkinPreset[]>([]);
+  const [skinSearchQuery, setSkinSearchQuery] = useState<string>("");
+  const [skinCategoryFilter, setSkinCategoryFilter] = useState<string>("all");
+  const filteredSkins = useMemo(() => {
+    return savedSkins.filter((s) => {
+      if (skinCategoryFilter !== "all" && s.category !== skinCategoryFilter) return false;
+      if (skinSearchQuery.trim()) {
+        const q = skinSearchQuery.toLowerCase();
+        return (
+          s.name.toLowerCase().includes(q) ||
+          s.prompt.toLowerCase().includes(q) ||
+          s.category.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [savedSkins, skinCategoryFilter, skinSearchQuery]);
   const [usageLedger, setUsageLedger] = useState<UsageLedgerEntry[]>([]);
 
   // EXPLORE Workspace
@@ -555,9 +570,11 @@ export default function StudioDeluluPage() {
   const [uploadIsNsfw, setUploadIsNsfw] = useState(false);
   const [uploadBadge, setUploadBadge] = useState("PROPIO");
 
-  // CREATE Workspace (Delulu Builder: Characters, Wardrobe & Accessories)
+  // CREATE Workspace (Delulu Builder: Characters, Wardrobe, Accessories & Saved Skins)
   const [createMode, setCreateMode] = useState<"scratch" | "image">("scratch");
-  const [createCategory, setCreateCategory] = useState<"person" | "outfit" | "props">("person");
+  const [createCategory, setCreateCategory] = useState<"person" | "outfit" | "props" | "saved_skins">("person");
+  const skinUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [skinSavedFeedback, setSkinSavedFeedback] = useState<boolean>(false);
   const [createPrompt, setCreatePrompt] = useState<string>(
     "A retro-futuristic space officer with chunky white visor and clean neon armor",
   );
@@ -5995,13 +6012,13 @@ export default function StudioDeluluPage() {
               }}
             />
 
-            {/* Sub-tabs: Persona, Wardrobe (Outfits), Accesorios (Props) */}
+            {/* Sub-tabs: Persona, Wardrobe (Outfits), Accesorios (Props), Mis Skins */}
             <div className="create-subtabs-row">
               <button
                 type="button"
                 className={`create-subtab-icon-btn ${createCategory === "person" ? "active" : ""}`}
                 onClick={() => setCreateCategory("person")}
-                title="Characters"
+                title="Characters (Personajes)"
                 aria-label="Characters"
               >
                 <Dashicon name="admin-users" size={18} />
@@ -6024,9 +6041,165 @@ export default function StudioDeluluPage() {
               >
                 <Dashicon name="art" size={18} />
               </button>
+              <button
+                type="button"
+                className={`create-subtab-icon-btn ${createCategory === "saved_skins" ? "active" : ""}`}
+                onClick={() => setCreateCategory("saved_skins")}
+                title={`Mis Skins Guardados (${savedSkins.length})`}
+                aria-label="Mis Skins Guardados"
+                style={{ position: "relative" }}
+              >
+                <Dashicon name="star-filled" size={18} color={createCategory === "saved_skins" ? "#FBBF24" : undefined} />
+                {savedSkins.length > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      background: "#FBBF24",
+                      color: "#000",
+                      fontSize: "0.58rem",
+                      fontWeight: 900,
+                      borderRadius: 10,
+                      padding: "1px 4px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {savedSkins.length}
+                  </span>
+                )}
+              </button>
             </div>
 
-            {createCategory === "outfit" || createCategory === "props" ? (
+            {createCategory === "saved_skins" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    background: "rgba(15, 18, 30, 0.85)",
+                    borderRadius: 14,
+                    border: "1px solid rgba(251, 191, 36, 0.3)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <Dashicon name="star-filled" size={18} color="#FBBF24" />
+                    <strong style={{ fontSize: "0.92rem", color: "#FFFFFF" }}>Gestor de Skins</strong>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.74rem", color: "#94A3B8", lineHeight: 1.4 }}>
+                    Tus personajes, vestuarios y presets guardados listos para activar en vivo en CAM o en Try-On.
+                  </p>
+                </div>
+
+                <div className="field-row" style={{ margin: 0 }}>
+                  <label style={{ fontSize: "0.74rem", fontWeight: 700, color: "#E2E8F0" }}>Buscar en mi colección</label>
+                  <input
+                    type="text"
+                    className="input-control"
+                    placeholder="Buscar por nombre o palabra clave..."
+                    value={skinSearchQuery}
+                    onChange={(e) => setSkinSearchQuery(e.target.value)}
+                    style={{ fontSize: "0.78rem" }}
+                  />
+                </div>
+
+                <div className="field-row" style={{ margin: 0 }}>
+                  <label style={{ fontSize: "0.74rem", fontWeight: 700, color: "#E2E8F0" }}>Filtrar por categoría</label>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {[
+                      { id: "all", label: "Todos" },
+                      { id: "Personaje", label: "Personajes" },
+                      { id: "Try-On", label: "Try-On" },
+                      { id: "Estilo", label: "Estilos" },
+                      { id: "VFX", label: "VFX" },
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        className={`pill-ctrl-button ${skinCategoryFilter === cat.id ? "active-pink" : ""}`}
+                        style={{ padding: "4px 8px", fontSize: "0.72rem" }}
+                        onClick={() => setSkinCategoryFilter(cat.id)}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      background: "rgba(255,255,255,0.06)",
+                      borderColor: "rgba(255,255,255,0.15)",
+                      minHeight: 36,
+                      fontSize: "0.78rem",
+                    }}
+                    onClick={() => skinUploadInputRef.current?.click()}
+                  >
+                    <Dashicon name="upload" size={14} />
+                    <span>Subir Skin desde Imagen</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      background: "linear-gradient(135deg, #4285F4 0%, #8B5CF6 100%)",
+                      color: "#FFF",
+                      minHeight: 36,
+                      fontSize: "0.78rem",
+                      border: "none",
+                    }}
+                    onClick={() => setCreateCategory("person")}
+                  >
+                    <Dashicon name="admin-users" size={14} />
+                    <span>+ Diseñar con IA</span>
+                  </button>
+                </div>
+
+                <input
+                  ref={skinUploadInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const dataUrl = ev.target?.result as string;
+                        const cleanName = f.name.replace(/\.[^/.]+$/, "").slice(0, 24);
+                        const newSkin: SavedSkinPreset = {
+                          id: `skin-upload-${Date.now()}`,
+                          name: cleanName || "Mi Skin",
+                          category: "Personaje",
+                          prompt: "Substitute the character with the person in the reference image",
+                          modelId: "lucy-2.6",
+                          refImageDataUrl: dataUrl,
+                          createdAt: new Date().toISOString(),
+                        };
+                        const updated = [newSkin, ...savedSkins];
+                        setSavedSkins(updated);
+                        try {
+                          window.localStorage.setItem(SKINS_STORAGE_KEY, JSON.stringify(updated));
+                        } catch {}
+                        setStreamInfo(`⭐ Skin "${newSkin.name}" guardado exitosamente.`);
+                      };
+                      reader.readAsDataURL(f);
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </div>
+            ) : createCategory === "outfit" || createCategory === "props" ? (
               (() => {
                 const draftCfg = CREATE_CATEGORY_CONFIG[createCategory];
                 const activeDraft = categoryDrafts[createCategory];
@@ -6235,7 +6408,7 @@ export default function StudioDeluluPage() {
             )}
 
             {/* Botón de acción CREATE conectado a Gemini / ChatGPT */}
-            {(() => {
+            {createCategory !== "saved_skins" && (() => {
               const isDraftCat = createCategory === "outfit" || createCategory === "props";
               const activeDraft = isDraftCat ? categoryDrafts[createCategory] : null;
               const isBuilderReady =
@@ -6280,7 +6453,207 @@ export default function StudioDeluluPage() {
 
           {/* Lienzo central de previsualización */}
           <main className="create-stage-preview">
-            {createResultUrl ? (
+            {createCategory === "saved_skins" ? (
+              <div style={{ width: "100%", maxWidth: 960, display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 12 }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: 8 }}>
+                      <Dashicon name="star-filled" size={18} color="#FBBF24" />
+                      <span>Colección de Skins ({filteredSkins.length})</span>
+                    </h2>
+                    <span style={{ fontSize: "0.75rem", color: "#94A3B8" }}>
+                      Selecciona cualquier skin para activarlo de inmediato en tu transmisión en vivo o probarlo en Try-On
+                    </span>
+                  </div>
+                  {savedSkins.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ fontSize: "0.74rem", padding: "4px 12px", minHeight: 32 }}
+                      onClick={() => setCreateCategory("person")}
+                    >
+                      <span>+ Diseñar Nuevo con IA</span>
+                    </button>
+                  )}
+                </div>
+
+                {filteredSkins.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "60px 20px", background: "rgba(15, 18, 30, 0.4)", borderRadius: 16, border: "1px dashed rgba(255,255,255,0.15)" }}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 12, color: "#FBBF24" }}>
+                      <Dashicon name="star-filled" size={36} />
+                    </div>
+                    <h3 style={{ margin: "0 0 6px 0", fontSize: "1rem", color: "#FFFFFF" }}>
+                      {savedSkins.length === 0 ? "Aún no tienes skins guardados" : "No hay skins que coincidan con la búsqueda"}
+                    </h3>
+                    <p style={{ margin: "0 auto 16px auto", maxWidth: 420, fontSize: "0.8rem", color: "#94A3B8" }}>
+                      {savedSkins.length === 0
+                        ? "Genera personajes, vestuarios o accesorios con Google Gemini o ChatGPT en las pestañas de arriba y guárdalos aquí para tenerlos siempre a mano."
+                        : "Intenta con otro término de búsqueda o cambia el filtro de categoría en la barra izquierda."}
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setCreateCategory("person")}
+                      style={{ padding: "8px 18px", fontSize: "0.82rem" }}
+                    >
+                      Diseñar con IA ahora
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 14 }}>
+                    {filteredSkins.map((skin) => (
+                      <div
+                        key={skin.id}
+                        style={{
+                          background: "#121422",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 14,
+                          padding: 12,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 10,
+                          transition: "border-color 0.2s ease",
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                          <div
+                            style={{
+                              width: 56,
+                              height: 56,
+                              borderRadius: 10,
+                              overflow: "hidden",
+                              background: "rgba(255,255,255,0.05)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              flexShrink: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {skin.refImageDataUrl ? (
+                              <img
+                                src={skin.refImageDataUrl}
+                                alt={skin.name}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            ) : (
+                              <Dashicon name="art" size={24} color="#A5B4FC" />
+                            )}
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                              <strong style={{ fontSize: "0.86rem", color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {skin.name}
+                              </strong>
+                            </div>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                fontSize: "0.62rem",
+                                fontWeight: 800,
+                                textTransform: "uppercase",
+                                padding: "2px 6px",
+                                borderRadius: 4,
+                                background:
+                                  skin.category === "Try-On"
+                                    ? "rgba(236, 72, 153, 0.2)"
+                                    : skin.category === "VFX"
+                                    ? "rgba(59, 130, 246, 0.2)"
+                                    : "rgba(168, 85, 247, 0.2)",
+                                color:
+                                  skin.category === "Try-On"
+                                    ? "#F472B6"
+                                    : skin.category === "VFX"
+                                    ? "#93C5FD"
+                                    : "#C084FC",
+                              }}
+                            >
+                              {skin.category}
+                            </span>
+                          </div>
+                        </div>
+
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "0.72rem",
+                            color: "#94A3B8",
+                            lineHeight: 1.35,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {skin.prompt}
+                        </p>
+
+                        <div style={{ display: "flex", gap: 6, marginTop: "auto", flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            style={{ flex: 1, padding: "6px 8px", fontSize: "0.74rem", minHeight: 32 }}
+                            onClick={() => {
+                              setPromptText(skin.prompt);
+                              setSelectedModelId(skin.modelId || "lucy-2.6");
+                              if (skin.refImageDataUrl) {
+                                setRefImageDataUrl(skin.refImageDataUrl);
+                                setRefImageFile(dataUrlToFile(skin.refImageDataUrl, `${skin.name}.png`));
+                                setSelectedPresetId("ref-swap");
+                              }
+                              setActiveTab("CAM");
+                              setStreamInfo(`✨ Skin "${skin.name}" aplicado a la cámara en vivo.`);
+                            }}
+                          >
+                            <span>Aplicar a CAM</span>
+                          </button>
+                          {skin.category === "Try-On" && (
+                            <button
+                              type="button"
+                              className="btn"
+                              style={{ padding: "6px 8px", fontSize: "0.74rem", minHeight: 32 }}
+                              onClick={() => {
+                                if (skin.refImageDataUrl) {
+                                  const g: TryOnGarmentItem = {
+                                    id: `garment-${skin.id}`,
+                                    name: skin.name,
+                                    category: "Outfit",
+                                    prompt: skin.prompt,
+                                    customImageUrl: skin.refImageDataUrl,
+                                    isCustom: true,
+                                  };
+                                  setTryOnGarments((prev) => [g, ...prev]);
+                                  void handleSelectGarment(g);
+                                }
+                                setActiveTab("TRY_ON");
+                              }}
+                              title="Usar en cabina Try-On"
+                            >
+                              <span>Try-On</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{ padding: "6px 8px", minHeight: 32, color: "#EF4444" }}
+                            onClick={() => {
+                              const updated = savedSkins.filter((s) => s.id !== skin.id);
+                              setSavedSkins(updated);
+                              try {
+                                window.localStorage.setItem(SKINS_STORAGE_KEY, JSON.stringify(updated));
+                              } catch {}
+                            }}
+                            title="Eliminar skin"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : createResultUrl ? (
               <div
                 style={{
                   display: "flex",
@@ -6388,6 +6761,54 @@ export default function StudioDeluluPage() {
                         ? CREATE_CATEGORY_CONFIG[createCategory].camBtnLabel
                         : "USAR COMO PERSONAJE EN CAM"}
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="pill-ctrl-button"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      borderColor: skinSavedFeedback ? "#10B981" : "rgba(251, 191, 36, 0.7)",
+                      color: skinSavedFeedback ? "#10B981" : "#FBBF24",
+                    }}
+                    onClick={() => {
+                      const isDraftCat = createCategory === "outfit" || createCategory === "props";
+                      const activeDraft = isDraftCat ? categoryDrafts[createCategory] : null;
+                      const finalPrompt =
+                        [
+                          isDraftCat && activeDraft
+                            ? activeDraft.prompt.trim() || composeCategoryPrompt(createCategory, activeDraft.chips, activeDraft.multi)
+                            : createPrompt.trim(),
+                          isDraftCat && activeDraft ? activeDraft.customAdditions.trim() : "",
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "Personaje estilizado con IA";
+                      const defaultName =
+                        isDraftCat && activeDraft && activeDraft.prompt.trim()
+                          ? activeDraft.prompt.trim().slice(0, 24)
+                          : `${createCategory === "outfit" ? "Outfit" : createCategory === "props" ? "Accesorio" : "Personaje"} ${createEngine === "gemini" ? "Gemini" : "ChatGPT"}`;
+                      const newSkin: SavedSkinPreset = {
+                        id: `skin-${Date.now()}`,
+                        name: defaultName,
+                        category: createCategory === "outfit" ? "Try-On" : createCategory === "props" ? "VFX" : "Personaje",
+                        prompt: finalPrompt,
+                        modelId: "lucy-2.6",
+                        refImageDataUrl: createResultUrl,
+                        createdAt: new Date().toISOString(),
+                      };
+                      const updated = [newSkin, ...savedSkins];
+                      setSavedSkins(updated);
+                      try {
+                        window.localStorage.setItem(SKINS_STORAGE_KEY, JSON.stringify(updated));
+                      } catch {}
+                      setSkinSavedFeedback(true);
+                      setTimeout(() => setSkinSavedFeedback(false), 3000);
+                      setStreamInfo(`⭐ Skin "${newSkin.name}" guardado exitosamente en tu colección.`);
+                    }}
+                  >
+                    <Dashicon name="star-filled" size={14} color={skinSavedFeedback ? "#10B981" : "#FBBF24"} />
+                    <span>{skinSavedFeedback ? "¡GUARDADO EN SKINS!" : "GUARDAR EN MIS SKINS"}</span>
                   </button>
                   <a
                     href={createResultUrl}
@@ -6552,14 +6973,6 @@ export default function StudioDeluluPage() {
               <Dashicon name="microphone" size={14} />
               <span>Voz IA &amp; Finanzas COP</span>
             </button>
-            <button
-              type="button"
-              className={`pro-subtab-btn ${proSubTab === "skins" ? "active" : ""}`}
-              onClick={() => setProSubTab("skins")}
-            >
-              <Dashicon name="star-filled" size={14} />
-              <span>Gestor de Skins</span>
-            </button>
           </div>
 
           <div>
@@ -6643,31 +7056,6 @@ export default function StudioDeluluPage() {
                 onProcessedAudioStream={(stream) => {
                   if (stream) setupVuMeter(stream);
                 }}
-              />
-            )}
-
-            {proSubTab === "skins" && (
-              <SkinsStudioPanel
-                skins={savedSkins}
-                onSaveSkin={(skin) => {
-                  setSavedSkins((prev) => [skin, ...prev]);
-                  try {
-                    window.localStorage.setItem(SKINS_STORAGE_KEY, JSON.stringify([skin, ...savedSkins]));
-                  } catch {}
-                }}
-                onDeleteSkin={(skinId) => {
-                  setSavedSkins((prev) => prev.filter((s) => s.id !== skinId));
-                }}
-                onApplySkinToLive={({ prompt, modelId, refFile }) => {
-                  setPromptText(prompt);
-                  setSelectedModelId(modelId);
-                  if (refFile) handleReferenceImageSelected(refFile);
-                  setActiveTab("CAM");
-                }}
-                sourceReady={!!localStreamRef.current}
-                captureSourceSnapshot={captureSourceSnapshot}
-                onLogUsage={appendLedgerEntry}
-                onRefreshAccount={refreshAccountStatus}
               />
             )}
           </div>
