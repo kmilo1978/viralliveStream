@@ -5544,7 +5544,7 @@ button {
 .neon-ambient-badge-live {
   position: absolute;
   top: 36px;
-  left: -12px;
+  left: -86px;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -5574,7 +5574,7 @@ button {
 .neon-ambient-badge-viewers {
   position: absolute;
   top: 36px;
-  right: -12px;
+  right: -86px;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -5857,12 +5857,104 @@ button {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* =============================================================
+   ESCALAS DE TAMAÑO PARA LA VERSIÓN MÓVIL (9:16 VERTICAL)
+   ============================================================= */
+.delulu-monitor-container.aspect-9-16 {
+  aspect-ratio: 9 / 16;
+  max-width: 480px;
+  max-height: 82vh;
+  transition: max-width 0.25s ease, max-height 0.25s ease;
+}
+
+.delulu-monitor-container.aspect-9-16.scale-md {
+  max-width: 400px !important;
+  max-height: 76vh !important;
+}
+
+.delulu-monitor-container.aspect-9-16.scale-lg {
+  max-width: 480px !important;
+  max-height: 82vh !important;
+}
+
+.delulu-monitor-container.aspect-9-16.scale-xl {
+  max-width: 560px !important;
+  max-height: 88vh !important;
+}
+
 .delulu-monitor-container.aspect-9-16.in-phone-mockup {
   border: 10px solid #1E1E28;
   border-radius: 46px;
   box-shadow: 0 0 60px rgba(236, 72, 153, 0.35), 0 25px 60px -15px rgba(0, 0, 0, 0.95);
-  max-width: 390px;
+  max-width: 480px;
+  max-height: 82vh;
   outline: 2px solid rgba(255, 255, 255, 0.08);
+  transition: max-width 0.25s ease, max-height 0.25s ease;
+}
+
+.delulu-monitor-container.aspect-9-16.in-phone-mockup.scale-md {
+  max-width: 400px !important;
+  max-height: 76vh !important;
+}
+
+.delulu-monitor-container.aspect-9-16.in-phone-mockup.scale-lg {
+  max-width: 480px !important;
+  max-height: 82vh !important;
+}
+
+.delulu-monitor-container.aspect-9-16.in-phone-mockup.scale-xl {
+  max-width: 560px !important;
+  max-height: 88vh !important;
+}
+
+.phone-mockup-outer-wrapper {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.mobile-size-pills-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(18, 18, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  padding: 2px 6px;
+  backdrop-filter: blur(8px);
+}
+
+.mobile-size-pills-label {
+  font-size: 0.64rem;
+  color: #94A3B8;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-right: 2px;
+}
+
+.mobile-size-opt-btn {
+  background: transparent;
+  border: none;
+  color: #CBD5E1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-size-opt-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mobile-size-opt-btn.active {
+  background: var(--accent-pink);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
 }
 
 /* Tarjeta Live Shopping optimizada dentro del Marco Smartphone (Estilo TikTok Shop Pin con QR)

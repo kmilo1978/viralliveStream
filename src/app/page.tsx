@@ -473,6 +473,7 @@ export default function StudioDeluluPage() {
   );
   const [phoneFrameMode, setPhoneFrameMode] = useState<boolean>(false);
   const [phoneMockupMode, setPhoneMockupMode] = useState<boolean>(true);
+  const [mobileViewScale, setMobileViewScale] = useState<"md" | "lg" | "xl">("lg"); // Escala de la versión móvil ("md": 400px, "lg": 480px, "xl": 560px)
   const [isMobileViewport, setIsMobileViewport] = useState<boolean>(false);
   const [showStreamConfigModal, setShowStreamConfigModal] = useState<boolean>(false);
   const [streamerName, setStreamerName] = useState<string>("Maddy");
@@ -3882,18 +3883,42 @@ export default function StudioDeluluPage() {
                 <span>STREAM CONFIG</span>
               </button>
 
-              {/* Botón Switch Modo Móvil (solo en escritorio/tablet cuando está en 9:16) */}
-                            {!isMobileViewport && effectiveCropMode === "9:16" && (
+              {/* Botón Switch Modo Móvil y Selector de Tamaño (solo en escritorio/tablet cuando está en 9:16) */}
+              {!isMobileViewport && effectiveCropMode === "9:16" && (
                 <>
                   <button
                     type="button"
                     className={`multistream-stage-pill ${phoneMockupMode ? "active-pink" : ""}`}
                     onClick={() => setPhoneMockupMode(!phoneMockupMode)}
-                    title="Alternar chasis de smartphone realista con neón exterior"
+                    title="Alternar entre marco de smartphone realista o escenario completo vertical"
                   >
                     <Dashicon name={phoneMockupMode ? "smartphone" : "desktop"} size={14} />
                     <span>{phoneMockupMode ? "VISTA MÓVIL" : "ESCENARIO"}</span>
                   </button>
+
+                  {/* Selector de Tamaño para ver la versión móvil más grande */}
+                  <div className="mobile-size-pills-group" title="Tamaño de la versión móvil en pantalla">
+                    <span className="mobile-size-pills-label">TAMAÑO:</span>
+                    {[
+                      { id: "md", label: "Normal (M)", tip: "400px ancho" },
+                      { id: "lg", label: "Grande (L)", tip: "480px ancho - Recomendado" },
+                      { id: "xl", label: "Extra Grande (XL)", tip: "560px ancho - Máxima visibilidad" },
+                    ].map((sz) => (
+                      <button
+                        key={sz.id}
+                        type="button"
+                        className={`mobile-size-opt-btn ${mobileViewScale === sz.id ? "active" : ""}`}
+                        onClick={() => {
+                          setMobileViewScale(sz.id as any);
+                          setStreamInfo(`Versión móvil ampliada a: ${sz.label}`);
+                        }}
+                        title={sz.tip}
+                      >
+                        {sz.label}
+                      </button>
+                    ))}
+                  </div>
+
                   {phoneMockupMode && (
                     <button
                       type="button"
@@ -3911,31 +3936,35 @@ export default function StudioDeluluPage() {
 
             {/* Monitor con esquinas neon rosa y formato de pantalla dinámico */}
             <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
-              {showPhoneMockupFrame && (
-                <>
-                  {/* Insignia Neón Flotante Superior Izquierda (Fotos 5, 7, 8) */}
-                  <div className="neon-ambient-badge-live">
-                    <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
-                    <span>● LIVE</span>
-                  </div>
+              <div
+                className={`phone-mockup-outer-wrapper ${showPhoneMockupFrame ? "with-ambient" : ""}`}
+                style={{ position: "relative", display: "inline-flex", justifyContent: "center", width: "100%", maxWidth: "fit-content" }}
+              >
+                {showPhoneMockupFrame && (
+                  <>
+                    {/* Insignia Neón Flotante Superior Izquierda (alineada junto al chasis del móvil) */}
+                    <div className="neon-ambient-badge-live">
+                      <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
+                      <span>● LIVE</span>
+                    </div>
 
-                  {/* Insignia Neón Flotante Superior Derecha */}
-                  <div className="neon-ambient-badge-viewers">
-                    <Dashicon name="visibility" size={13} />
-                    <span>{guestSplitConfig.viewerRange.formattedCount}</span>
-                  </div>
+                    {/* Insignia Neón Flotante Superior Derecha (alineada junto al chasis del móvil) */}
+                    <div className="neon-ambient-badge-viewers">
+                      <Dashicon name="visibility" size={13} />
+                      <span>{guestSplitConfig.viewerRange.formattedCount}</span>
+                    </div>
 
-                  {/* Burbujas flotantes de reacciones ambientales */}
-                  <div className="neon-ambient-bubble" style={{ top: 120, left: -20, fontSize: "1.4rem" }}>❤️</div>
-                  <div className="neon-ambient-bubble" style={{ top: 250, left: -16, fontSize: "1.2rem", animationDelay: "1.2s" }}>👍</div>
-                  <div className="neon-ambient-bubble" style={{ top: 380, left: -22, fontSize: "1.3rem", animationDelay: "2.4s" }}>💬</div>
-                  <div className="neon-ambient-bubble" style={{ top: 150, right: -20, fontSize: "1.5rem", animationDelay: "0.8s" }}>✨</div>
-                  <div className="neon-ambient-bubble" style={{ top: 280, right: -18, fontSize: "1.3rem", animationDelay: "1.8s" }}>🔥</div>
-                  <div className="neon-ambient-bubble" style={{ top: 410, right: -22, fontSize: "1.4rem", animationDelay: "2.8s" }}>💖</div>
-                </>
-              )}
+                    {/* Burbujas flotantes de reacciones ambientales */}
+                    <div className="neon-ambient-bubble" style={{ top: 120, left: -26, fontSize: "1.4rem" }}>❤️</div>
+                    <div className="neon-ambient-bubble" style={{ top: 250, left: -22, fontSize: "1.2rem", animationDelay: "1.2s" }}>👍</div>
+                    <div className="neon-ambient-bubble" style={{ top: 380, left: -28, fontSize: "1.3rem", animationDelay: "2.4s" }}>💬</div>
+                    <div className="neon-ambient-bubble" style={{ top: 150, right: -26, fontSize: "1.5rem", animationDelay: "0.8s" }}>✨</div>
+                    <div className="neon-ambient-bubble" style={{ top: 280, right: -24, fontSize: "1.3rem", animationDelay: "1.8s" }}>🔥</div>
+                    <div className="neon-ambient-bubble" style={{ top: 410, right: -28, fontSize: "1.4rem", animationDelay: "2.8s" }}>💖</div>
+                  </>
+                )}
 
-              <div className={`delulu-monitor-container aspect-${effectiveCropMode.replace(":", "-")} ${showPhoneMockupFrame ? "in-phone-mockup" : ""} ${isDuoSplitActive ? "has-duo-split" : ""}`}>
+                <div className={`delulu-monitor-container aspect-${effectiveCropMode.replace(":", "-")} ${showPhoneMockupFrame ? "in-phone-mockup" : ""} ${effectiveCropMode === "9:16" ? `scale-${mobileViewScale}` : ""} ${isDuoSplitActive ? "has-duo-split" : ""}`}>
                 {showPhoneMockupFrame ? (
                   <>
                     {/* Dynamic Island de Smartphone */}
@@ -5051,24 +5080,34 @@ export default function StudioDeluluPage() {
                 </div>
               )}
             </div>
+            {/* Cierre de phone-mockup-outer-wrapper */}
+            </div>
             {/* Cierre del envoltorio relativo del monitor */}
             </div>
 
             {/* CASILLA DE COMENTARIOS DEBAJO DE LA PANTALLA CON BURBUJA DE WHATSAPP AL LADO */}
             <div
               className="under-monitor-comment-row"
-                style={{
-                  width: "100%",
-                  maxWidth: effectiveCropMode === "9:16" ? 440 : 1360,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  margin: "8px 0 6px 0",
-                  zIndex: 25,
-                  position: "relative",
-                  boxSizing: "border-box",
-                }}
-              >
+              style={{
+                width: "100%",
+                maxWidth:
+                  effectiveCropMode === "9:16"
+                    ? mobileViewScale === "xl"
+                      ? 560
+                      : mobileViewScale === "lg"
+                      ? 480
+                      : 400
+                    : 1360,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                margin: "8px 0 6px 0",
+                zIndex: 25,
+                position: "relative",
+                boxSizing: "border-box",
+                transition: "max-width 0.25s ease",
+              }}
+            >
                 <form
                   className="under-monitor-chat-bar"
                   onSubmit={handleSendUnderMonitorChat}

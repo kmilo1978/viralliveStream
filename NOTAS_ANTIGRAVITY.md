@@ -1489,3 +1489,15 @@
   4. Modo de inserción: Selector de modo `Reemplazar Todo` o `+ Añadir al final` para concatenar múltiples notas o guiones.
   5. Editor ampliable: Botón para alternar entre modo compacto (110px) y modo amplio (280px a 520px) con scroll suave para guiones extensos de 15, 30 o 60 minutos.
   6. Barra de métricas en vivo: Indicadores en tiempo real de palabras, caracteres, párrafos y tiempo estimado de locución (a ~130 palabras por minuto).
+
+
+## Validación completada
+- Fecha: 2026-11-12T18:20:00-05:00
+- Resultado: Aprobado (score >= 9)
+- Resumen: Ampliación de tamaño y selector de escala para la versión móvil (9:16) en escritorio
+- Observaciones:
+  1. Tamaño ampliado por defecto: Se incrementó el tamaño base de la versión móvil de 390px a 480px (Grande - L), aprovechando mejor el monitor y eliminando el espacio negro excesivo alrededor del marco.
+  2. Selector interactivo de tamaños: Se añadió una botonera en la barra superior con tres escalas: `Normal (M - 400px)`, `Grande (L - 480px, Recomendado)` y `Extra Grande (XL - 560px, Máxima visibilidad)`.
+  3. Alineación perfecta de elementos ambientales: Las insignias neón `● LIVE` y el contador de espectadores `50.7K`, así como las burbujas flotantes de reacciones (`❤️`, `🔥`, `✨`), ahora abrazan directamente el contorno del smartphone sin quedar dispersadas a los extremos de la pantalla.
+  4. Barra de comentarios coordinada: El cajetín de comentarios inferior y la burbuja de WhatsApp ajustan su ancho automáticamente para alinearse de forma milimétrica con el ancho seleccionado del móvil.
+  5. Modo Escenario Vertical: Opción para alternar entre el chasis de smartphone y el video vertical 9:16 completo sin marcos.
