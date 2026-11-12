@@ -1109,3 +1109,18 @@
 - Resultado: Aprobado (score 10/10)
 - Resumen: Agregados indicadores `*` y notas transparentes de requisitos de **TikTok Live** e **Instagram Live**, junto con la aclaración de modo **V1 (Cabina + OBS)** y proyección de envío directo a **V2 SaaS** en el modal **Multistream** (`src/app/page.tsx`), **Playlist Streaming** (`src/components/PlaylistStreamingPanel.tsx`) y **Configuración Go Live / RTMP** (`src/components/SettingsStudioPanel.tsx`).
 - Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow). Listo para commit y push automático a GitHub.
+
+
+## Validación completada
+- Fecha: 2026-11-12 12:03
+- Resultado: Aprobado (score 10/10)
+- Resumen: Creada la **Guía Completa Paso a Paso (Virallive V1 · Cabina + OBS)** como portada predeterminada en `src/components/DocumentationCenterPanel.tsx` (17 fichas en total), cubriendo paso a paso Cabina CAM, 45 Estilos y 4 VFX, TRY ON, DÚO personalizable, CREATE (Wardrobe/Accesorios), CLIPS (6 formatos hasta 4K), TIKTOK (Logo PNG + RGB + fondo limpio), Playlist Streaming (videos propios, horarios, prelanzamientos, plataforma/MultiLive), conexión V1 Cabina + OBS, condicionales `*` de TikTok Live e Instagram Live y alcance V2 SaaS; actualizadas además las fichas de `multistream`, `tiktok_live` y `playlist_streaming`.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow). Subiendo automáticamente a GitHub.
+
+## Nueva sesión
+- Fecha: 2026-11-12 12:03
+- Solicitud: Crear una guía completa en Documentación.
+- Decisiones clave:
+  - Añadido artículo `guia_maestra` (`Empieza Aquí`) seleccionado por defecto al entrar a **Ajustes → Documentación**.
+- Pendientes:
+  - Respaldo automático en `origin/main` en ejecución inmediata.

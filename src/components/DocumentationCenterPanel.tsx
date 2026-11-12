@@ -6,6 +6,7 @@ import { ViraliveLogo } from "@/components/ViraliveLogo";
 import { PlatformLogo, TikTokLogo, YouTubeLogo, TwitchLogo, FacebookLogo, InstagramLogo } from "@/components/PlatformLogos";
 
 export type DocSectionId =
+  | "guia_maestra"
   | "cam_stage"
   | "virtual_backgrounds"
   | "recording_suite"
@@ -46,6 +47,46 @@ interface DocItem {
 }
 
 const DOC_ITEMS: DocItem[] = [
+  {
+    id: "guia_maestra",
+    title: "Guía Completa Paso a Paso (Virallive V1 · Cabina + OBS)",
+    category: "Cabina CAM",
+    icon: "book",
+    badge: "Empieza Aquí",
+    targetTab: "CAM",
+    shortDesc: "Manual práctico de principio a fin: cómo configurar cámara, estilos IA, Dúo, Clips, TikTok Marcas, Playlist y transmitir hoy vía Cabina + OBS.",
+    content: {
+      whatIs:
+        "Es tu guía rápida oficial para dominar toda la Versión 1 de Virallive (estudio local Cabina + OBS) en pocos minutos, sin necesidad de conocimientos técnicos.",
+      whatIsFor:
+        "Te muestra el orden exacto para preparar tu escena con IA, personalizar marcas/invitados y sacar la señal en vivo hacia OBS Studio, aclarando además las condiciones reales (*) de TikTok e Instagram y lo que pasa a Versión 2 SaaS.",
+      howTo: [
+        "Paso 1 — Cabina CAM: Elige tu fuente (Cámara Web o Video pregrabado), prueba los 45 Estilos o 4 Efectos VFX desde la barra izquierda y selecciona tu fondo verde Chroma Key (#00FF00) sin gastar créditos.",
+        "Paso 2 — Capas y Chat IA (Columna derecha CAM): Activa hasta 4 capas en pantalla (Fondo, Shop QR, Banners, Chat IA, Deck). Desde arriba manejas Agente IA, comentarios manuales o Google Sheets y auto-respondedor.",
+        "Paso 3 — TRY ON, DÚO y CREATE: Usa TRY ON para probador de ropa en vivo; DÚO para pantalla dividida con Perfil de Invitado personalizable (foto, color, verificado y texto); y CREATE (Wardrobe/Accesorios) para diseñar atuendos o ítems nuevos.",
+        "Paso 4 — CLIPS y TIKTOK (Menú superior después de DÚO): En CLIPS procesa videos en 6 proporciones (16:9, 9:16, 1:1, 4:5, 4:3, 21:9) y hasta 4K. En TIKTOK sube tu Logo PNG transparente, elige colores RGB personalizados y configura fondos limpios sin nombres en pantalla.",
+        "Paso 5 — PRO → Playlist Streaming: Sube tus propios videos, programa fecha/horas, enciende Prelanzamiento (cuenta regresiva) y elige 1 plataforma o MultiLive.",
+        "Paso 6 — Salir al Aire hoy (Cabina + OBS) y Condiciones (*): En V1 transmites enviando esta Cabina a OBS Studio (/obs-stage + Cámara Virtual). * Recuerda: TikTok Live exige acceso LIVE Studio/RTMP aprobado (+1.000 seg.) e Instagram Live exige Cuenta Profesional (Live Producer). El MultiStream directo en nube sin OBS y Playlist 24/7 se ejecutarán en Versión 2 SaaS.",
+      ],
+      technicalDetails: [
+        { label: "Modo Operativo V1", value: "Cabina Local + OBS Studio (/obs-stage y /obs-overlay vía WebSockets v5)" },
+        { label: "Límite de Capas en CAM", value: "Hasta 4 capas simultáneas visibles para evitar saturar el video" },
+        { label: "Condicional TikTok Live *", value: "Solo cuentas con LIVE Studio / clave RTMP oficial aprobada (+1.000 seg.)" },
+        { label: "Condicional Instagram Live *", value: "Solo cuentas Profesionales (Creador/Empresa) con clave de Live Producer" },
+        { label: "Alcance Versión 2 (V2 SaaS)", value: "MultiStream directo en nube (WebRTC→RTMP), Playlist 24/7 sin PC encendido e integraciones Composio.dev" },
+      ],
+      commonMistakes: [
+        {
+          mistake: "Intentar usar MultiStream o MultiLive directamente sin OBS en la Versión 1.",
+          solution: "En V1, el MultiStream hacia redes sale conectando la Cabina a OBS Studio (con plugin obs-multi-rtmp). El servidor en nube propio sin OBS llegará en Versión 2 SaaS.",
+        },
+        {
+          mistake: "No encontrar la clave RTMP en una cuenta nueva de TikTok o cuenta personal de Instagram.",
+          solution: "Verifica las condiciones (*): TikTok requiere elegibilidad LIVE habilitada y en Instagram debes cambiar primero tu cuenta a Perfil Profesional (Creador o Empresa).",
+        },
+      ],
+    },
+  },
   {
     id: "cam_stage",
     title: "Cabina Central CAM & Monitor Principal",
@@ -316,25 +357,24 @@ const DOC_ITEMS: DocItem[] = [
     shortDesc: "Transmisión paralela hacia TikTok, YouTube, Facebook, Twitch, Instagram y servidores RTMP.",
     content: {
       whatIs:
-        "Un módulo de distribución de señal múltiple inspirado en Onestream Live que reparte tu directo hacia más de 45 redes sociales y servidores de streaming simultáneamente.",
+        "Un sistema de referencia para organizar claves RTMP y preparar la salida simultánea hacia plataformas como YouTube, Twitch, Facebook, Kick, TikTok * e Instagram *.",
       whatIsFor:
-        "Multiplicar el alcance de tu audiencia transmitiendo al mismo tiempo en Facebook, YouTube, Twitch, TikTok, Instagram y Kick con una sola cámara y conexión.",
+        "Centraliza tus destinos y llaves de transmisión. En Versión 1 (Cabina + OBS) funciona como guía junto a OBS Studio; en Versión 2 SaaS enviará la señal directo en la nube.",
       howTo: [
-        "En la cabina CAM, haz clic en el botón '🌐 MULTISTREAM (45+)'.",
-        "Se abrirá el modal con las plataformas principales (Facebook, Instagram, TikTok, Twitch, YouTube).",
-        "Haz clic en los switches azules para activar las plataformas donde quieres emitir.",
-        "Haz clic en '🔑 Clave RTMP' junto a cada red para ingresar tu URL de servidor y Stream Key.",
-        "Pulsa 'Ver el Catálogo Completo (45+ Plataformas)' para explorar redes como Kick, LinkedIn, Twitter/X o Trovo.",
+        "En la cabina CAM, haz clic en 'MULTISTREAM' para revisar y guardar tus claves RTMP locales.",
+        "Para transmitir hoy en Versión 1: conecta Virallive con OBS Studio usando 'VIRTUAL CAMERA / OBS' (/obs-stage) y emite desde OBS a tus destinos.",
+        "Ten en cuenta las marcas (*): TikTok Live * e Instagram Live * solo se habilitan si tu cuenta cumple sus requisitos oficiales y te entrega clave RTMP activa.",
+        "En Versión 2 SaaS podrás emitir a todas las redes marcadas con 1 solo clic directo en la nube sin abrir OBS.",
       ],
       technicalDetails: [
-        { label: "Protocolo Soportado", value: "RTMP, RTMPS y WebRTC" },
-        { label: "Métricas Agregadas", value: "Contador de audiencia en tiempo real (LIVE · 18.5K viewers)" },
-        { label: "Cifrado de Claves", value: "Almacenamiento seguro en sesión local cifrada" },
+        { label: "Modo V1 Actual", value: "Cabina + OBS Studio (/obs-stage / Cámara Virtual + plugin Multi-RTMP)" },
+        { label: "Modo V2 SaaS (Planificado)", value: "Servidor Media Nube (WebRTC → RTMP Multi-destino con FFmpeg)" },
+        { label: "TikTok Live * / Instagram Live *", value: "Sujetos a aprobación LIVE Studio (+1.000 seg.) o Cuenta Profesional (Live Producer)" },
       ],
       commonMistakes: [
         {
-          mistake: "Una plataforma no recibe señal.",
-          solution: "Comprueba que la Clave de Transmisión (Stream Key) no haya caducado en el panel de control de esa red social.",
+          mistake: "Activar switches en el modal Multistream esperando que transmita sin OBS en V1.",
+          solution: "En V1 la emisión real al aire sale por Cabina + OBS Studio. Los switches de MultiStream guardan tu configuración y quedan listos para el motor nube de V2 SaaS.",
         },
       ],
     },
@@ -350,27 +390,25 @@ const DOC_ITEMS: DocItem[] = [
     shortDesc: "Simulador de smartphone con Dynamic Island, 4 temas de marca, fondo verde por defecto y sincronización CAM.",
     content: {
       whatIs:
-        "Un entorno especializado para directos verticales de marcas comerciales en TikTok, Instagram Reels y YouTube Shorts.",
+        "Un entorno dedicado en el menú principal (TIKTOK, junto a DÚO y CLIPS) para diseñar directos verticales con Logo PNG transparente, colores RGB personalizados, fondos limpios y simulación de audiencia.",
       whatIsFor:
-        "Diseñar transmisiones con marcos profesionales, logotipos de marca, eslogan, botón SHOP y reacciones animadas sobre fondo verde Chroma Key para recorte en OBS.",
+        "Crear marcos de marca 9:16 listos para llevar a tu Cabina CAM o recortar en OBS Studio usando el Fondo Verde Chroma Key (#00FF00) sin textos estorbosos sobre el video.",
       howTo: [
-        "En el menú superior, ve a 'MODULOS PRO' y entra en '📱 TikTok Live con Marcas'.",
-        "En la columna izquierda verás el simulador con el marco de smartphone en 9:16.",
-        "Por defecto, el fondo está en '🟢 Chroma Key (Verde) #00FF00' para recorte limpio.",
-        "En la sección de fondos de la derecha puedes elegir otro escenario, subir tu foto/video o pulsar 'Poner por Defecto'.",
-        "Elige un estilo de marca: Beauty & Skincare, Fitness, Music DJ o Travel.",
-        "Escribe el nombre de tu tienda y tu eslogan o cupón promocional.",
-        "Pulsa '🚀 APLICAR MARCO Y FONDO A CABINA CAM (9:16)' para llevar todo a la cabina principal en un clic.",
+        "En el menú superior, haz clic directamente en 'TIKTOK' (después de DÚO y CLIPS).",
+        "En '1. Fondos para TikTok Live', elige Chroma Key o sube tu propia foto/video (el nombre del fondo no aparecerá sobre la pantalla en vivo).",
+        "En '2. Estilo de Marco, Colores RGB y Logo PNG', elige una plantilla, cambia los colores con la paleta o selector RGB/HEX y sube tu logotipo .PNG transparente ajustando su tamaño.",
+        "En '3. Personaliza Textos', define tu nombre, eslogan, reacciones, botón SHOP y rango de espectadores.",
+        "Pulsa 'APLICAR MARCO Y FONDO A CABINA CAM (9:16)' para enviar todo el estilo y tu Logo PNG directo al monitor de CAM.",
       ],
       technicalDetails: [
-        { label: "Relación de Aspecto", value: "9:16 (Resolución recomendada: 1080x1920)" },
-        { label: "Fondo por Defecto", value: "Chroma Key Verde (#00FF00) con persistencia en localStorage" },
-        { label: "Elementos de Interfaz", value: "Dynamic Island, Badge LIVE 12.5K, Logo, Tagline, Botón SHOP, Reacciones flotantes" },
+        { label: "Ubicación en Menú", value: "Pestaña principal TIKTOK (después de DÚO y CLIPS)" },
+        { label: "Personalización de Estilo", value: "12 colores rápidos + Selector RGB/HEX + Color de marco + Logo PNG transparente (20-48px)" },
+        { label: "Fondo por Defecto", value: "Chroma Key Verde (#00FF00) limpio sin letreros en pantalla" },
       ],
       commonMistakes: [
         {
-          mistake: "Al ir a CAM el video se ve estirado.",
-          solution: "Al pulsar el botón 'Aplicar Marco', el sistema ajusta automáticamente el recorte a 9:16 para que la imagen mantenga las proporciones humanas perfectas.",
+          mistake: "El logo subido tiene un cuadro blanco detrás.",
+          solution: "Exporta tu logotipo en formato .PNG con fondo transparente para que se integre limpio sobre el marco y banner.",
         },
       ],
     },
@@ -423,25 +461,25 @@ const DOC_ITEMS: DocItem[] = [
     shortDesc: "Cola de videos pregrabados con duración total acumulada, bucle 24/7 y auto-avance entre pistas.",
     content: {
       whatIs:
-        "Un reproductor secuencial de listas de video que automatiza la emisión de contenido sin pausa.",
+        "Un programador de listas de video pregrabados que permite subir tus propios clips, fijar fecha/horas, activar prelanzamientos con cuenta regresiva y elegir 1 plataforma o MultiLive.",
       whatIsFor:
-        "Crear canales temáticos de streaming 24/7 (como canales de música lo-fi, podcasts repetidos, tutoriales o infomerciales continuos) sin necesidad de estar físicamente frente a la cabina.",
+        "Organizar lanzamientos, clases o infomerciales con horarios calculados clip por clip. En Versión 1 se reproduce desde la Cabina hacia OBS; la emisión 24/7 autónoma en nube se ejecutará en Versión 2 SaaS.",
       howTo: [
-        "Entra a 'MODULOS PRO' -> '📼 Playlist Streaming (Loop 24/7)'.",
-        "Revisa la lista de clips pregrabados con sus duraciones individuales y el tiempo total acumulado.",
-        "Activa el interruptor 'Repetición Continua (Loop 24/7)' si deseas que al terminar el último video vuelva a empezar desde el primero.",
-        "Pulsa '👁️ Cargar en Cabina' en cualquier pista para previsualizarla.",
-        "Pulsa '🚀 INICIAR PLAYLIST STREAMING AHORA' para disparar la transmisión continua a tus destinos conectados.",
+        "Entra a 'PRO' -> 'Playlist Streaming (Loop 24/7)'.",
+        "En '1. Plataforma de Destino', elige entre 'Una Plataforma' o 'MultiLive (Simultáneo)' teniendo en cuenta los requisitos (*) de TikTok Live e Instagram Live.",
+        "En '2. Programar Horas & Prelanzamientos', escoge 'Programar Fecha y Hora', define inicio/fin y activa el switch de 'Prelanzamiento / Cuenta Regresiva' si quieres sala de espera.",
+        "Pulsa '+ Subir Mis Videos' (MP4, WebM, MOV, MKV) o '+ Video por URL' y ordena tu cola con ↑ y ↓.",
+        "Pulsa 'TRANSMITIR' o 'PROGRAMAR PLAYLIST EN VIVO' para cargar la secuencia en tu Cabina CAM y sacarla al aire por OBS.",
       ],
       technicalDetails: [
-        { label: "Modo de Reproducción", value: "Secuencial continuo con auto-advance de pista" },
-        { label: "Tiempo de Búfer", value: "Precarga de pista siguiente a los 3 segundos del fin de la actual" },
-        { label: "Compatibilidad", value: "Videos MP4 optimizados para web (H.264 / AAC)" },
+        { label: "Carga de Videos", value: "Múltiples archivos locales (lectura automática de duración) o enlace URL" },
+        { label: "Horarios & Estreno", value: "Franjas horarias por clip + Prelanzamiento T-01:00 a T-15:00" },
+        { label: "Nota V1 vs V2 SaaS", value: "V1 reproduce en Cabina + OBS; V2 SaaS ejecutará worker FFmpeg 24/7 en la nube" },
       ],
       commonMistakes: [
         {
-          mistake: "El video se detiene al terminar el primer clip.",
-          solution: "Verifica que el switch 'Repetición Continua (Loop 24/7)' esté activado en color verde.",
+          mistake: "Apagar el computador y esperar que siga transmitiendo en V1.",
+          solution: "En Versión 1 (estudio local), tu computador y OBS deben permanecer encendidos. El streaming 24/7 autónomo sin PC llegará en Versión 2 SaaS.",
         },
       ],
     },
@@ -613,7 +651,7 @@ const DOC_ITEMS: DocItem[] = [
 ];
 
 export function DocumentationCenterPanel({ onNavigateToTab }: DocumentationCenterPanelProps) {
-  const [selectedDocId, setSelectedDocId] = useState<DocSectionId>("cam_stage");
+  const [selectedDocId, setSelectedDocId] = useState<DocSectionId>("guia_maestra");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [docTab, setDocTab] = useState<"overview" | "steps" | "tech" | "faq">("overview");
@@ -682,7 +720,7 @@ export function DocumentationCenterPanel({ onNavigateToTab }: DocumentationCente
               Centro de Documentación &amp; Manual de Funciones
             </h1>
             <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-              Guía técnica, casos de uso, pasos operativos y solución de problemas para los 16 módulos de Virallive (viralive.app).
+              Guía maestra paso a paso, casos de uso, condicionales (*) y solución de problemas para los {DOC_ITEMS.length} módulos de Virallive (V1 · Cabina + OBS).
             </p>
           </div>
         </div>
@@ -744,7 +782,7 @@ export function DocumentationCenterPanel({ onNavigateToTab }: DocumentationCente
             style={{ fontSize: "0.76rem", padding: "6px 14px", minHeight: 40, display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             <Dashicon name={cat === "all" ? "grid-view" : "book"} size={14} />
-            <span>{cat === "all" ? "Todos los Módulos (16)" : cat}</span>
+            <span>{cat === "all" ? `Todos los Módulos (${DOC_ITEMS.length})` : cat}</span>
           </button>
         ))}
       </div>
