@@ -1425,3 +1425,11 @@
   3. Se diseñó con estética oscura de cristal esmerilado (Dark Frosted Glassmorphism con borde rosa neón y precio verde esmeralda #10B981) idéntica a los Live Product Pins de TikTok Shop.
   4. Se restauró y optimizó la visibilidad del código QR escaneable en móvil con un contenedor blanco de alto contraste (`44x44px`), permitiendo que la audiencia escanee el producto directamente en pantalla.
 - Observaciones: Verificado mediante Playwright, captura guardada en `verified_shop_qr_phone_close.png`, TypeScript 0 errores.
+
+## Validación completada - Integración Universal de WhatsApp (CAM, TRY ON, DÚO)
+- Fecha: 2026-11-12
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Integración por defecto de WhatsApp con las 3 modalidades completas: 1) Código QR escaneable en pantalla con descarga PNG, 2) Número telefónico directo con generación de link wa.me y mensaje inicial, 3) API para conectar con Webhook/Meta Cloud API/Evolution API y Agente IA de Ventas 24/7 con simulador en vivo.
+- Cabinas cubiertas: CAM, TRY ON y DÚO.
+- Verificación: Capturas verificadas en vivo con Playwright en modo 16:9 y modo 9:16 móvil sin colisión de elementos.
+- Estado Git: Commit 936eadc enviado a origin/main en GitHub.
