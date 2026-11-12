@@ -7155,8 +7155,8 @@ export default function StudioDeluluPage() {
               </button>
             </div>
 
-            <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
-              Para transmitir tu personaje de IA en vivo a Zoom, Google Meet, TikTok Live o Discord:
+                        <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
+              Usa tu señal de <strong>CAM</strong> (fondos virtuales, ropa Try-On, filtros IA y overlays) en tiempo real dentro de <strong>Zoom, Google Meet, Microsoft Teams, WhatsApp o Discord</strong>:
             </p>
 
             <ol
@@ -7171,7 +7171,7 @@ export default function StudioDeluluPage() {
               }}
             >
               <li>
-                <strong>Paso 1:</strong> Abre OBS Studio y agrega una fuente de tipo <em>Navegador (Browser Source)</em> apuntando a:
+                <strong>Paso 1 (Abrir señal limpia):</strong> Pulsa el botón abajo <em>&quot;Abrir Ventana Desacoplada (Pop-out)&quot;</em> o agrega una fuente <em>Navegador (Browser Source)</em> en OBS con la dirección:
                 <div
                   style={{
                     marginTop: 4,
@@ -7187,10 +7187,10 @@ export default function StudioDeluluPage() {
                 </div>
               </li>
               <li>
-                <strong>Paso 2:</strong> En OBS Studio, haz clic en el botón <strong>&quot;Iniciar Cámara Virtual&quot;</strong> en la esquina inferior derecha.
+                <strong>Paso 2 (Activar Cámara Virtual):</strong> En OBS Studio, haz clic en <strong>&quot;Iniciar Cámara Virtual&quot;</strong> (esquina inferior derecha).
               </li>
               <li>
-                <strong>Paso 3:</strong> En tu aplicación de videollamada (Meet/Zoom/Discord), selecciona <em>&quot;OBS Virtual Camera&quot;</em> como tu cámara.
+                <strong>Paso 3 (Seleccionar en tu llamada):</strong> Abre Zoom, Google Meet, Microsoft Teams o WhatsApp, ve a Configuración de Video y selecciona <em>&quot;OBS Virtual Camera&quot;</em> como tu cámara web.
               </li>
             </ol>
 

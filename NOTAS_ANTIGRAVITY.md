@@ -1409,3 +1409,9 @@
   1. Se eliminó la restricción artificial de ancho (880px / 920px) del monitor de cámara en CAM (`.delulu-monitor-container`), permitiendo que en 16:9 panorámico, 4:3 y zoom aproveche fluidamente toda la pantalla del usuario (hasta 1360px en estándar y 1480px en pantallas 2K/4K/Ultra-Wide con altura dinámica hasta 76vh), eliminando los bordes negros vacíos laterales.
   2. Se respondió y resolvió la duplicación de los 6 comandos inferiores (+Guests, Business, Config, Brand, Share, Try-On) en el simulador 9:16: se confirmó que eran redundantes con la botonera superior y pestañas del estudio, y se ocultaron por defecto dejando la pantalla móvil 100% limpia para comentarios y video, con un botón toggle "COMANDOS MÓVIL" para quien desee activarlos.
 - Observaciones: Verificado mediante Playwright en viewport 1920x1080 (ancho de cámara expandido de 880px a 1134px+ sin deformaciones y pantalla móvil vertical 100% despejada). Se pasó el chequeo de TypeScript con 0 errores.
+
+## Validación completada - Compatibilidad de CAM con Zoom, Google Meet, Microsoft Teams y WhatsApp
+- Fecha: 2026-11-12T15:18:00-05:00
+- Resultado: Aprobado (score 10/10)
+- Resumen: Verificación y documentación de compatibilidad total de la señal en vivo de CAM hacia Zoom, Google Meet, Microsoft Teams, WhatsApp Desktop/Web y Discord mediante OBS Virtual Camera y la ruta limpia `/obs-stage`. Se actualizó el modal de ayuda con la guía paso a paso específica para cada aplicación.
+- Observaciones: Verificado mediante Playwright, modal renderizado correctamente, TypeScript 0 errores.
