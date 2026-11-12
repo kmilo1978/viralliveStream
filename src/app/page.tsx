@@ -16,6 +16,7 @@ import { PlaylistStreamingPanel } from "@/components/PlaylistStreamingPanel";
 import { UnifiedLiveChatPanel, UnifiedLiveChatProvider } from "@/components/UnifiedLiveChatPanel";
 import { ScheduleLivePanel } from "@/components/ScheduleLivePanel";
 import { SettingsStudioPanel } from "@/components/SettingsStudioPanel";
+import { WhatsAppStudioPanel } from "@/components/WhatsAppStudioPanel";
 import { RealFeelLiveChatOverlay } from "@/components/RealFeelLiveChatOverlay";
 import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 import { GuestSplitScreenPanel, type GuestSplitScreenConfig } from "@/components/GuestSplitScreenPanel";
@@ -77,6 +78,8 @@ import {
   type UnifiedChatMessage,
   type PlaylistStreamingItem,
   type ScheduledLiveEvent,
+  DEFAULT_WHATSAPP_CONFIG,
+  type WhatsAppConfig,
   DEFAULT_GUEST_PRESETS,
   DEFAULT_VIEWER_RANGES,
   type ViewerRangeOption,
@@ -188,7 +191,8 @@ type StudioDockTab =
   | "teleprompter"
   | "deck"
   | "recording"
-  | "chat";
+  | "chat"
+  | "whatsapp";
 type SourceMode = "camera" | "video_file";
 
 type AccountStatusState = {
@@ -385,6 +389,10 @@ export default function StudioDeluluPage() {
   const [activeProductId, setActiveProductId] = useState<string | null>("prod-headphones");
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
   const [showProductCatalogModal, setShowProductCatalogModal] = useState<boolean>(false);
+
+  // WhatsApp en Vivo (QR, Número y Agente IA)
+  const WHATSAPP_STORAGE_KEY = "miplataformastream.whatsappConfig.v1";
+  const [whatsappConfig, setWhatsappConfig] = useState<WhatsAppConfig>(DEFAULT_WHATSAPP_CONFIG);
 
   // Formulario nuevo producto
   const [newProdTitle, setNewProdTitle] = useState<string>("");
@@ -1707,10 +1715,46 @@ export default function StudioDeluluPage() {
     } catch {}
   }, []);
 
+  // Cargar configuración de WhatsApp y generar QR inicial
+  useEffect(() => {
+    let isCancelled = false;
+    async function initWhatsAppConfig() {
+      try {
+        const stored = window.localStorage.getItem(WHATSAPP_STORAGE_KEY);
+        let cfg: WhatsAppConfig = DEFAULT_WHATSAPP_CONFIG;
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<WhatsAppConfig>;
+          cfg = { ...DEFAULT_WHATSAPP_CONFIG, ...parsed };
+        }
+        const cleanPhone = cfg.phoneNumber.replace(/[^0-9]/g, "");
+        const waLink = cleanPhone
+          ? `https://wa.me/${cleanPhone}${cfg.defaultMessage ? `?text=${encodeURIComponent(cfg.defaultMessage)}` : ""}`
+          : "https://wa.me/";
+        if (!cfg.qrCodeDataUrl) {
+          const qr = await generateQrCodeDataUrl(waLink);
+          cfg.qrCodeDataUrl = qr;
+        }
+        if (!isCancelled) setWhatsappConfig(cfg);
+      } catch {}
+    }
+    void initWhatsAppConfig();
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const persistWhatsAppConfig = useCallback((cfg: WhatsAppConfig) => {
+    setWhatsappConfig(cfg);
+    try {
+      window.localStorage.setItem(WHATSAPP_STORAGE_KEY, JSON.stringify(cfg));
+    } catch {}
+  }, []);
+
   // Contador de elementos activos en pantalla para prevenir sobrecarga visual (Máximo 3)
   const countActiveOnScreen = useCallback(() => {
     let count = 0;
     if (activeProductId && shoppableProducts.some((p) => p.id === activeProductId && p.enabled)) count++;
+    if (whatsappConfig.showOnScreen) count++;
     if (teleprompterActive) count++;
     if (scheduledOverlays.some((o) => o.enabled)) count++;
     if (selectedBgId && selectedBgId !== "bg-none" && bgPreviewEnabled) count++;
@@ -1725,6 +1769,7 @@ export default function StudioDeluluPage() {
     selectedBgId,
     shoppableProducts,
     teleprompterActive,
+    whatsappConfig.showOnScreen,
   ]);
 
   const requestEnableOnScreen = useCallback((): boolean => {
@@ -1738,6 +1783,24 @@ export default function StudioDeluluPage() {
     }
     return true;
   }, [countActiveOnScreen]);
+
+  const handleToggleWhatsAppOnScreen = useCallback(() => {
+    setWhatsappConfig((prev) => {
+      if (!prev.showOnScreen) {
+        if (!requestEnableOnScreen()) return prev;
+        const updated = { ...prev, showOnScreen: true };
+        try {
+          window.localStorage.setItem(WHATSAPP_STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+      const updated = { ...prev, showOnScreen: false };
+      try {
+        window.localStorage.setItem(WHATSAPP_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, [requestEnableOnScreen]);
 
   const handleSelectBackground = useCallback(
     async (bg: VirtualBackgroundItem) => {
@@ -4458,6 +4521,57 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
+              {/* BADGE / TARJETA FLOTANTE DE WHATSAPP EN VIVO (QR, NÚMERO Y AGENTE IA) */}
+              {whatsappConfig.showOnScreen && (
+                <div
+                  className={`whatsapp-live-overlay-stage pos-${whatsappConfig.position || "bottom-left"} ${showPhoneMockupFrame ? "in-mockup" : ""}`}
+                  onClick={() => {
+                    const cleanPhone = whatsappConfig.phoneNumber.replace(/[^0-9]/g, "");
+                    const waLink = cleanPhone
+                      ? `https://wa.me/${cleanPhone}${whatsappConfig.defaultMessage ? `?text=${encodeURIComponent(whatsappConfig.defaultMessage)}` : ""}`
+                      : "https://wa.me/";
+                    window.open(waLink, "_blank");
+                  }}
+                  title={`Clic para chatear por WhatsApp al ${whatsappConfig.phoneNumber}`}
+                >
+                  <button
+                    type="button"
+                    className="whatsapp-overlay-close-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      persistWhatsAppConfig({ ...whatsappConfig, showOnScreen: false });
+                    }}
+                    title="Ocultar WhatsApp de la pantalla"
+                  >
+                    ×
+                  </button>
+
+                  <div className="whatsapp-overlay-icon-wrap">
+                    <SocialIcon network="whatsapp" size={22} />
+                    {whatsappConfig.aiAgentEnabled && (
+                      <span className="whatsapp-overlay-ai-badge" title="Agente IA de Ventas Activo">
+                        IA
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="whatsapp-overlay-info">
+                    <div className="whatsapp-overlay-cta">{whatsappConfig.callToAction || "Escríbenos a WhatsApp"}</div>
+                    <div className="whatsapp-overlay-phone">{whatsappConfig.phoneNumber}</div>
+                    <div className="whatsapp-overlay-sub">
+                      {whatsappConfig.aiAgentEnabled ? "🤖 Agente IA disponible 24/7" : "Atención directa en vivo"}
+                    </div>
+                  </div>
+
+                  {whatsappConfig.qrCodeDataUrl && (
+                    <div className="whatsapp-overlay-qr-box" title="Escanea con la cámara de tu celular para abrir WhatsApp">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={whatsappConfig.qrCodeDataUrl} alt="QR Escaneable de WhatsApp" />
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Barra inferior móvil de acciones dentro del marco 9:16 de escritorio */}
               {showPhoneMockupFrame && showPhoneMockupBottomDock && (
                 <div className="phone-bottom-actions-dock">
@@ -4855,6 +4969,20 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
 
+                {/* Switch WhatsApp Live */}
+                <div className="studio-layers-row-item" title="Alternar código QR y contacto de WhatsApp en pantalla">
+                  <div className="studio-layers-row-label">
+                    <SocialIcon network="whatsapp" size={14} />
+                    <span>WhatsApp Live QR</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${whatsappConfig.showOnScreen ? "active-green" : ""}`}
+                    onClick={handleToggleWhatsAppOnScreen}
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
                 {/* Switch Shopping */}
                 <div className="studio-layers-row-item" title="Alternar tarjeta de producto comprable con QR">
                   <div className="studio-layers-row-label">
@@ -4967,6 +5095,19 @@ export default function StudioDeluluPage() {
                   <Dashicon name="format-gallery" size={16} />
                   <span className="tool-label">Fondos</span>
                   <span className="tool-counter">{virtualBackgrounds.length}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`studio-tools-nav-btn ${activeStudioTab === "whatsapp" ? "active" : ""}`}
+                  onClick={() => setActiveStudioTab("whatsapp")}
+                  title="WhatsApp en Vivo: Código QR, número directo y Agente IA de atención"
+                >
+                  <SocialIcon network="whatsapp" size={16} />
+                  <span className="tool-label">WhatsApp</span>
+                  <span className="tool-counter" style={{ color: whatsappConfig.showOnScreen ? "#25D366" : undefined }}>
+                    {whatsappConfig.showOnScreen ? "LIVE" : "ON"}
+                  </span>
                 </button>
 
                 <button
@@ -5694,6 +5835,16 @@ export default function StudioDeluluPage() {
             )}
 
             {/* Barra de progreso de sesión / Free Tier */}
+
+              {/* PANEL DE CONTROL DE WHATSAPP (QR, NUMERO Y AGENTE IA) */}
+              {(isDockStackedView || activeStudioTab === "whatsapp") && (
+                <WhatsAppStudioPanel
+                  config={whatsappConfig}
+                  onChangeConfig={persistWhatsAppConfig}
+                  onToggleOnScreen={handleToggleWhatsAppOnScreen}
+                  activeCabinName={activeTab === "TRY_ON" ? "TRY ON" : activeTab === "DUO" ? "DÚO" : "CAM"}
+                />
+              )}
 
               {/* PANEL DE CHAT Y AGENTE IA CON SWITCHES DENTRO DE CAM */}
               {(isDockStackedView || activeStudioTab === "chat") && (

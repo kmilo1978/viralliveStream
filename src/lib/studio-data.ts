@@ -2561,3 +2561,44 @@ export const CAM_VFX_PRESETS: CamStylePresetItem[] = [
     keywords: "bajo el agua oceano profundo burbujas",
   },
 ];
+
+
+// =============================================================
+// INTEGRACIÓN UNIVERSAL DE WHATSAPP (QR, NÚMERO Y AGENTE IA)
+// =============================================================
+export type WhatsAppIntegrationMode = "qr" | "number" | "api";
+
+export type WhatsAppConfig = {
+  enabled: boolean;
+  mode: WhatsAppIntegrationMode;
+  phoneNumber: string;
+  defaultMessage: string;
+  qrCodeDataUrl?: string;
+  // API & Agente IA
+  apiProvider: "webhook" | "cloud_api" | "evolution_api" | "openrouter";
+  webhookUrl: string;
+  apiKey: string;
+  aiAgentEnabled: boolean;
+  aiModel: string;
+  aiSystemPrompt: string;
+  // Pantalla
+  showOnScreen: boolean;
+  position: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+  callToAction: string;
+};
+
+export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
+  enabled: true,
+  mode: "number",
+  phoneNumber: "+1 (555) 234-5678",
+  defaultMessage: "¡Hola! Vi la transmisión en vivo en viralive.app y quiero información de los productos.",
+  apiProvider: "webhook",
+  webhookUrl: "https://api.viralive.app/v1/whatsapp/webhook",
+  apiKey: "",
+  aiAgentEnabled: true,
+  aiModel: "openai/gpt-4o-mini",
+  aiSystemPrompt: "Eres el Agente de Ventas y Atención Oficial por WhatsApp de la transmisión en vivo. Tu misión es responder cordialmente en español, resolver dudas sobre los productos vistos en el stream, informar precios y guiar al cliente para completar su pedido por este chat.",
+  showOnScreen: true,
+  position: "bottom-left",
+  callToAction: "Escríbenos en vivo a WhatsApp",
+};

@@ -9581,3 +9581,250 @@ body {
     max-width: 1480px;
   }
 }
+
+/* =============================================================
+   INTEGRACIÓN UNIVERSAL DE WHATSAPP (QR, NÚMERO Y AGENTE IA)
+   ============================================================= */
+
+/* 1. Panel de control en barra lateral derecha */
+.whatsapp-studio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.whatsapp-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.whatsapp-tab-pill {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.whatsapp-tab-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.whatsapp-tab-pill.active {
+  background: rgba(37, 211, 102, 0.16);
+  border-color: #25D366;
+  color: #25D366;
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.2);
+}
+
+/* 2. Badge / Tarjeta Flotante en Pantalla (Monitor en Vivo) */
+.whatsapp-live-overlay-stage {
+  position: absolute;
+  z-index: 56;
+  background: rgba(14, 20, 18, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #FFFFFF;
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(37, 211, 102, 0.25);
+  border: 1.5px solid rgba(37, 211, 102, 0.45);
+  max-width: 360px;
+  user-select: none;
+  animation: slideUpFade 0.3s ease-out;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.whatsapp-live-overlay-stage:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 26px rgba(37, 211, 102, 0.4);
+}
+
+/* Posiciones en escritorio (16:9 y panorámico) */
+.whatsapp-live-overlay-stage.pos-bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.whatsapp-live-overlay-stage.pos-bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.whatsapp-live-overlay-stage.pos-top-left {
+  top: 60px;
+  left: 20px;
+}
+
+.whatsapp-live-overlay-stage.pos-top-right {
+  top: 60px;
+  right: 20px;
+}
+
+/* Elementos internos de la tarjeta */
+.whatsapp-overlay-icon-wrap {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+}
+
+.whatsapp-overlay-ai-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #00E676;
+  color: #000000;
+  font-size: 0.58rem;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.whatsapp-overlay-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.whatsapp-overlay-cta {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #25D366;
+  line-height: 1.2;
+}
+
+.whatsapp-overlay-phone {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.whatsapp-overlay-sub {
+  font-size: 0.65rem;
+  color: #94A3B8;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.whatsapp-overlay-qr-box {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  background: #FFFFFF;
+  padding: 3px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.whatsapp-overlay-qr-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.whatsapp-overlay-close-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(20, 20, 25, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.whatsapp-overlay-close-btn:hover {
+  background: #EF4444;
+  border-color: #EF4444;
+}
+
+/* 3. Optimización para Móvil 9:16 (Marco Smartphone) */
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage,
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage.pos-bottom-left,
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage.pos-bottom-right,
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage.pos-top-left,
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage.pos-top-right {
+  bottom: 310px !important;
+  left: 10px !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  max-width: 250px !important;
+  width: calc(100% - 92px) !important;
+  padding: 6px 8px !important;
+  gap: 8px !important;
+  background: rgba(10, 16, 14, 0.94) !important;
+  border: 1.5px solid rgba(37, 211, 102, 0.5) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.75), 0 0 14px rgba(37, 211, 102, 0.22) !important;
+  z-index: 69 !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage .whatsapp-overlay-icon-wrap {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 8px !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage .whatsapp-overlay-cta {
+  font-size: 0.64rem !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage .whatsapp-overlay-phone {
+  font-size: 0.74rem !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage .whatsapp-overlay-sub {
+  font-size: 0.58rem !important;
+}
+
+.delulu-monitor-container.in-phone-mockup .whatsapp-live-overlay-stage .whatsapp-overlay-qr-box {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  padding: 2px !important;
+  border-radius: 6px !important;
+}
