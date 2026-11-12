@@ -1124,3 +1124,10 @@
   - Añadido artículo `guia_maestra` (`Empieza Aquí`) seleccionado por defecto al entrar a **Ajustes → Documentación**.
 - Pendientes:
   - Respaldo automático en `origin/main` en ejecución inmediata.
+
+
+## Actualización Roadmap V2 SaaS: Módulo Dashboard de Métricas y Gráficas
+- Fecha: 2026-11-12 12:05
+- Solicitud: Agregar a la Versión 2 un módulo tipo Dashboard con todas las métricas (horas de reproducción, plataformas, comentarios, CTA, gráficas y salud técnica).
+- Archivo creado: `ROADMAP_V2_SAAS.md` (consolidando arquitectura V2 completa: Multi-usuario, Motor MultiStream Nube WebRTC→RTMP, Playlist 24/7 en nube, Composio.dev, condicionales `*` de TikTok/Instagram Live y el nuevo Módulo 5: Dashboard de Analítica, Métricas & Gráficas).
+- Estado V1: Sin cambios visuales en V1 (`V1 = Cabina + OBS` intacta y estable). Subiendo documentación a GitHub automáticamente.
