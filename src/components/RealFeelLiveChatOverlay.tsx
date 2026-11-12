@@ -5,6 +5,8 @@ import { type UnifiedChatMessage, type ViewerRangeOption, DEFAULT_VIEWER_RANGES 
 import { PlatformLogo, SocialIcon } from "@/components/PlatformLogos";
 import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 
+export type ChatLanguageOption = "es" | "en" | "both";
+
 interface RealFeelLiveChatOverlayProps {
   messages?: UnifiedChatMessage[];
   onPinMessage?: (msg: UnifiedChatMessage | null) => void;
@@ -21,6 +23,7 @@ interface RealFeelLiveChatOverlayProps {
   hasPipCamera?: boolean;
   onOpenWhatsApp?: () => void;
   hasActiveProduct?: boolean;
+  chatLanguage?: ChatLanguageOption;
 }
 
 type HeartParticle = {
@@ -31,95 +34,7 @@ type HeartParticle = {
   animDuration: number;
 };
 
-const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
-  {
-    platform: "tiktok",
-    author: "JustHereToDance",
-    avatarLetter: "J",
-    avatarColor: "#EC4899",
-    avatarUrl: "/avatars/female_1.svg",
-    gender: "female",
-    isVerified: false,
-    badgeIcon: "✨",
-    userLevel: 18,
-    message: "I'm enjoying your content so much! 🎉",
-    timestamp: "Ahora",
-  },
-  {
-    platform: "youtube",
-    author: "ShotCaller",
-    avatarLetter: "S",
-    avatarColor: "#3B82F6",
-    avatarUrl: "/avatars/male_1.svg",
-    gender: "male",
-    isVerified: true,
-    badgeIcon: "🔥",
-    userLevel: 42,
-    message: "Keep it up! You're the best! 🔥",
-    timestamp: "Ahora",
-  },
-  {
-    platform: "instagram",
-    author: "LightShowLaura",
-    avatarLetter: "L",
-    avatarColor: "#F59E0B",
-    avatarUrl: "/avatars/female_2.svg",
-    gender: "female",
-    isVerified: false,
-    badgeIcon: "✨",
-    userLevel: 25,
-    message: "This setup is next level! 🔥✨",
-    timestamp: "Ahora",
-  },
-  {
-    platform: "facebook",
-    author: "HappyHourHarry",
-    avatarLetter: "H",
-    avatarColor: "#EF4444",
-    avatarUrl: "/avatars/male_2.svg",
-    gender: "male",
-    isVerified: false,
-    badgeIcon: "👍",
-    userLevel: 31,
-    message: "Hey everyone! smash that like button! 👍",
-    timestamp: "Ahora",
-  },
-  {
-    platform: "twitch",
-    author: "SongSeeker",
-    avatarLetter: "S",
-    avatarColor: "#A855F7",
-    avatarUrl: "/avatars/female_3.svg",
-    gender: "female",
-    isVerified: false,
-    badgeIcon: "🎶",
-    message: "What's the name of this track? It's a banger!",
-    timestamp: "Ahora",
-  },
-  {
-    platform: "tiktok",
-    author: "DJ_Fan",
-    avatarLetter: "D",
-    avatarColor: "#10B981",
-    avatarUrl: "/avatars/male_3.svg",
-    gender: "male",
-    isVerified: true,
-    badgeIcon: "🎧",
-    message: "You're the best DJ on this platform! 🎧🔥",
-    timestamp: "Ahora",
-  },
-  {
-    platform: "youtube",
-    author: "GlobalGuest",
-    avatarLetter: "G",
-    avatarColor: "#EAB308",
-    avatarUrl: "/avatars/male_4.svg",
-    gender: "male",
-    isVerified: false,
-    badgeIcon: "🇪🇸",
-    message: "Checking in from Spain! ¡Hola! 🇪🇸❤️",
-    timestamp: "Ahora",
-  },
+export const SAMPLE_CHAT_BANK_ES: Omit<UnifiedChatMessage, "id">[] = [
   {
     platform: "instagram",
     author: "SofiaModaStudio",
@@ -130,7 +45,7 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     isVerified: true,
     badgeIcon: "🛍️",
     userLevel: 34,
-    message: "¿El código sigue activo? ¡Lo quiero! 👗",
+    message: "¿El código sigue activo? ¡Lo quiero ya! 👗",
     timestamp: "Ahora",
   },
   {
@@ -161,7 +76,300 @@ const SAMPLE_CHAT_BANK: Omit<UnifiedChatMessage, "id">[] = [
     message: "¡Mandando 10x Rosas! 🌹🌹",
     timestamp: "Ahora",
   },
+  {
+    platform: "tiktok",
+    author: "Mariana_Vibes",
+    avatarLetter: "M",
+    avatarColor: "#EC4899",
+    avatarUrl: "/avatars/female_1.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "✨",
+    userLevel: 18,
+    message: "¡Qué buena calidad de directo! Me encanta tu contenido 🎉",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "youtube",
+    author: "Andres_Bogota",
+    avatarLetter: "A",
+    avatarColor: "#3B82F6",
+    avatarUrl: "/avatars/male_1.svg",
+    gender: "male",
+    isVerified: true,
+    badgeIcon: "🔥",
+    userLevel: 42,
+    message: "¡Sigue así crack! El mejor directo de la semana 🔥",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "youtube",
+    author: "DiegoGamer_Pro",
+    avatarLetter: "D",
+    avatarColor: "#EAB308",
+    avatarUrl: "/avatars/male_4.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "🇪🇸",
+    message: "¡Saludos desde España! El micrófono se oye impecable 🇪🇸❤️",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "tiktok",
+    author: "Camila_Estilo",
+    avatarLetter: "C",
+    avatarColor: "#10B981",
+    avatarUrl: "/avatars/female_2.svg",
+    gender: "female",
+    isVerified: true,
+    badgeIcon: "✨",
+    userLevel: 25,
+    message: "¡Ese setup está a otro nivel! ¿Dónde compraste la luz? ✨",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "facebook",
+    author: "Alejandro_Tech",
+    avatarLetter: "A",
+    avatarColor: "#EF4444",
+    avatarUrl: "/avatars/male_2.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "👍",
+    userLevel: 31,
+    message: "¡Dejando mi like y compartiendo la transmisión con todos! 👍",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "twitch",
+    author: "MusicaEnVivo",
+    avatarLetter: "M",
+    avatarColor: "#A855F7",
+    avatarUrl: "/avatars/female_3.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "🎶",
+    message: "¿Cómo se llama la canción de fondo? ¡Está genial! 🎧",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "youtube",
+    author: "Javier_Gamer",
+    avatarLetter: "J",
+    avatarColor: "#6366F1",
+    avatarUrl: "/avatars/male_3.svg",
+    gender: "male",
+    isVerified: true,
+    badgeIcon: "💎",
+    userLevel: 55,
+    isDonation: true,
+    donationAmount: "$10.00",
+    message: "¡SuperChat enviado! Directo de diez, sigue rompiéndola 🚀",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "tiktok",
+    author: "Valeria_Shop",
+    avatarLetter: "V",
+    avatarColor: "#F43F5E",
+    avatarUrl: "/avatars/female_5.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "🛍️",
+    userLevel: 22,
+    message: "¿Tienen envíos rápidos? Quiero pedir los audífonos ya 📦",
+    timestamp: "Ahora",
+  },
+  {
+    platform: "instagram",
+    author: "Mateo_Vlog",
+    avatarLetter: "M",
+    avatarColor: "#F59E0B",
+    avatarUrl: "/avatars/male_6.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "⚡",
+    userLevel: 19,
+    message: "¡El probador virtual en directo está brutal! 👏",
+    timestamp: "Ahora",
+  },
 ];
+
+export const SAMPLE_CHAT_BANK_EN: Omit<UnifiedChatMessage, "id">[] = [
+  {
+    platform: "tiktok",
+    author: "JustHereToDance",
+    avatarLetter: "J",
+    avatarColor: "#EC4899",
+    avatarUrl: "/avatars/female_1.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "✨",
+    userLevel: 18,
+    message: "I'm enjoying your stream so much! 🎉",
+    timestamp: "Now",
+  },
+  {
+    platform: "youtube",
+    author: "ShotCaller",
+    avatarLetter: "S",
+    avatarColor: "#3B82F6",
+    avatarUrl: "/avatars/male_1.svg",
+    gender: "male",
+    isVerified: true,
+    badgeIcon: "🔥",
+    userLevel: 42,
+    message: "Keep it up! You're the best! 🔥",
+    timestamp: "Now",
+  },
+  {
+    platform: "instagram",
+    author: "LightShowLaura",
+    avatarLetter: "L",
+    avatarColor: "#F59E0B",
+    avatarUrl: "/avatars/female_2.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "✨",
+    userLevel: 25,
+    message: "This setup is next level! 🔥✨",
+    timestamp: "Now",
+  },
+  {
+    platform: "facebook",
+    author: "HappyHourHarry",
+    avatarLetter: "H",
+    avatarColor: "#EF4444",
+    avatarUrl: "/avatars/male_2.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "👍",
+    userLevel: 31,
+    message: "Hey everyone! Smash that like button! 👍",
+    timestamp: "Now",
+  },
+  {
+    platform: "twitch",
+    author: "SongSeeker",
+    avatarLetter: "S",
+    avatarColor: "#A855F7",
+    avatarUrl: "/avatars/female_3.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "🎶",
+    message: "What's the name of this track? It's a banger! 🎶",
+    timestamp: "Now",
+  },
+  {
+    platform: "tiktok",
+    author: "DJ_Fan",
+    avatarLetter: "D",
+    avatarColor: "#10B981",
+    avatarUrl: "/avatars/male_3.svg",
+    gender: "male",
+    isVerified: true,
+    badgeIcon: "🎧",
+    message: "You're the best creator on this platform! 🎧🔥",
+    timestamp: "Now",
+  },
+  {
+    platform: "youtube",
+    author: "GlobalGuest",
+    avatarLetter: "G",
+    avatarColor: "#EAB308",
+    avatarUrl: "/avatars/male_4.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "🌎",
+    message: "Checking in from London! Greetings everyone! 🇬🇧❤️",
+    timestamp: "Now",
+  },
+  {
+    platform: "instagram",
+    author: "Emily_Trends",
+    avatarLetter: "E",
+    avatarColor: "#F43F5E",
+    avatarUrl: "/avatars/female_4.svg",
+    gender: "female",
+    isVerified: true,
+    badgeIcon: "🛍️",
+    userLevel: 34,
+    message: "Is the LIVE20 discount code still active? Buying right now! 👗",
+    timestamp: "Now",
+  },
+  {
+    platform: "facebook",
+    author: "Marcus_Tech",
+    avatarLetter: "M",
+    avatarColor: "#06B6D4",
+    avatarUrl: "/avatars/male_5.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "🚀",
+    userLevel: 21,
+    message: "Streaming quality is top notch! Zero lag today 🇺🇸",
+    timestamp: "Now",
+  },
+  {
+    platform: "twitch",
+    author: "NeonRider",
+    avatarLetter: "N",
+    avatarColor: "#8B5CF6",
+    avatarUrl: "/avatars/male_6.svg",
+    gender: "male",
+    isVerified: false,
+    badgeIcon: "🌹",
+    userLevel: 49,
+    isDonation: true,
+    donationAmount: "10x Roses",
+    message: "Sending 10x Roses! Keep up the great energy 🌹🌹",
+    timestamp: "Now",
+  },
+  {
+    platform: "youtube",
+    author: "CyberGamer_UK",
+    avatarLetter: "C",
+    avatarColor: "#6366F1",
+    avatarUrl: "/avatars/male_2.svg",
+    gender: "male",
+    isVerified: true,
+    badgeIcon: "💎",
+    userLevel: 50,
+    isDonation: true,
+    donationAmount: "$10.00",
+    message: "SuperChat from UK! You deserve all the love! 🚀",
+    timestamp: "Now",
+  },
+  {
+    platform: "tiktok",
+    author: "Chloe_Style",
+    avatarLetter: "C",
+    avatarColor: "#EC4899",
+    avatarUrl: "/avatars/female_5.svg",
+    gender: "female",
+    isVerified: false,
+    badgeIcon: "✨",
+    userLevel: 27,
+    message: "That outfit looks stunning on you! Does it ship to US? ✨",
+    timestamp: "Now",
+  },
+];
+
+export function getChatBank(lang: ChatLanguageOption = "es"): Omit<UnifiedChatMessage, "id">[] {
+  if (lang === "en") return SAMPLE_CHAT_BANK_EN;
+  if (lang === "both") {
+    const combined: Omit<UnifiedChatMessage, "id">[] = [];
+    const maxLen = Math.max(SAMPLE_CHAT_BANK_ES.length, SAMPLE_CHAT_BANK_EN.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < SAMPLE_CHAT_BANK_ES.length) combined.push(SAMPLE_CHAT_BANK_ES[i]);
+      if (i < SAMPLE_CHAT_BANK_EN.length) combined.push(SAMPLE_CHAT_BANK_EN[i]);
+    }
+    return combined;
+  }
+  return SAMPLE_CHAT_BANK_ES;
+}
+
+export const SAMPLE_CHAT_BANK = SAMPLE_CHAT_BANK_ES;
 
 export function RealFeelLiveChatOverlay({
   messages: propMessages,
@@ -179,11 +387,12 @@ export function RealFeelLiveChatOverlay({
   hasPipCamera = false,
   onOpenWhatsApp,
   hasActiveProduct = false,
+  chatLanguage = "es",
 }: RealFeelLiveChatOverlayProps) {
   const [localMessages, setLocalMessages] = useState<UnifiedChatMessage[]>(() =>
     propMessages && propMessages.length > 0
       ? propMessages.slice(0, 5)
-      : SAMPLE_CHAT_BANK.slice(0, 4).map((item, idx) => ({
+      : getChatBank(chatLanguage).slice(0, 4).map((item, idx) => ({
           ...item,
           id: `initial-live-${idx}`,
         }))
@@ -192,7 +401,6 @@ export function RealFeelLiveChatOverlay({
   const [likesCount, setLikesCount] = useState(50740);
   const [hearts, setHearts] = useState<HeartParticle[]>([]);
   const nextHeartIdRef = useRef(1);
-  const sampleBank = SAMPLE_CHAT_BANK;
 
   // Actualizar si llegan mensajes externos explícitos
   useEffect(() => {
@@ -200,6 +408,19 @@ export function RealFeelLiveChatOverlay({
       setLocalMessages(propMessages.slice(0, 5));
     }
   }, [propMessages]);
+
+  // Cambiar mensajes visibles cuando cambia el idioma si no hay propMessages
+  useEffect(() => {
+    if (!propMessages || propMessages.length === 0) {
+      const bank = getChatBank(chatLanguage);
+      setLocalMessages(
+        bank.slice(0, 4).map((item, idx) => ({
+          ...item,
+          id: `initial-lang-${chatLanguage}-${Date.now()}-${idx}`,
+        }))
+      );
+    }
+  }, [chatLanguage, propMessages]);
 
   // Empujar comentario rápido desde la barra externa debajo del monitor
   useEffect(() => {
@@ -214,20 +435,21 @@ export function RealFeelLiveChatOverlay({
       isVerified: true,
       badgeIcon: "👑",
       message: externalMessageToPush.text.trim(),
-      timestamp: "Ahora",
+      timestamp: chatLanguage === "en" ? "Now" : "Ahora",
     };
     setLocalMessages((prev) => [...prev.slice(-5), userMsg]);
-  }, [externalMessageToPush, streamerName]);
+  }, [externalMessageToPush, streamerName, chatLanguage]);
 
-  // Generador de comentarios continuo sincronizado con viewerRange
+  // Generador de comentarios continuo sincronizado con viewerRange y chatLanguage
   useEffect(() => {
+    const bank = getChatBank(chatLanguage);
     const interval = setInterval(() => {
-      const randomItem = sampleBank[Math.floor(Math.random() * sampleBank.length)];
+      const randomItem = bank[Math.floor(Math.random() * bank.length)];
       const newComment: UnifiedChatMessage = {
         ...randomItem,
         id: `stream-msg-${Date.now()}-${Math.random()}`,
         avatarUrl: randomItem.avatarUrl || getFaceAvatarUrl(randomItem.author, randomItem.gender),
-        timestamp: "Ahora",
+        timestamp: chatLanguage === "en" ? "Now" : "Ahora",
       };
 
       setLocalMessages((prev) => {
@@ -238,7 +460,7 @@ export function RealFeelLiveChatOverlay({
     }, viewerRange.chatSpeedMs);
 
     return () => clearInterval(interval);
-  }, [viewerRange]);
+  }, [viewerRange, chatLanguage]);
 
   // Generador de corazones flotantes continuo
   useEffect(() => {

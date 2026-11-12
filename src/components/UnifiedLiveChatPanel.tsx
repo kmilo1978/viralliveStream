@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import {
   DEFAULT_UNIFIED_CHAT_MESSAGES,
+  getDefaultUnifiedChatMessages,
   type UnifiedChatMessage,
 } from "@/lib/studio-data";
 import { PlatformLogo } from "@/components/PlatformLogos";
@@ -18,6 +19,7 @@ import {
 
 export type MonitorCropMode = "16:9" | "9:16" | "1:1" | "4:3" | "zoom";
 export type UnifiedChatSectionMode = "all" | "feed" | "composer";
+export type ChatLanguageOption = "es" | "en" | "both";
 
 const PINNED_MAX_CHARS = 180;
 const getRecommendedPinChars = (cropMode: MonitorCropMode = "9:16"): number =>
@@ -28,6 +30,8 @@ interface UnifiedLiveChatSharedProps {
   pinnedCommentId?: string | null;
   pinnedMessage?: UnifiedChatMessage | null;
   cropMode?: MonitorCropMode;
+  chatLanguage?: ChatLanguageOption;
+  onLanguageChange?: (lang: ChatLanguageOption) => void;
 }
 
 interface UnifiedLiveChatPanelProps extends UnifiedLiveChatSharedProps {
@@ -116,8 +120,29 @@ function useUnifiedLiveChatController({
   pinnedCommentId,
   pinnedMessage = null,
   cropMode = "16:9",
+  chatLanguage: propChatLanguage,
+  onLanguageChange,
 }: UnifiedLiveChatSharedProps) {
-  const [messages, setMessages] = useState<UnifiedChatMessage[]>(DEFAULT_UNIFIED_CHAT_MESSAGES);
+  const [internalLang, setInternalLang] = useState<ChatLanguageOption>("es");
+  const chatLanguage = propChatLanguage || internalLang;
+
+  const setChatLanguage = (lang: ChatLanguageOption) => {
+    if (onLanguageChange) {
+      onLanguageChange(lang);
+    } else {
+      setInternalLang(lang);
+    }
+  };
+
+  const [messages, setMessages] = useState<UnifiedChatMessage[]>(() =>
+    getDefaultUnifiedChatMessages(chatLanguage)
+  );
+
+  // Sincronizar mensajes si cambia el idioma seleccionado
+  useEffect(() => {
+    setMessages(getDefaultUnifiedChatMessages(chatLanguage));
+  }, [chatLanguage]);
+
   const [enabledPlatforms, setEnabledPlatforms] = useState<Record<ChatPlatformKey, boolean>>({
     tiktok: true,
     youtube: true,
@@ -343,26 +368,68 @@ function useUnifiedLiveChatController({
     }
   };
   // =============================================================
-  // AGENTE IA: RESPONDER AUTOMÁTICAMENTE EN TIEMPO REAL
+  // AGENTE IA: RESPONDER AUTOMÁTICAMENTE EN TIEMPO REAL (ES/EN/AMBAS)
   // =============================================================
   const handleAiReplyToComment = (targetMsg: UnifiedChatMessage) => {
     const textLower = targetMsg.message.toLowerCase();
     let reply = "";
 
-    if (targetMsg.isDonation) {
-      reply = `¡Muchísimas gracias por tu generoso SuperChat de ${targetMsg.donationAmount} ${targetMsg.author}! ❤️ Eres clave para seguir con este streaming de calidad. ¡Abrazo gigante! 🎉`;
-    } else if (textLower.includes("precio") || textLower.includes("cuanto") || textLower.includes("costo") || textLower.includes("vale")) {
-      reply = `¡Hola ${targetMsg.author}! El precio especial de la transmisión incluye 20% de descuento usando el código LIVE20 directo en el enlace en pantalla 🛍️🏷️`;
-    } else if (textLower.includes("envio") || textLower.includes("entrega") || textLower.includes("donde")) {
-      reply = `¡Saludos ${targetMsg.author}! Hacemos envíos garantizados nacionales e internacionales con entrega rápida y guía de rastreo en 24-48h 📦🚚`;
-    } else if (textLower.includes("setup") || textLower.includes("pc") || textLower.includes("camara") || textLower.includes("microfono") || textLower.includes("fondo") || textLower.includes("luz")) {
-      reply = `¡Gracias ${targetMsg.author}! Transmitimos en resolución 1080p con cámara virtual, iluminación LED de estudio y fondo Chroma Key verde en tiempo real 🎙️✨`;
-    } else if (textLower.includes("descuento") || textLower.includes("cupon") || textLower.includes("codigo") || textLower.includes("oferta")) {
-      reply = `¡Por supuesto ${targetMsg.author}! Puedes activar el cupón exclusivo LIVE20 escaneando el código QR visible en pantalla para tu descuento inmediato 💳⚡`;
-    } else if (textLower.includes("talla") || textLower.includes("outfit") || textLower.includes("ropa") || textLower.includes("color")) {
-      reply = `¡Hola ${targetMsg.author}! Tenemos todas las tallas desde S hasta XL disponibles en vivo con probador virtual en directo 👗✨`;
+    const isEnglishReply =
+      chatLanguage === "en" ||
+      (chatLanguage === "both" &&
+        (textLower.includes("what") ||
+          textLower.includes("how") ||
+          textLower.includes("price") ||
+          textLower.includes("shipping") ||
+          textLower.includes("discount") ||
+          textLower.includes("coupon") ||
+          textLower.includes("banger") ||
+          textLower.includes("track") ||
+          textLower.includes("setup") ||
+          textLower.includes("lighting") ||
+          textLower.includes("hello") ||
+          textLower.includes("hi") ||
+          textLower.includes("love") ||
+          textLower.includes("camera") ||
+          textLower.includes("mic") ||
+          textLower.includes("smash") ||
+          textLower.includes("button") ||
+          textLower.includes("superchat") ||
+          textLower.includes("best") ||
+          textLower.includes("is")));
+
+    if (isEnglishReply) {
+      if (targetMsg.isDonation) {
+        reply = `Huge thanks for the generous SuperChat of ${targetMsg.donationAmount} ${targetMsg.author}! ❤️ You keep this high quality live stream going. Big hug! 🎉`;
+      } else if (textLower.includes("price") || textLower.includes("how much") || textLower.includes("cost")) {
+        reply = `Hey ${targetMsg.author}! The live special price includes 20% OFF using promo code LIVE20 via the on-screen link 🛍️🏷️`;
+      } else if (textLower.includes("shipping") || textLower.includes("delivery") || textLower.includes("ship")) {
+        reply = `Greetings ${targetMsg.author}! We offer guaranteed fast worldwide shipping with 24-48h tracking 📦🚚`;
+      } else if (textLower.includes("setup") || textLower.includes("camera") || textLower.includes("mic") || textLower.includes("pc") || textLower.includes("light")) {
+        reply = `Thanks ${targetMsg.author}! Streaming in crisp 1080p 60fps with studio lighting and real-time chroma key 🎙️✨`;
+      } else if (textLower.includes("discount") || textLower.includes("coupon") || textLower.includes("code") || textLower.includes("promo")) {
+        reply = `Of course ${targetMsg.author}! Scan the QR code on screen to instantly apply coupon LIVE20 at checkout 💳⚡`;
+      } else if (textLower.includes("size") || textLower.includes("outfit") || textLower.includes("clothes") || textLower.includes("fit")) {
+        reply = `Hey ${targetMsg.author}! All sizes from S to XL are in stock right now, tested live with our virtual try-on 👗✨`;
+      } else {
+        reply = `Thanks for tuning in to the stream ${targetMsg.author}! Much love and appreciate the good vibes in the chat 🙌🔥`;
+      }
     } else {
-      reply = `¡Muchas gracias por acompañarnos en el directo ${targetMsg.author}! Totalmente de acuerdo, gracias por compartir tu buena vibra con todo el chat 🙌🔥`;
+      if (targetMsg.isDonation) {
+        reply = `¡Muchísimas gracias por tu generoso SuperChat de ${targetMsg.donationAmount} ${targetMsg.author}! ❤️ Eres clave para seguir con este streaming de calidad. ¡Abrazo gigante! 🎉`;
+      } else if (textLower.includes("precio") || textLower.includes("cuanto") || textLower.includes("costo") || textLower.includes("vale")) {
+        reply = `¡Hola ${targetMsg.author}! El precio especial de la transmisión incluye 20% de descuento usando el código LIVE20 directo en el enlace en pantalla 🛍️🏷️`;
+      } else if (textLower.includes("envio") || textLower.includes("entrega") || textLower.includes("donde")) {
+        reply = `¡Saludos ${targetMsg.author}! Hacemos envíos garantizados nacionales e internacionales con entrega rápida y guía de rastreo en 24-48h 📦🚚`;
+      } else if (textLower.includes("setup") || textLower.includes("pc") || textLower.includes("camara") || textLower.includes("microfono") || textLower.includes("fondo") || textLower.includes("luz")) {
+        reply = `¡Gracias ${targetMsg.author}! Transmitimos en resolución 1080p con cámara virtual, iluminación LED de estudio y fondo Chroma Key verde en tiempo real 🎙️✨`;
+      } else if (textLower.includes("descuento") || textLower.includes("cupon") || textLower.includes("codigo") || textLower.includes("oferta")) {
+        reply = `¡Por supuesto ${targetMsg.author}! Puedes activar el cupón exclusivo LIVE20 escaneando el código QR visible en pantalla para tu descuento inmediato 💳⚡`;
+      } else if (textLower.includes("talla") || textLower.includes("outfit") || textLower.includes("ropa") || textLower.includes("color")) {
+        reply = `¡Hola ${targetMsg.author}! Tenemos todas las tallas desde S hasta XL disponibles en vivo con probador virtual en directo 👗✨`;
+      } else {
+        reply = `¡Muchas gracias por acompañarnos en el directo ${targetMsg.author}! Totalmente de acuerdo, gracias por compartir tu buena vibra con todo el chat 🙌🔥`;
+      }
     }
 
     const replyMsg: UnifiedChatMessage = {
@@ -373,7 +440,7 @@ function useUnifiedLiveChatController({
       avatarColor: "#8B5CF6",
       avatarUrl: SPECIAL_AVATARS.bot,
       message: reply,
-      timestamp: "Ahora mismo",
+      timestamp: chatLanguage === "en" ? "Just now" : "Ahora mismo",
       isAiResponse: true,
       replyToAuthor: targetMsg.author,
       replyToText: targetMsg.message,
@@ -385,7 +452,7 @@ function useUnifiedLiveChatController({
   };
 
   // =============================================================
-  // AGENTE IA: GENERADOR DE COMENTARIOS A PARTIR DE UN PROMPT
+  // AGENTE IA: GENERADOR DE COMENTARIOS A PARTIR DE UN PROMPT (ES/EN/AMBAS)
   // =============================================================
   const handleGenerateAiComments = (overridePrompt?: string) => {
     const prompt = (overridePrompt || aiCommentsPrompt).trim();
@@ -398,10 +465,16 @@ function useUnifiedLiveChatController({
       const count = aiCommentCount;
       const generatedList: UnifiedChatMessage[] = [];
 
-      const sampleUsernames = [
+      const sampleUsernamesEs = [
         "@carlos_tech99", "@mariana_vlog", "@mateo_streamer", "@valeria.creativa",
         "@lucas_gadgets", "@daniela_style", "@juan_gamer_live", "@sofia_fitness",
         "@alvaro_online", "@camila_trend", "@nico_reviews", "@paula_live"
+      ];
+
+      const sampleUsernamesEn = [
+        "@alex_streamer", "@chloe_creatives", "@jordan_tech", "@sam_gamer_live",
+        "@taylor_reviews", "@emma_vlogs", "@ryan_gadgets", "@zoe_fitness",
+        "@austin_live", "@morgan_trends", "@liam_vibes", "@olivia_style"
       ];
 
       const platforms: ("tiktok" | "youtube" | "twitch" | "facebook" | "instagram")[] = [
@@ -410,9 +483,10 @@ function useUnifiedLiveChatController({
 
       const donationOptions = ["$2.00", "$5.00", "$10.00", "$20.00", "$50.00"];
 
-      const questionBank: string[] = [];
-      if (pLower.includes("precio") || pLower.includes("descuento") || pLower.includes("compr") || pLower.includes("tienda") || pLower.includes("cupon") || pLower.includes("oferta")) {
-        questionBank.push(
+      // BANCOS EN ESPAÑOL
+      const questionBankEs: string[] = [];
+      if (pLower.includes("precio") || pLower.includes("descuento") || pLower.includes("compr") || pLower.includes("tienda") || pLower.includes("cupon") || pLower.includes("oferta") || pLower.includes("price") || pLower.includes("discount")) {
+        questionBankEs.push(
           "¿El cupón de descuento LIVE20 aplica para envíos a todo el país?",
           "¿Dónde puedo comprar el producto que estás mostrando en pantalla?",
           "¡Acabo de entrar al directo! ¿Cuál es el precio especial de hoy?",
@@ -421,8 +495,8 @@ function useUnifiedLiveChatController({
           "¡Aprovechando el descuento de una vez! ¿Hasta cuándo dura la oferta?"
         );
       }
-      if (pLower.includes("gamer") || pLower.includes("setup") || pLower.includes("pc") || pLower.includes("juego") || pLower.includes("pantalla") || pLower.includes("fps")) {
-        questionBank.push(
+      if (pLower.includes("gamer") || pLower.includes("setup") || pLower.includes("pc") || pLower.includes("juego") || pLower.includes("pantalla") || pLower.includes("fps") || pLower.includes("gpu")) {
+        questionBankEs.push(
           "¿Qué tarjeta gráfica y procesador tienes en ese setup? Va súper fluido 🔥",
           "¡Ese monitor se ve brutal! ¿Es de 144Hz o 240Hz?",
           "¿El micrófono que usas tiene cancelación de ruido integrada?",
@@ -431,15 +505,15 @@ function useUnifiedLiveChatController({
         );
       }
       if (pLower.includes("ropa") || pLower.includes("moda") || pLower.includes("outfit") || pLower.includes("tryon") || pLower.includes("vestir") || pLower.includes("talla")) {
-        questionBank.push(
+        questionBankEs.push(
           "¡Ese outfit te queda espectacular! ¿Tienen disponible en talla M y L?",
           "¿Qué tipo de tela es? ¿Se siente fresca para el clima cálido?",
           "¿Van a sacar más colores de la prenda que mostraste?",
           "Me encantó cómo probaste la ropa en el probador virtual en vivo ✨"
         );
       }
-      if (pLower.includes("donac") || pLower.includes("superchat") || pLower.includes("apoy") || pLower.includes("bits") || pLower.includes("regalo") || pLower.includes("donar")) {
-        questionBank.push(
+      if (pLower.includes("donac") || pLower.includes("superchat") || pLower.includes("apoy") || pLower.includes("bits") || pLower.includes("regalo") || pLower.includes("donar") || pLower.includes("tip")) {
+        questionBankEs.push(
           "Enviando un regalito para apoyar la transmisión, ¡el mejor streamer!",
           "¡SuperChat enviado! Saludos a toda la comunidad del chat 👋",
           "Te mando una donación para que sigas trayendo contenido de esta calidad ❤️",
@@ -447,7 +521,7 @@ function useUnifiedLiveChatController({
         );
       }
 
-      const genericBank = [
+      const genericBankEs = [
         "¡Excelente calidad de transmisión! La resolución y los colores se ven nítidos.",
         "¿Cada cuánto haces directos a esta hora? Ya me suscribí al canal 🔔",
         "¡Saludos desde aquí! Primera vez en tu stream y la producción está genial 🙌",
@@ -456,18 +530,84 @@ function useUnifiedLiveChatController({
         "Me quedo hasta el final del stream, contenido de altísimo nivel."
       ];
 
-      const pool = questionBank.length >= 3 ? [...questionBank, ...genericBank] : genericBank;
+      // BANCOS EN INGLÉS
+      const questionBankEn: string[] = [];
+      if (pLower.includes("precio") || pLower.includes("descuento") || pLower.includes("price") || pLower.includes("discount") || pLower.includes("buy") || pLower.includes("coupon") || pLower.includes("deal") || pLower.includes("code")) {
+        questionBankEn.push(
+          "Does the promo code LIVE20 include free international shipping? 🛍️",
+          "Where can I buy the product on screen right now?",
+          "Just joined the stream! What's the special promo price today?",
+          "Can we pay with credit card or PayPal via the QR code?",
+          "How fast is shipping to the US? Can't wait! 📦⚡",
+          "Grabbing this discount right now! When does the live deal end?"
+        );
+      }
+      if (pLower.includes("gamer") || pLower.includes("setup") || pLower.includes("pc") || pLower.includes("fps") || pLower.includes("gpu") || pLower.includes("screen")) {
+        questionBankEn.push(
+          "What GPU and processor are you running? The live feed is butter smooth 🔥",
+          "That monitor is insane! Is it 144Hz or 240Hz?",
+          "Does your microphone have built-in active noise canceling? Crisp audio! 🎙️",
+          "How did you set up that neon background lighting? Looks unreal 🎮",
+          "Rock solid 60fps streaming, top tier production quality!"
+        );
+      }
+      if (pLower.includes("ropa") || pLower.includes("moda") || pLower.includes("outfit") || pLower.includes("tryon") || pLower.includes("size") || pLower.includes("wear")) {
+        questionBankEn.push(
+          "That outfit looks stunning on you! Do you have sizes M and L in stock? 👗",
+          "What fabric is that? Looks super breathable and lightweight!",
+          "Will there be more color variants of this item dropping soon?",
+          "The live virtual try-on feature looks so clean and realistic ✨"
+        );
+      }
+      if (pLower.includes("donac") || pLower.includes("superchat") || pLower.includes("tip") || pLower.includes("gift") || pLower.includes("bits") || pLower.includes("support")) {
+        questionBankEn.push(
+          "Dropping a SuperChat to support this high quality broadcast! ❤️",
+          "SuperChat sent! Big shoutout to everyone in the chat tonight 👋",
+          "Take my donation, hands down the best creator on the platform! 🚀",
+          "Amazing stream vibe! Sent some love, keep crushing it 🔥"
+        );
+      }
+
+      const genericBankEn = [
+        "Incredible stream quality! The 1080p 60fps sharpness is unmatched.",
+        "What's your weekly schedule? Just hit that follow and bell button 🔔",
+        "First time here and the production level is through the roof! 🙌",
+        "That background setup is wild, chroma key or physical studio?",
+        "Such positive energy in chat today! Shared the link with friends 📲",
+        "Staying until the end of the broadcast, fantastic content!"
+      ];
+
+      // SELECCIÓN SEGÚN IDIOMA (ES, EN O BOTH)
+      let pool: string[];
+      let usernames: string[];
+
+      if (chatLanguage === "en") {
+        pool = questionBankEn.length >= 3 ? [...questionBankEn, ...genericBankEn] : genericBankEn;
+        usernames = sampleUsernamesEn;
+      } else if (chatLanguage === "both") {
+        const poolEs = questionBankEs.length >= 2 ? [...questionBankEs, ...genericBankEs] : genericBankEs;
+        const poolEn = questionBankEn.length >= 2 ? [...questionBankEn, ...genericBankEn] : genericBankEn;
+        pool = [...poolEs, ...poolEn];
+        usernames = [...sampleUsernamesEs, ...sampleUsernamesEn];
+      } else {
+        // Por defecto: Español
+        pool = questionBankEs.length >= 3 ? [...questionBankEs, ...genericBankEs] : genericBankEs;
+        usernames = sampleUsernamesEs;
+      }
+
       const startOffset = Math.floor(Math.random() * platforms.length);
 
       for (let i = 0; i < count; i++) {
-        const username = sampleUsernames[(i + Math.floor(Math.random() * sampleUsernames.length)) % sampleUsernames.length];
+        const username = usernames[(i + Math.floor(Math.random() * usernames.length)) % usernames.length];
         const plat = platforms[(startOffset + i) % platforms.length];
         const text = pool[Math.floor(Math.random() * pool.length)];
-        const isDon = Math.random() > 0.65 || pLower.includes("donac") || pLower.includes("superchat");
+        const isDon = Math.random() > 0.65 || pLower.includes("donac") || pLower.includes("superchat") || pLower.includes("tip");
         const donAmount = isDon ? donationOptions[Math.floor(Math.random() * donationOptions.length)] : undefined;
 
         const g = detectAvatarGender(username);
         const avUrl = getFaceAvatarUrl(username, g);
+        const timeText = chatLanguage === "en" ? `${i * 3 + 2}s ago` : `Hace ${i * 3 + 2}s`;
+
         generatedList.push({
           id: `ai-gen-${Date.now()}-${i}`,
           platform: plat,
@@ -477,7 +617,7 @@ function useUnifiedLiveChatController({
           avatarUrl: avUrl,
           gender: g,
           message: text,
-          timestamp: `Hace ${i * 3 + 2}s`,
+          timestamp: timeText,
           isDonation: isDon,
           donationAmount: donAmount,
         });
@@ -485,7 +625,7 @@ function useUnifiedLiveChatController({
 
       setMessages((prev) => [...generatedList, ...prev]);
       setAiGenerating(false);
-      setToastMessage(`✨ ¡${count} comentarios generados con IA según tu prompt!`);
+      setToastMessage(`✨ ¡${count} comentarios generados con IA en ${chatLanguage === "en" ? "Inglés" : chatLanguage === "both" ? "Ambos idiomas" : "Español"}!`);
       setTimeout(() => setToastMessage(null), 3500);
 
       if (aiAutoResponderActive && generatedList.length > 0) {
@@ -495,7 +635,6 @@ function useUnifiedLiveChatController({
       }
     }, 700);
   };
-
 
   // Lanzar o fijar/desfijar un comentario pregrabado al feed en vivo
   const handleLaunchPreRecorded = (item: PreRecordedComment, pinToScreen: boolean = false) => {
@@ -784,6 +923,8 @@ PedroLiveStream\tApoyando la transmisión desde México, ¡sigue así crack!\tfa
     pinnedCommentId,
     pinnedMessage,
     cropMode,
+    chatLanguage,
+    setChatLanguage,
   };
 }
 
@@ -889,6 +1030,8 @@ function StandaloneChatPanelView({
     pinnedCommentId,
     pinnedMessage,
     cropMode,
+    chatLanguage,
+    setChatLanguage,
   } = ctrl;
 
   const showFeedSection = sectionMode === "all" || sectionMode === "feed";
@@ -1031,6 +1174,42 @@ function StandaloneChatPanelView({
               </button>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Selector de Idioma de Comentarios: Español (por defecto), Inglés o Ambas */}
+      <div className="chat-language-selector-bar">
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Dashicon name="translation" size={15} color="#A78BFA" />
+          <span style={{ fontSize: "0.73rem", fontWeight: 700, color: "#FFFFFF" }}>
+            Idioma del Chat:
+          </span>
+        </div>
+        <div className="chat-lang-btn-group">
+          <button
+            type="button"
+            className={`chat-lang-btn ${chatLanguage === "es" ? "active" : ""}`}
+            onClick={() => setChatLanguage("es")}
+            title="Comentarios 100% en Español (Por defecto)"
+          >
+            🇪🇸 Español <span className="lang-default-tag">Defecto</span>
+          </button>
+          <button
+            type="button"
+            className={`chat-lang-btn ${chatLanguage === "en" ? "active" : ""}`}
+            onClick={() => setChatLanguage("en")}
+            title="Comentarios 100% en Inglés"
+          >
+            🇺🇸 Inglés
+          </button>
+          <button
+            type="button"
+            className={`chat-lang-btn ${chatLanguage === "both" ? "active" : ""}`}
+            onClick={() => setChatLanguage("both")}
+            title="Comentarios en Ambos idiomas (Bilingüe)"
+          >
+            🌎 Ambas
+          </button>
         </div>
       </div>
 
@@ -1315,44 +1494,142 @@ function StandaloneChatPanelView({
                     Multi-Red Social
                   </span>
                 </div>
+
+                {/* Badge indicador y selector rápido de idioma de generación */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, padding: "5px 8px", background: "rgba(139, 92, 246, 0.12)", borderRadius: 6, border: "1px solid rgba(139, 92, 246, 0.25)" }}>
+                  <span style={{ fontSize: "0.68rem", color: "#DDD6FE", fontWeight: 600 }}>
+                    Idioma: <strong style={{ color: "#FFFFFF" }}>{chatLanguage === "es" ? "🇪🇸 Español (Por defecto)" : chatLanguage === "en" ? "🇺🇸 Inglés" : "🌎 Ambas (Bilingüe)"}</strong>
+                  </span>
+                  <div style={{ display: "flex", gap: 3 }}>
+                    <button
+                      type="button"
+                      className={`chat-lang-compact-badge ${chatLanguage === "es" ? "active" : ""}`}
+                      onClick={() => setChatLanguage("es")}
+                      title="Generar en Español (Por defecto)"
+                    >
+                      🇪🇸 ES
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-lang-compact-badge ${chatLanguage === "en" ? "active" : ""}`}
+                      onClick={() => setChatLanguage("en")}
+                      title="Generar en Inglés"
+                    >
+                      🇺🇸 EN
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-lang-compact-badge ${chatLanguage === "both" ? "active" : ""}`}
+                      onClick={() => setChatLanguage("both")}
+                      title="Generar en Ambos idiomas"
+                    >
+                      🌎 Ambos
+                    </button>
+                  </div>
+                </div>
+
                 <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--text-secondary)" }}>
-                  Describe el rol y actitud de la audiencia. La IA generará comentarios creíbles con perfiles y plataformas auténticas.
+                  Describe el rol y actitud de la audiencia. La IA generará comentarios creíbles en {chatLanguage === "en" ? "inglés" : chatLanguage === "both" ? "ambos idiomas" : "español"} con perfiles auténticos.
                 </p>
 
                 <textarea
                   className="pro-textarea-field"
                   rows={2}
-                  placeholder="Ej: Audiencia apasionada preguntando por precios, características técnicas y enviando donaciones de SuperChat"
+                  placeholder={
+                    chatLanguage === "en"
+                      ? "E.g. Excited audience asking for prices, gear setup, shipping time and sending SuperChats"
+                      : chatLanguage === "both"
+                      ? "Ej: Audiencia bilingüe (ES/EN) preguntando por precios, características técnicas y superchats"
+                      : "Ej: Audiencia apasionada preguntando por precios, características técnicas y enviando donaciones de SuperChat"
+                  }
                   value={aiCommentsPrompt}
                   onChange={(e) => setAiCommentsPrompt(e.target.value)}
                 />
 
-                {/* Presets rápidos de prompt */}
+                {/* Presets rápidos de prompt adaptados al idioma */}
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    className="pill-ctrl-button"
-                    style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
-                    onClick={() => setAiCommentsPrompt("Audiencia preguntando por precio, envíos y código de descuento LIVE20")}
-                  >
-                    <Dashicon name="cart" size={12} /> Compradores & Descuentos
-                  </button>
-                  <button
-                    type="button"
-                    className="pill-ctrl-button"
-                    style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
-                    onClick={() => setAiCommentsPrompt("Espectadores gamer preguntando por FPS, GPU y periféricos del stream")}
-                  >
-                    <Dashicon name="performance" size={12} /> Gamers & Setup
-                  </button>
-                  <button
-                    type="button"
-                    className="pill-ctrl-button"
-                    style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
-                    onClick={() => setAiCommentsPrompt("Fans donando SuperChats de $5 a $50 y felicitando la calidad del directo")}
-                  >
-                    <Dashicon name="money-alt" size={12} /> Donaciones SuperChat
-                  </button>
+                  {chatLanguage === "en" ? (
+                    <>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Buyers asking for pricing, worldwide shipping and promo code LIVE20")}
+                      >
+                        <Dashicon name="cart" size={12} /> Buyers & Discounts
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Gamer audience asking about FPS, GPU, monitors and streaming gear")}
+                      >
+                        <Dashicon name="performance" size={12} /> Gamers & Setup
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("SuperChat fans tipping $5 to $50 and cheering stream quality")}
+                      >
+                        <Dashicon name="money-alt" size={12} /> SuperChat Donations
+                      </button>
+                    </>
+                  ) : chatLanguage === "both" ? (
+                    <>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Audiencia bilingüe inglés y español preguntando por precios, envíos y descuentos")}
+                      >
+                        <Dashicon name="translation" size={12} /> Bilingüe (ES/EN)
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Gamer viewers in English and Spanish asking about FPS and PC specs")}
+                      >
+                        <Dashicon name="performance" size={12} /> Gamers Global
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Fans donando SuperChats internacionales de $5 a $50")}
+                      >
+                        <Dashicon name="money-alt" size={12} /> Donaciones & Tips
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Audiencia preguntando por precio, envíos y código de descuento LIVE20")}
+                      >
+                        <Dashicon name="cart" size={12} /> Compradores & Descuentos
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Espectadores gamer preguntando por FPS, GPU y periféricos del stream")}
+                      >
+                        <Dashicon name="performance" size={12} /> Gamers & Setup
+                      </button>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button"
+                        style={{ fontSize: "0.64rem", padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setAiCommentsPrompt("Fans donando SuperChats de $5 a $50 y felicitando la calidad del directo")}
+                      >
+                        <Dashicon name="money-alt" size={12} /> Donaciones SuperChat
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>

@@ -71,7 +71,8 @@ export type DashiconName =
   | "yes"
   | "yes-alt"
   | "trash"
-  | "dismiss";
+  | "dismiss"
+  | "translation";
 
 const DASHICONS_PATHS: Record<DashiconName, string> = {
   "menu-alt": "M3 11h14V9H3zm0 5h14v-2H3zM3 4v2h14V4z",
@@ -194,6 +195,8 @@ const DASHICONS_PATHS: Record<DashiconName, string> = {
     "M12 4h3c.6 0 1 .4 1 1v1H3V5c0-.6.5-1 1-1h3c.2-1.1 1.3-2 2.5-2s2.3.9 2.5 2M8 4h3c-.2-.6-.9-1-1.5-1S8.2 3.4 8 4M4 7h11l-.9 10.1c0 .5-.5.9-1 .9H5.9c-.5 0-.9-.4-1-.9z",
   dismiss:
     "M10 2c4.42 0 8 3.58 8 8s-3.58 8-8 8s-8-3.58-8-8s3.58-8 8-8m5 11l-3-3l3-3l-2-2l-3 3l-3-3l-2 2l3 3l-3 3l2 2l3-3l3 3z",
+  translation:
+    "M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z",
 };
 
 interface DashiconProps {

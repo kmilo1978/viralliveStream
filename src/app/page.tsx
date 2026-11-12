@@ -412,6 +412,10 @@ export default function StudioDeluluPage() {
   const [whatsappConfig, setWhatsappConfig] = useState<WhatsAppConfig>(DEFAULT_WHATSAPP_CONFIG);
   const [showWhatsAppBubblePopover, setShowWhatsAppBubblePopover] = useState<boolean>(false);
 
+  // Personalización de idioma de comentarios y chat IA: "es" | "en" | "both" (Español por defecto)
+  const CHAT_LANGUAGE_STORAGE_KEY = "miplataformastream.chatLanguage.v1";
+  const [chatLanguage, setChatLanguage] = useState<"es" | "en" | "both">("es");
+
   // Formulario nuevo producto
   const [newProdTitle, setNewProdTitle] = useState<string>("");
   const [newProdSubtitle, setNewProdSubtitle] = useState<string>("");
@@ -1779,6 +1783,24 @@ export default function StudioDeluluPage() {
     } catch {}
   }, []);
 
+  // Cargar preferencia de idioma de chat guardada (Español por defecto)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(CHAT_LANGUAGE_STORAGE_KEY);
+      if (stored === "es" || stored === "en" || stored === "both") {
+        setChatLanguage(stored);
+      }
+    } catch {}
+  }, []);
+
+  const handleUpdateChatLanguage = useCallback((lang: "es" | "en" | "both") => {
+    setChatLanguage(lang);
+    try {
+      window.localStorage.setItem(CHAT_LANGUAGE_STORAGE_KEY, lang);
+    } catch {}
+  }, []);
+
   // Contador de elementos públicos activos en pantalla para prevenir sobrecarga visual de la audiencia (Máximo 3)
   // Nota: El Teleprompter NO suma aquí porque es un HUD privado exclusivo del streamer (la audiencia no lo ve)
   const countActiveOnScreen = useCallback(() => {
@@ -3120,6 +3142,8 @@ export default function StudioDeluluPage() {
       {isCockpitTab && (
         <UnifiedLiveChatProvider
           cropMode={effectiveCropMode}
+          chatLanguage={chatLanguage}
+          onLanguageChange={handleUpdateChatLanguage}
           onPinCommentToScreen={(msg) => {
             setPinnedChatMessage(msg);
             if (msg) {
@@ -4770,6 +4794,7 @@ export default function StudioDeluluPage() {
                     bgPreviewMode === "pip_camera"
                   }
                   externalMessageToPush={underMonitorChatPush}
+                  chatLanguage={chatLanguage}
                 />
               )}
 
@@ -5132,7 +5157,13 @@ export default function StudioDeluluPage() {
                     <span style={{ display: "inline-flex", alignItems: "center", opacity: 0.8 }}><Dashicon name="format-chat" size={16} color="rgba(255,255,255,0.8)" /></span>
                     <input
                       type="text"
-                      placeholder="Add a comment... (Presiona Enter para enviar en vivo)"
+                      placeholder={
+                        chatLanguage === "en"
+                          ? "Add a comment... (Press Enter to send live)"
+                          : chatLanguage === "both"
+                          ? "Escribe o Add a comment... (Enter para enviar)"
+                          : "Escribe un comentario... (Presiona Enter para enviar en vivo)"
+                      }
                       value={underMonitorChatText}
                       onChange={(e) => setUnderMonitorChatText(e.target.value)}
                       style={{
@@ -5146,6 +5177,42 @@ export default function StudioDeluluPage() {
                         minWidth: 0,
                       }}
                     />
+                  </div>
+                  {/* Selector rápido de idioma en la barra inferior del monitor */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 3, marginRight: 6 }}>
+                    <button
+                      type="button"
+                      className={`chat-lang-compact-badge ${chatLanguage === "es" ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUpdateChatLanguage("es");
+                      }}
+                      title="Cambiar comentarios en vivo a Español (Por defecto)"
+                    >
+                      🇪🇸 ES
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-lang-compact-badge ${chatLanguage === "en" ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUpdateChatLanguage("en");
+                      }}
+                      title="Cambiar comentarios en vivo a Inglés"
+                    >
+                      🇺🇸 EN
+                    </button>
+                    <button
+                      type="button"
+                      className={`chat-lang-compact-badge ${chatLanguage === "both" ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUpdateChatLanguage("both");
+                      }}
+                      title="Cambiar comentarios en vivo a Ambos idiomas (Bilingüe)"
+                    >
+                      🌎 Ambos
+                    </button>
                   </div>
                   <button
                     type="submit"
@@ -8293,6 +8360,8 @@ export default function StudioDeluluPage() {
                 onPinCommentToScreen={(msg) => setPinnedChatMessage(msg)}
                 pinnedCommentId={pinnedChatMessage?.id}
                 pinnedMessage={pinnedChatMessage}
+                chatLanguage={chatLanguage}
+                onLanguageChange={handleUpdateChatLanguage}
               />
             )}
 

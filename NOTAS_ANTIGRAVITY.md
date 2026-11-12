@@ -1501,3 +1501,25 @@
   3. Alineación perfecta de elementos ambientales: Las insignias neón `● LIVE` y el contador de espectadores `50.7K`, así como las burbujas flotantes de reacciones (`❤️`, `🔥`, `✨`), ahora abrazan directamente el contorno del smartphone sin quedar dispersadas a los extremos de la pantalla.
   4. Barra de comentarios coordinada: El cajetín de comentarios inferior y la burbuja de WhatsApp ajustan su ancho automáticamente para alinearse de forma milimétrica con el ancho seleccionado del móvil.
   5. Modo Escenario Vertical: Opción para alternar entre el chasis de smartphone y el video vertical 9:16 completo sin marcos.
+
+## Validación completada
+- Fecha: 2026-11-12 18:50
+- Resultado: Aprobado (score 10/10)
+- Resumen: Se implementó la personalización completa del idioma de los mensajes y comentarios del stream (Español por defecto, Inglés o Ambos idiomas / bilingüe):
+  1. Selector de idioma con botones pill interactivos en la cabecera del chat y dentro del bloque Agente IA: `[ 🇪🇸 Español (Por defecto) ]`, `[ 🇺🇸 Inglés ]` y `[ 🌎 Ambas ]`.
+  2. Selector rápido de idioma integrado en la barra inferior del monitor (al lado del envío de comentarios en vivo) con ajuste dinámico del placeholder según el idioma elegido.
+  3. Bancos bilingües dedicados en `RealFeelLiveChatOverlay.tsx` (`SAMPLE_CHAT_BANK_ES` y `SAMPLE_CHAT_BANK_EN`) para alimentar la simulación en tiempo real y el monitor en 16:9 y 9:16 móvil.
+  4. Agente IA con bancos de preguntas temáticas adaptadas (precios, gamers, ropa, donaciones) y generador de comentarios IA en inglés, español o bilingüe.
+  5. Auto-Respondedor IA inteligente con respuestas contextuales en el idioma correspondiente (o auto-detección en modo bilingüe).
+  6. Persistencia automática en `localStorage` con la clave `miplataformastream.chatLanguage.v1`.
+- Observaciones: `npx tsc --noEmit` -> OK (cero errores); Verificación Playwright end-to-end con capturas visuales aprobadas en todos los estados.
+
+## Nueva sesión
+- Fecha: 2026-11-12 18:50
+- Solicitud: Poder personalizar si los mensajes son en inglés, español por defecto o ambas.
+- Decisiones clave:
+  - Default establecido en `es` (Español) con etiqueta visual verde `DEFECTO` para garantizar que la experiencia inicial sea en español.
+  - Sincronización bidireccional entre la barra rápida del monitor, el panel lateral unificado y el generador de IA.
+  - Detección semántica automática en el auto-respondedor para el modo bilingüe ("ambas").
+- Pendientes:
+  - Ninguno para este requerimiento. Todo funcionando y verificado.
