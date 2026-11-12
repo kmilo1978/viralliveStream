@@ -1364,6 +1364,7 @@ export type TikTokBrandTheme = {
   streamerSampleUrl: string;
   decorations: string[];
   borderStyle: "curved_wave" | "angular_volt" | "cracked_neon" | "gold_corners";
+  logoUrl?: string;
 };
 
 export const DEFAULT_TIKTOK_BRAND_THEMES: TikTokBrandTheme[] = [

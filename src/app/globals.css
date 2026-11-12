@@ -9114,3 +9114,395 @@ body {
     max-width: 100%;
   }
 }
+
+/* -------------------------------------------------------------
+   TIKTOK MARCAS: COLORES RGB PERSONALIZADOS Y LOGO PNG EN ESTILO
+   ------------------------------------------------------------- */
+.tiktok-style-custom-panel {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 12px;
+}
+
+.tiktok-style-color-block,
+.tiktok-style-logo-block {
+  background: rgba(15, 16, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tiktok-style-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #F8FAFC;
+}
+
+.tiktok-color-swatches-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.tiktok-color-swatch-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tiktok-color-swatch-btn.is-sm {
+  width: 18px;
+  height: 18px;
+}
+
+.tiktok-color-swatch-btn:hover {
+  transform: scale(1.12);
+}
+
+.tiktok-color-swatch-btn.active {
+  border-color: #FFFFFF;
+  box-shadow: 0 0 0 2px #0A0A10, 0 0 0 4px #FFFFFF;
+  transform: scale(1.1);
+}
+
+.tiktok-rgb-controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tiktok-native-color-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: #141625;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #E2E8F0;
+  cursor: pointer;
+}
+
+.tiktok-native-color-pill.is-compact {
+  padding: 2px 6px;
+  font-size: 0.64rem;
+}
+
+.tiktok-native-color-pill input[type="color"] {
+  width: 18px;
+  height: 18px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tiktok-rgb-channel-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tiktok-rgb-input-wrap,
+.tiktok-hex-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border-radius: 7px;
+  background: #11121E;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94A3B8;
+}
+
+.tiktok-rgb-input-wrap input {
+  width: 34px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 700;
+  outline: none;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.tiktok-rgb-input-wrap input::-webkit-outer-spin-button,
+.tiktok-rgb-input-wrap input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tiktok-hex-input-wrap input {
+  width: 68px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: monospace;
+  outline: none;
+}
+
+.tiktok-secondary-color-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.tiktok-logo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tiktok-logo-preview-checker {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  background-color: #161826;
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.06) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.06) 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 960px) {
+  .tiktok-style-custom-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------
+   PLAYLIST STREAMING: MULTILIVE, HORARIOS, PRELANZAMIENTO & VIDEOS PROPIOS
+   ------------------------------------------------------------- */
+.playlist-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.playlist-config-card {
+  background: rgba(15, 16, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.playlist-config-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.playlist-config-card-head h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #FFFFFF;
+}
+
+.playlist-badge-accent,
+.playlist-badge-info {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.playlist-badge-accent {
+  background: rgba(236, 72, 153, 0.16);
+  color: #F472B6;
+  border: 1px solid rgba(236, 72, 153, 0.4);
+}
+
+.playlist-badge-info {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93C5FD;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.playlist-mode-switch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.playlist-platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+  gap: 6px;
+}
+
+.playlist-platform-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: #141625;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #CBD5E1;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.playlist-platform-btn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.playlist-platform-btn.active {
+  color: #FFFFFF;
+}
+
+.playlist-check-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
+.playlist-schedule-inputs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.playlist-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94A3B8;
+}
+
+.playlist-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: #E2E8F0;
+  font-weight: 600;
+  padding-bottom: 6px;
+  cursor: pointer;
+}
+
+.playlist-prelaunch-box {
+  background: rgba(10, 11, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playlist-prelaunch-box.active {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.playlist-prelaunch-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playlist-prelaunch-preview-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px dashed rgba(251, 191, 36, 0.45);
+}
+
+.prelaunch-timer-pill {
+  background: #F59E0B;
+  color: #000000;
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.playlist-url-adder-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(18, 20, 34, 0.92);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  margin-bottom: 12px;
+}
+
+.playlist-url-adder-form input[type="text"],
+.playlist-url-adder-form input[type="url"] {
+  flex: 1;
+  min-width: 180px;
+}
+
+.playlist-slot-time-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #93C5FD;
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+@media (max-width: 900px) {
+  .playlist-config-grid {
+    grid-template-columns: 1fr;
+  }
+}

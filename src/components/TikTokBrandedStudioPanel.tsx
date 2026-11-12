@@ -25,6 +25,64 @@ interface TikTokBrandedStudioPanelProps {
   hideViewerRangeCard?: boolean;
 }
 
+const TIKTOK_STYLE_COLOR_PRESETS: Array<{ label: string; hex: string }> = [
+  { label: "Rosa Neón", hex: "#F472B6" },
+  { label: "TikTok Crimson", hex: "#FF0050" },
+  { label: "Magenta Viral", hex: "#FF2E93" },
+  { label: "Púrpura Live", hex: "#A855F7" },
+  { label: "Cian TikTok", hex: "#00F0FF" },
+  { label: "Azul Eléctrico", hex: "#3B82F6" },
+  { label: "Esmeralda Pro", hex: "#10B981" },
+  { label: "Lima Volt", hex: "#84CC16" },
+  { label: "Ámbar Oro", hex: "#F59E0B" },
+  { label: "Naranja Fuego", hex: "#F97316" },
+  { label: "Coral Brillo", hex: "#FB7185" },
+  { label: "Blanco Puro", hex: "#FFFFFF" },
+];
+
+const TIKTOK_SECONDARY_COLOR_PRESETS: Array<{ label: string; hex: string }> = [
+  { label: "Rosa Suave", hex: "#FDF2F8" },
+  { label: "Bosque Oscuro", hex: "#14532D" },
+  { label: "Violeta Profundo", hex: "#3B0764" },
+  { label: "Ámbar Oscuro", hex: "#78350F" },
+  { label: "Noche Azul", hex: "#0F172A" },
+  { label: "Negro Puro", hex: "#09090F" },
+];
+
+function normalizeHexColor(val: string, fallback = "#F472B6"): string {
+  const clean = val.trim();
+  return /^#[0-9A-Fa-f]{6}$/.test(clean) ? clean.toUpperCase() : fallback;
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const safe = normalizeHexColor(hex);
+  const num = parseInt(safe.slice(1), 16);
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255,
+  };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(Number.isFinite(n) ? n : 0)));
+  return (
+    "#" +
+    [clamp(r), clamp(g), clamp(b)]
+      .map((c) => c.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase()
+  );
+}
+
+function getContrastTextForHex(hex: string): "#000000" | "#FFFFFF" {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.58 ? "#000000" : "#FFFFFF";
+}
+
+const TIKTOK_LOGO_STORAGE_KEY = "miplataformastream.tiktokStyleLogoPng.v1";
+
 export function TikTokBrandedStudioPanel({
   onApplyThemeToCam,
   onSelectCropAspect,
@@ -36,10 +94,24 @@ export function TikTokBrandedStudioPanel({
   onSelectViewerRange,
   hideViewerRangeCard = false,
 }: TikTokBrandedStudioPanelProps) {
-  const [themes, setThemes] = useState<TikTokBrandTheme[]>(DEFAULT_TIKTOK_BRAND_THEMES);
+  const [themes] = useState<TikTokBrandTheme[]>(DEFAULT_TIKTOK_BRAND_THEMES);
   const [activeThemeId, setActiveThemeId] = useState<string>("tt-beauty");
   const [customBrandName, setCustomBrandName] = useState<string>("Beauty by Mia");
   const [customTagline, setCustomTagline] = useState<string>("Glow & Skincare Daily");
+  const [customAccentColor, setCustomAccentColor] = useState<string>(DEFAULT_TIKTOK_BRAND_THEMES[0].accentColor);
+  const [customSecondaryColor, setCustomSecondaryColor] = useState<string>(DEFAULT_TIKTOK_BRAND_THEMES[0].secondaryColor);
+  const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return window.localStorage.getItem(TIKTOK_LOGO_STORAGE_KEY);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [logoSizePx, setLogoSizePx] = useState<number>(28);
+  const logoUploadRef = useRef<HTMLInputElement | null>(null);
   const [showHeartsAnim, setShowHeartsAnim] = useState<boolean>(true);
   const [showLiveBadge, setShowLiveBadge] = useState<boolean>(true);
   const [showShopPill, setShowShopPill] = useState<boolean>(true);
@@ -91,13 +163,53 @@ export function TikTokBrandedStudioPanel({
     }
   }, [propBackgrounds]);
 
-  const activeTheme = themes.find((t) => t.id === activeThemeId) || themes[0];
+  const baseTheme = themes.find((t) => t.id === activeThemeId) || themes[0];
+  const activeTheme: TikTokBrandTheme = {
+    ...baseTheme,
+    brandName: customBrandName,
+    tagline: customTagline,
+    accentColor: normalizeHexColor(customAccentColor, baseTheme.accentColor),
+    secondaryColor: normalizeHexColor(customSecondaryColor, baseTheme.secondaryColor),
+    logoUrl: customLogoUrl || undefined,
+  };
+  const accentRgb = hexToRgb(activeTheme.accentColor);
+  const accentContrastText = getContrastTextForHex(activeTheme.accentColor);
   const activeBg = bgList.find((b) => b.id === tiktokBgId) || bgList.find((b) => b.id === "bg-chroma-green");
 
   const handleSelectTheme = (theme: TikTokBrandTheme) => {
     setActiveThemeId(theme.id);
     setCustomBrandName(theme.brandName);
     setCustomTagline(theme.tagline);
+    setCustomAccentColor(theme.accentColor.toUpperCase());
+    setCustomSecondaryColor(theme.secondaryColor.toUpperCase());
+  };
+
+  const handleAccentRgbChannel = (channel: "r" | "g" | "b", value: string) => {
+    const num = Math.max(0, Math.min(255, Number.parseInt(value || "0", 10) || 0));
+    const next = { ...accentRgb, [channel]: num };
+    setCustomAccentColor(rgbToHex(next.r, next.g, next.b));
+  };
+
+  const handleUploadStyleLogoPng = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (!dataUrl) return;
+      setCustomLogoUrl(dataUrl);
+      try {
+        window.localStorage.setItem(TIKTOK_LOGO_STORAGE_KEY, dataUrl);
+      } catch {}
+      setToastMessage("Logo PNG cargado en el estilo de marca.");
+      setTimeout(() => setToastMessage(null), 3000);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveStyleLogoPng = () => {
+    setCustomLogoUrl(null);
+    try {
+      window.localStorage.removeItem(TIKTOK_LOGO_STORAGE_KEY);
+    } catch {}
   };
 
   // Seleccionar fondo para el preview de TikTok Live
@@ -173,6 +285,9 @@ export function TikTokBrandedStudioPanel({
       ...activeTheme,
       brandName: customBrandName,
       tagline: customTagline,
+      accentColor: activeTheme.accentColor,
+      secondaryColor: activeTheme.secondaryColor,
+      logoUrl: customLogoUrl || undefined,
     };
     if (onSelectCropAspect) {
       onSelectCropAspect("9:16");
@@ -249,42 +364,16 @@ export function TikTokBrandedStudioPanel({
             >
               {/* CAPA DE FONDO VIRTUAL O CHROMA KEY EN TIEMPO REAL */}
               {activeBg?.id === "bg-chroma-green" ? (
-                /* FONDO VERDE CHROMA KEY PURO (#00FF00) */
+                /* FONDO VERDE CHROMA KEY PURO (#00FF00) SIN TEXTO EN PANTALLA */
                 <div
+                  className="tiktok-chroma-green-stage"
                   style={{
                     position: "absolute",
                     inset: 0,
                     zIndex: 1,
                     backgroundColor: "#00FF00",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
                   }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0, 0, 0, 0.75)",
-                      border: "1px solid #00FF00",
-                      borderRadius: 12,
-                      padding: "8px 14px",
-                      textAlign: "center",
-                      color: "#00FF00",
-                      fontSize: "0.74rem",
-                      fontWeight: 800,
-                      backdropFilter: "blur(6px)",
-                      maxWidth: 220,
-                    }}
-                  >
-                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                      <Dashicon name="art" size={14} color="#00FF00" />
-                      <span>FONDO VERDE CHROMA KEY</span>
-                    </span>
-                    <p style={{ margin: "4px 0 0 0", fontSize: "0.65rem", color: "#E5E7EB", fontWeight: 400 }}>
-                      Listo para recortar en OBS o emitir con transparencia limpia.
-                    </p>
-                  </div>
-                </div>
+                />
               ) : activeBg?.mediaType === "video" || activeBg?.customVideoUrl ? (
                 /* FONDO DE VIDEO EN BUCLE (LOOP VIDEO) CONTINUO */
                 <video
@@ -409,7 +498,17 @@ export function TikTokBrandedStudioPanel({
                   )}
 
                   <div className="tiktok-brand-chip" style={{ borderColor: activeTheme.accentColor }}>
-                    <span>{activeTheme.decorations[0]}</span>
+                    {customLogoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={customLogoUrl}
+                        alt={`${customBrandName} logo`}
+                        className="tiktok-chip-logo-img"
+                        style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+                      />
+                    ) : (
+                      <span>{activeTheme.decorations[0]}</span>
+                    )}
                     <strong>{customBrandName}</strong>
                   </div>
                 </div>
@@ -417,39 +516,6 @@ export function TikTokBrandedStudioPanel({
                 <div className="tiktok-watermark-tag" style={{ color: activeTheme.accentColor }}>
                   {activeTheme.topBadge}
                 </div>
-              </div>
-
-              {/* BADGE DE FONDO ACTIVO EN PANTALLA */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 50,
-                  right: 10,
-                  zIndex: 15,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "3px 8px",
-                  borderRadius: 6,
-                  backgroundColor: activeBg?.id === "bg-chroma-green" ? "rgba(0, 0, 0, 0.8)" : "rgba(0,0,0,0.75)",
-                  border: activeBg?.id === "bg-chroma-green" ? "1px solid #00FF00" : "1px solid rgba(255,255,255,0.2)",
-                  color: activeBg?.id === "bg-chroma-green" ? "#00FF00" : "#FFFFFF",
-                  fontSize: "0.65rem",
-                  fontWeight: 800,
-                  backdropFilter: "blur(4px)",
-                }}
-              >
-                <Dashicon
-                  name={activeBg?.id === "bg-chroma-green" ? "art" : "format-gallery"}
-                  size={12}
-                  color={activeBg?.id === "bg-chroma-green" ? "#00FF00" : "#A5B4FC"}
-                />
-                <span>{activeBg ? activeBg.name : "Chroma Key"}</span>
-                {tiktokBgId === defaultBgId && (
-                  <span style={{ color: "#FBBF24", fontSize: "0.6rem", display: "inline-flex", alignItems: "center", gap: 2 }}>
-                    <Dashicon name="star-filled" size={10} /> Default
-                  </span>
-                )}
               </div>
 
               {/* MARCO LATERAL O EFECTO ANGULAR DECORATIVO */}
@@ -511,20 +577,44 @@ export function TikTokBrandedStudioPanel({
                   background: `linear-gradient(0deg, #0A0A10F5 0%, #0A0A10D0 100%)`,
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#FFFFFF" }}>
-                      {customBrandName}
-                    </div>
-                    <div style={{ fontSize: "0.72rem", color: activeTheme.accentColor, fontWeight: 700 }}>
-                      {customTagline}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    {customLogoUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={customLogoUrl}
+                        alt={`${customBrandName} logo PNG`}
+                        className="tiktok-banner-logo-png"
+                        style={{
+                          width: logoSizePx,
+                          height: logoSizePx,
+                          objectFit: "contain",
+                          flexShrink: 0,
+                          filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.65))",
+                        }}
+                      />
+                    )}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#FFFFFF" }}>
+                        {customBrandName}
+                      </div>
+                      <div style={{ fontSize: "0.72rem", color: activeTheme.accentColor, fontWeight: 700 }}>
+                        {customTagline}
+                      </div>
                     </div>
                   </div>
 
                   {showShopPill && (
                     <div
                       className="tiktok-shop-pill-btn"
-                      style={{ backgroundColor: activeTheme.accentColor, color: "#000000", display: "inline-flex", alignItems: "center", gap: 4 }}
+                      style={{
+                        backgroundColor: activeTheme.accentColor,
+                        color: accentContrastText,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        flexShrink: 0,
+                      }}
                     >
                       <Dashicon name="cart" size={12} />
                       <span>SHOP</span>
@@ -687,22 +777,30 @@ export function TikTokBrandedStudioPanel({
             </div>
           </div>
 
-          {/* SECCIÓN 2: SELECCIONAR ESTILO DE MARCA */}
+          {/* SECCIÓN 2: SELECCIONAR ESTILO DE MARCA, COLORES RGB Y LOGO PNG */}
           <div className="customizer-card-box">
             <h3 style={{ margin: "0 0 10px 0", fontSize: "0.95rem", color: "#FFFFFF" }}>
-              2. Selecciona un Estilo de Marco Preconfigurado
+              2. Estilo de Marco, Colores RGB y Logo PNG
             </h3>
             <div className="themes-preset-grid">
               {themes.map((t) => {
                 const isSelected = activeThemeId === t.id;
+                const displayAccent = isSelected ? activeTheme.accentColor : t.accentColor;
+                const displaySecondary = isSelected ? activeTheme.secondaryColor : t.secondaryColor;
                 return (
                   <div
                     key={t.id}
                     className={`theme-preset-card ${isSelected ? "selected" : ""}`}
                     onClick={() => handleSelectTheme(t)}
-                    style={{ borderColor: isSelected ? t.accentColor : "var(--border-dark)" }}
+                    style={{ borderColor: isSelected ? displayAccent : "var(--border-dark)" }}
                   >
-                    <div className="theme-preset-badge" style={{ backgroundColor: t.accentColor }}>
+                    <div
+                      className="theme-preset-badge"
+                      style={{
+                        backgroundColor: displayAccent,
+                        color: getContrastTextForHex(displayAccent),
+                      }}
+                    >
                       {t.decorations[0]} {t.name}
                     </div>
                     <strong style={{ fontSize: "0.82rem", color: "#FFFFFF" }}>{t.brandName}</strong>
@@ -711,11 +809,206 @@ export function TikTokBrandedStudioPanel({
                     </span>
                     <div
                       className="theme-preset-preview-line"
-                      style={{ background: `linear-gradient(90deg, ${t.accentColor}, ${t.secondaryColor})` }}
+                      style={{ background: `linear-gradient(90deg, ${displayAccent}, ${displaySecondary})` }}
                     />
                   </div>
                 );
               })}
+            </div>
+
+            {/* SUB-BLOQUE EN ESTILO: VARIEDAD DE COLORES, RGB PERSONALIZADO Y LOGO PNG */}
+            <div className="tiktok-style-custom-panel">
+              <div className="tiktok-style-color-block">
+                <div className="tiktok-style-subhead">
+                  <span>Color del Estilo (Paleta + RGB Personalizado)</span>
+                  <button
+                    type="button"
+                    className="pill-ctrl-button"
+                    style={{ padding: "3px 8px", fontSize: "0.68rem", minHeight: 26 }}
+                    onClick={() => {
+                      setCustomAccentColor(baseTheme.accentColor.toUpperCase());
+                      setCustomSecondaryColor(baseTheme.secondaryColor.toUpperCase());
+                    }}
+                  >
+                    Restaurar del tema
+                  </button>
+                </div>
+
+                {/* Paleta rápida de 12 colores */}
+                <div className="tiktok-color-swatches-row" role="group" aria-label="Paleta de colores de estilo">
+                  {TIKTOK_STYLE_COLOR_PRESETS.map((swatch) => {
+                    const isColorActive = activeTheme.accentColor.toUpperCase() === swatch.hex.toUpperCase();
+                    return (
+                      <button
+                        key={swatch.hex}
+                        type="button"
+                        className={`tiktok-color-swatch-btn ${isColorActive ? "active" : ""}`}
+                        style={{ backgroundColor: swatch.hex }}
+                        onClick={() => setCustomAccentColor(swatch.hex)}
+                        title={`${swatch.label} (${swatch.hex})`}
+                        aria-label={`Color ${swatch.label}`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Selector RGB personalizado + Hex + Picker visual */}
+                <div className="tiktok-rgb-controls-row">
+                  <label className="tiktok-native-color-pill" title="Abrir selector visual de color RGB">
+                    <input
+                      type="color"
+                      aria-label="Selector visual RGB personalizado"
+                      value={activeTheme.accentColor}
+                      onChange={(e) => setCustomAccentColor(e.target.value.toUpperCase())}
+                    />
+                    <span>RGB Visual</span>
+                  </label>
+
+                  <div className="tiktok-rgb-channel-group">
+                    <label className="tiktok-rgb-input-wrap">
+                      <span>R</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={255}
+                        aria-label="Canal Rojo RGB"
+                        value={accentRgb.r}
+                        onChange={(e) => handleAccentRgbChannel("r", e.target.value)}
+                      />
+                    </label>
+                    <label className="tiktok-rgb-input-wrap">
+                      <span>G</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={255}
+                        aria-label="Canal Verde RGB"
+                        value={accentRgb.g}
+                        onChange={(e) => handleAccentRgbChannel("g", e.target.value)}
+                      />
+                    </label>
+                    <label className="tiktok-rgb-input-wrap">
+                      <span>B</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={255}
+                        aria-label="Canal Azul RGB"
+                        value={accentRgb.b}
+                        onChange={(e) => handleAccentRgbChannel("b", e.target.value)}
+                      />
+                    </label>
+                  </div>
+
+                  <label className="tiktok-hex-input-wrap">
+                    <span>HEX</span>
+                    <input
+                      type="text"
+                      maxLength={7}
+                      aria-label="Código hexadecimal de color"
+                      value={customAccentColor}
+                      onChange={(e) => {
+                        const raw = e.target.value.toUpperCase();
+                        setCustomAccentColor(raw);
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* Color Secundario / Gradiente superior */}
+                <div className="tiktok-secondary-color-row">
+                  <span style={{ fontSize: "0.7rem", color: "#94A3B8", fontWeight: 700 }}>
+                    Fondo del marco:
+                  </span>
+                  <div className="tiktok-color-swatches-row is-compact">
+                    {TIKTOK_SECONDARY_COLOR_PRESETS.map((sec) => (
+                      <button
+                        key={sec.hex}
+                        type="button"
+                        className={`tiktok-color-swatch-btn is-sm ${activeTheme.secondaryColor.toUpperCase() === sec.hex.toUpperCase() ? "active" : ""}`}
+                        style={{ backgroundColor: sec.hex }}
+                        onClick={() => setCustomSecondaryColor(sec.hex)}
+                        title={`Fondo ${sec.label} (${sec.hex})`}
+                        aria-label={`Color secundario ${sec.label}`}
+                      />
+                    ))}
+                    <label className="tiktok-native-color-pill is-compact" title="Color secundario personalizado">
+                      <input
+                        type="color"
+                        aria-label="Selector de color secundario RGB"
+                        value={activeTheme.secondaryColor}
+                        onChange={(e) => setCustomSecondaryColor(e.target.value.toUpperCase())}
+                      />
+                      <span>Otro</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Logo de marca en PNG transparente */}
+              <div className="tiktok-style-logo-block">
+                <div className="tiktok-style-subhead">
+                  <span>Logo de Marca en PNG (Transparente)</span>
+                  {customLogoUrl && (
+                    <button
+                      type="button"
+                      className="pill-ctrl-button"
+                      style={{ padding: "3px 8px", fontSize: "0.68rem", minHeight: 26, borderColor: "#EF4444", color: "#FCA5A5" }}
+                      onClick={handleRemoveStyleLogoPng}
+                    >
+                      Quitar Logo
+                    </button>
+                  )}
+                </div>
+
+                <div className="tiktok-logo-upload-row">
+                  <div className="tiktok-logo-preview-checker">
+                    {customLogoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={customLogoUrl} alt="Vista previa Logo PNG" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                    ) : (
+                      <Dashicon name="format-image" size={20} color="#64748B" />
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+                    <label className="pill-ctrl-button" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, width: "fit-content" }}>
+                      <Dashicon name="upload" size={13} />
+                      <span>{customLogoUrl ? "Cambiar Logo PNG" : "Subir Logo PNG"}</span>
+                      <input
+                        ref={logoUploadRef}
+                        type="file"
+                        accept="image/png,image/webp,image/svg+xml,.png"
+                        aria-label="Subir logo en PNG para el estilo"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleUploadStyleLogoPng(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+
+                    {customLogoUrl ? (
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.7rem", color: "#CBD5E1" }}>
+                        <span>Tamaño ({logoSizePx}px):</span>
+                        <input
+                          type="range"
+                          min={20}
+                          max={48}
+                          value={logoSizePx}
+                          aria-label="Tamaño del logo PNG en pantalla"
+                          onChange={(e) => setLogoSizePx(Number(e.target.value))}
+                        />
+                      </label>
+                    ) : (
+                      <span style={{ fontSize: "0.7rem", color: "#94A3B8" }}>
+                        Sube tu logotipo `.png` transparente para mostrarlo arriba y en el banner de tu directo.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

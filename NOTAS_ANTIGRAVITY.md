@@ -1044,3 +1044,48 @@
   - Publicado commit `f2d60fd` en `origin/main` con los 7 archivos de código y notas actualizados.
 - Pendientes:
   - Esperar siguiente instrucción del usuario (continuar ajustes o proceder con congelación V1 + carpeta aislada V2 SaaS).
+
+
+## Validación completada
+- Fecha: 2026-11-12 11:37
+- Resultado: Aprobado (score 10/10)
+- Resumen: Mejorado **TikTok Live con Marcas (`TikTokBrandedStudioPanel.tsx`)**:
+  1. Eliminado el badge flotante que imprimía el nombre del fondo seleccionado (y el cartel de Chroma Key) sobre la pantalla del simulador en directo.
+  2. Añadido cargador de **Logo de Marca en PNG (Transparente)** dentro de **Estilo**, con vista previa sobre cuadrícula de transparencia, control deslizante de tamaño (`20px – 48px`) y renderizado directo tanto en la vista previa TikTok como al aplicarlo en **CAM**.
+  3. Incorporada paleta de **12 colores rápidos + 6 fondos de marco + selector RGB / HEX personalizado** (picker visual y canales `R`, `G`, `B`) con ajuste automático de contraste de texto en botones.
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 11:37
+- Solicitud: Quitar el nombre del fondo de la pantalla en TikTok Marcas, permitir subir Logo PNG en Estilo y agregar variedad de colores con selector RGB personalizado.
+- Decisiones clave:
+  - Removido el overlay del nombre de fondo y tarjeta de Chroma Key de `.tiktok-live-screen-viewport`.
+  - Añadidos `customAccentColor`, `customSecondaryColor`, `customLogoUrl` (persistido en `localStorage` bajo `miplataformastream.tiktokStyleLogoPng.v1`) y `logoSizePx` en `src/components/TikTokBrandedStudioPanel.tsx`, más soporte de `logoUrl` en `TikTokBrandTheme` (`src/lib/studio-data.ts`) y en el overlay de `src/app/page.tsx`.
+- Pendientes:
+  - Respaldar este bloque en GitHub cuando el usuario indique o continuar con el siguiente ajuste.
+
+
+## Validación completada
+- Fecha: 2026-11-12 11:46
+- Resultado: Aprobado (score 10/10)
+- Resumen: Ampliado **Playlist Streaming** (`src/components/PlaylistStreamingPanel.tsx`, `src/app/page.tsx` y `src/app/globals.css`) con:
+  1. Subida múltiple de videos propios locales (`MP4 / WebM / MOV / MKV / M4V`) con detección automática de duración, más formulario rápido `+ Video por URL`.
+  2. Programación de fecha, hora de inicio y hora de fin (`Emitir Ahora` vs `Programar Fecha y Hora`), inicio automático puntual y franja horaria acumulada calculada para cada video en la lista.
+  3. Bloque de **Prelanzamiento / Cuenta Regresiva (Premiere)** con selector de minutos previos (`1` a `15 min`), mensaje personalizable de sala de espera y vista previa `PRELANZAMIENTO T-05:00`.
+  4. Selector de destino entre **Una Plataforma** o **MultiLive (Simultáneo)** con 7 plataformas (`TikTok Live`, `YouTube Live`, `Instagram Live`, `Facebook Live`, `Twitch`, `X Live`, `RTMP Custom`).
+- Observaciones: `npx tsc --noEmit` -> `TSC_OK`; `verify_viralive_spike.py` -> 9/9 escenarios PASS (`0` console_errors, `0` page_errors, `0` overflow).
+
+## Nueva sesión
+- Fecha: 2026-11-12 11:46
+- Solicitud: Agregar a Playlist subida de videos propios, programación de horas, prelanzamientos y elección de plataforma única o MultiLive.
+- Decisiones clave:
+  - Añadida lectura de duración real desde `<video>` local en `readLocalVideoMetadata()`, cálculos acumulados `addSecondsToClock()` y metadatos `PlaylistBroadcastMeta` propagados al estado de cabina en `page.tsx`.
+  - Corregidos iconos válidos de `DashiconName` (`networking` y `rest-api`).
+- Pendientes:
+  - Subir estos cambios de TikTok Marcas y Playlist a GitHub cuando el usuario lo indique.
+
+
+## Regla de flujo acordada con el usuario
+- Fecha: 2026-11-12 11:49
+- Regla: **Actualizar siempre GitHub (`origin/main`) automáticamente después de cada cambio de código verificado** (`tsc --noEmit` + Playwright OK), asegurando que nunca queden cambios aprobados solo en local.
+- Repositorio sincronizado: `https://github.com/kmilo1978/viralliveStream.git` (`main`).

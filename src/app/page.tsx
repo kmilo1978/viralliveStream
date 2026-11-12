@@ -4279,7 +4279,16 @@ export default function StudioDeluluPage() {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span>{activeTikTokTheme.decorations[0]}</span>
+                        {activeTikTokTheme.logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={activeTikTokTheme.logoUrl}
+                            alt={`${activeTikTokTheme.brandName} logo`}
+                            style={{ width: 24, height: 24, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+                          />
+                        ) : (
+                          <span>{activeTikTokTheme.decorations[0]}</span>
+                        )}
                         <div>
                           <div style={{ fontSize: "0.74rem", fontWeight: 900, color: "#FFFFFF", lineHeight: 1.1 }}>
                             {activeTikTokTheme.brandName}
@@ -4314,7 +4323,16 @@ export default function StudioDeluluPage() {
                             <span>{guestSplitConfig.viewerRange.formattedCount}</span>
                           </div>
                           <div className="tiktok-brand-chip" style={{ borderColor: activeTikTokTheme.accentColor }}>
-                            <span>{activeTikTokTheme.decorations[0]}</span>
+                            {activeTikTokTheme.logoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={activeTikTokTheme.logoUrl}
+                                alt={`${activeTikTokTheme.brandName} logo`}
+                                style={{ width: 18, height: 18, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+                              />
+                            ) : (
+                              <span>{activeTikTokTheme.decorations[0]}</span>
+                            )}
                             <strong>{activeTikTokTheme.brandName}</strong>
                           </div>
                         </div>
@@ -4330,13 +4348,23 @@ export default function StudioDeluluPage() {
                           borderTop: `2px solid ${activeTikTokTheme.accentColor}`,
                         }}
                       >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div>
-                            <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#FFFFFF" }}>
-                              {activeTikTokTheme.brandName}
-                            </div>
-                            <div style={{ fontSize: "0.72rem", color: activeTikTokTheme.accentColor, fontWeight: 700 }}>
-                              {activeTikTokTheme.tagline}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {activeTikTokTheme.logoUrl && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={activeTikTokTheme.logoUrl}
+                                alt={`${activeTikTokTheme.brandName} logo PNG`}
+                                style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }}
+                              />
+                            )}
+                            <div>
+                              <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#FFFFFF" }}>
+                                {activeTikTokTheme.brandName}
+                              </div>
+                              <div style={{ fontSize: "0.72rem", color: activeTikTokTheme.accentColor, fontWeight: 700 }}>
+                                {activeTikTokTheme.tagline}
+                              </div>
                             </div>
                           </div>
                           <div
@@ -6318,13 +6346,24 @@ export default function StudioDeluluPage() {
                   setActiveTab("CAM");
                   setStreamInfo("📼 Video de la playlist cargado en el monitor.");
                 }}
-                onStartPlaylistStream={(items, loop) => {
+                onStartPlaylistStream={(items, loop, meta) => {
                   if (items[0]) {
                     setLocalVideoFileUrl(items[0].videoUrl);
                     setSourceMode("video_file");
                   }
+                  const destText =
+                    meta?.broadcastMode === "single"
+                      ? `1 plataforma (${meta.selectedPlatforms[0]})`
+                      : `MultiLive (${meta?.selectedPlatforms.length || 3} plataformas)`;
+                  const schedText =
+                    meta?.scheduleMode === "scheduled"
+                      ? ` · Programado ${meta.scheduledDate} ${meta.scheduledStartTime}`
+                      : "";
+                  const preText = meta?.enablePreLaunch
+                    ? ` · Prelanzamiento ${meta.preLaunchMinutes}m`
+                    : "";
                   setActiveTab("CAM");
-                  setStreamInfo("🚀 Playlist streaming en directo iniciado.");
+                  setStreamInfo(`🚀 Playlist streaming ${loop ? "24/7" : "en cola"} hacia ${destText}${schedText}${preText}.`);
                 }}
               />
             )}
