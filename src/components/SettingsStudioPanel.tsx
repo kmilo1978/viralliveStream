@@ -31,6 +31,10 @@ export function SettingsStudioPanel({
   const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [elevenlabsApiKey, setElevenlabsApiKey] = useState("");
   const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [openrouterApiKey, setOpenrouterApiKey] = useState("");
+  const [claudeApiKey, setClaudeApiKey] = useState("");
+  const [higgsfieldApiKey, setHiggsfieldApiKey] = useState("");
+  const [huggingfaceApiKey, setHuggingfaceApiKey] = useState("");
   const [showKeys, setShowKeys] = useState(false);
   const [apiSaveStatus, setApiSaveStatus] = useState<string | null>(null);
   const [testingApi, setTestingApi] = useState<string | null>(null);
@@ -72,6 +76,10 @@ export function SettingsStudioPanel({
       setOpenaiApiKey(localStorage.getItem("openai_api_key") || "");
       setElevenlabsApiKey(localStorage.getItem("elevenlabs_api_key") || "");
       setGeminiApiKey(localStorage.getItem("gemini_api_key") || "");
+      setOpenrouterApiKey(localStorage.getItem("openrouter_api_key") || "");
+      setClaudeApiKey(localStorage.getItem("claude_api_key") || "");
+      setHiggsfieldApiKey(localStorage.getItem("higgsfield_api_key") || "");
+      setHuggingfaceApiKey(localStorage.getItem("huggingface_api_key") || "");
       setRtmpServerUrl(localStorage.getItem("rtmp_server_url") || "rtmp://a.rtmp.youtube.com/live2");
       setRtmpStreamKey(localStorage.getItem("rtmp_stream_key") || "");
       setObsWsHost(localStorage.getItem("obs_ws_host") || "localhost");
@@ -87,13 +95,27 @@ export function SettingsStudioPanel({
       localStorage.setItem("openai_api_key", openaiApiKey);
       localStorage.setItem("elevenlabs_api_key", elevenlabsApiKey);
       localStorage.setItem("gemini_api_key", geminiApiKey);
+      localStorage.setItem("openrouter_api_key", openrouterApiKey);
+      localStorage.setItem("claude_api_key", claudeApiKey);
+      localStorage.setItem("higgsfield_api_key", higgsfieldApiKey);
+      localStorage.setItem("huggingface_api_key", huggingfaceApiKey);
       setApiSaveStatus("✓ Claves de API guardadas correctamente en almacenamiento local seguro.");
       setTimeout(() => setApiSaveStatus(null), 4000);
     }
   };
 
   // Prueba de conexión de API
-  const handleTestApi = (provider: "decart" | "openai" | "elevenlabs" | "gemini") => {
+  const handleTestApi = (
+    provider:
+      | "decart"
+      | "openai"
+      | "elevenlabs"
+      | "gemini"
+      | "openrouter"
+      | "claude"
+      | "higgsfield"
+      | "huggingface",
+  ) => {
     setTestingApi(provider);
     const key =
       provider === "decart"
@@ -102,7 +124,15 @@ export function SettingsStudioPanel({
         ? openaiApiKey
         : provider === "elevenlabs"
         ? elevenlabsApiKey
-        : geminiApiKey;
+        : provider === "gemini"
+        ? geminiApiKey
+        : provider === "openrouter"
+        ? openrouterApiKey
+        : provider === "claude"
+        ? claudeApiKey
+        : provider === "higgsfield"
+        ? higgsfieldApiKey
+        : huggingfaceApiKey;
 
     setTimeout(() => {
       setTestingApi(null);
@@ -478,6 +508,174 @@ export function SettingsStudioPanel({
                 {apiTestResults.gemini && (
                   <span style={{ fontSize: "0.72rem", color: apiTestResults.gemini.ok ? "#4ADE80" : "#F87171" }}>
                     {apiTestResults.gemini.msg} {apiTestResults.gemini.latency ? `(${apiTestResults.gemini.latency}ms)` : ""}
+                  </span>
+                )}
+              </div>
+
+              {/* 5. OpenRouter AI */}
+              <div style={{ minWidth: 0, background: "#151624", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <Dashicon name="networking" size={16} />
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#FFFFFF" }}>OpenRouter AI (200+ Modelos)</strong>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8" }}>
+                        Acceso unificado a Claude 3.5, Llama 3.3, DeepSeek-V3, Qwen y GPT-4o
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`studio-dock-status-badge ${openrouterApiKey ? "active-green" : ""}`}>
+                    {openrouterApiKey ? "Conectado" : "Sin Clave"}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                  <input
+                    type={showKeys ? "text" : "password"}
+                    value={openrouterApiKey}
+                    onChange={(e) => setOpenrouterApiKey(e.target.value)}
+                    placeholder="sk-or-v1-xxxxxxxxxxxxxxxxxxxx"
+                    style={{ flex: "1 1 170px", minWidth: 0, background: "#0D0E15", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: 8, padding: "8px 12px", color: "#FFFFFF", fontSize: "0.8rem" }}
+                  />
+                  <button
+                    type="button"
+                    className="studio-action-button"
+                    disabled={testingApi === "openrouter"}
+                    onClick={() => handleTestApi("openrouter")}
+                    style={{ flex: "0 0 auto", minHeight: 40, padding: "8px 14px" }}
+                  >
+                    <span>{testingApi === "openrouter" ? "Probando..." : "Probar"}</span>
+                  </button>
+                </div>
+                {apiTestResults.openrouter && (
+                  <span style={{ fontSize: "0.72rem", color: apiTestResults.openrouter.ok ? "#4ADE80" : "#F87171" }}>
+                    {apiTestResults.openrouter.msg} {apiTestResults.openrouter.latency ? `(${apiTestResults.openrouter.latency}ms)` : ""}
+                  </span>
+                )}
+              </div>
+
+              {/* 6. Anthropic Claude */}
+              <div style={{ minWidth: 0, background: "#151624", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <Dashicon name="media-text" size={16} />
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#FFFFFF" }}>Anthropic Claude (3.5 Sonnet / Opus)</strong>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8" }}>
+                        Razonamiento avanzado, redacción de prompts y respuestas hipernaturales
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`studio-dock-status-badge ${claudeApiKey ? "active-green" : ""}`}>
+                    {claudeApiKey ? "Conectado" : "Sin Clave"}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                  <input
+                    type={showKeys ? "text" : "password"}
+                    value={claudeApiKey}
+                    onChange={(e) => setClaudeApiKey(e.target.value)}
+                    placeholder="sk-ant-api03-xxxxxxxxxxxxxxxx"
+                    style={{ flex: "1 1 170px", minWidth: 0, background: "#0D0E15", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: 8, padding: "8px 12px", color: "#FFFFFF", fontSize: "0.8rem" }}
+                  />
+                  <button
+                    type="button"
+                    className="studio-action-button"
+                    disabled={testingApi === "claude"}
+                    onClick={() => handleTestApi("claude")}
+                    style={{ flex: "0 0 auto", minHeight: 40, padding: "8px 14px" }}
+                  >
+                    <span>{testingApi === "claude" ? "Probando..." : "Probar"}</span>
+                  </button>
+                </div>
+                {apiTestResults.claude && (
+                  <span style={{ fontSize: "0.72rem", color: apiTestResults.claude.ok ? "#4ADE80" : "#F87171" }}>
+                    {apiTestResults.claude.msg} {apiTestResults.claude.latency ? `(${apiTestResults.claude.latency}ms)` : ""}
+                  </span>
+                )}
+              </div>
+
+              {/* 7. Higgsfield AI ("Hiffiends") */}
+              <div style={{ minWidth: 0, background: "#151624", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <Dashicon name="video-alt2" size={16} />
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#FFFFFF" }}>Higgsfield AI (Video &amp; Personajes)</strong>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8" }}>
+                        Animación cinematográfica de personajes y control de cámara para creadores ("Hiffiends")
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`studio-dock-status-badge ${higgsfieldApiKey ? "active-green" : ""}`}>
+                    {higgsfieldApiKey ? "Conectado" : "Sin Clave"}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                  <input
+                    type={showKeys ? "text" : "password"}
+                    value={higgsfieldApiKey}
+                    onChange={(e) => setHiggsfieldApiKey(e.target.value)}
+                    placeholder="hf_sec_xxxxxxxxxxxxxxxxxxxx"
+                    style={{ flex: "1 1 170px", minWidth: 0, background: "#0D0E15", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: 8, padding: "8px 12px", color: "#FFFFFF", fontSize: "0.8rem" }}
+                  />
+                  <button
+                    type="button"
+                    className="studio-action-button"
+                    disabled={testingApi === "higgsfield"}
+                    onClick={() => handleTestApi("higgsfield")}
+                    style={{ flex: "0 0 auto", minHeight: 40, padding: "8px 14px" }}
+                  >
+                    <span>{testingApi === "higgsfield" ? "Probando..." : "Probar"}</span>
+                  </button>
+                </div>
+                {apiTestResults.higgsfield && (
+                  <span style={{ fontSize: "0.72rem", color: apiTestResults.higgsfield.ok ? "#4ADE80" : "#F87171" }}>
+                    {apiTestResults.higgsfield.msg} {apiTestResults.higgsfield.latency ? `(${apiTestResults.higgsfield.latency}ms)` : ""}
+                  </span>
+                )}
+              </div>
+
+              {/* 8. Hugging Face Hub */}
+              <div style={{ minWidth: 0, background: "#151624", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <Dashicon name="admin-generic" size={16} />
+                    <div style={{ minWidth: 0 }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#FFFFFF" }}>Hugging Face Hub (Inference API)</strong>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8" }}>
+                        Inferencia de FLUX.1, SDXL y pipelines de visión de código abierto
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`studio-dock-status-badge ${huggingfaceApiKey ? "active-green" : ""}`}>
+                    {huggingfaceApiKey ? "Conectado" : "Sin Clave"}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                  <input
+                    type={showKeys ? "text" : "password"}
+                    value={huggingfaceApiKey}
+                    onChange={(e) => setHuggingfaceApiKey(e.target.value)}
+                    placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx"
+                    style={{ flex: "1 1 170px", minWidth: 0, background: "#0D0E15", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: 8, padding: "8px 12px", color: "#FFFFFF", fontSize: "0.8rem" }}
+                  />
+                  <button
+                    type="button"
+                    className="studio-action-button"
+                    disabled={testingApi === "huggingface"}
+                    onClick={() => handleTestApi("huggingface")}
+                    style={{ flex: "0 0 auto", minHeight: 40, padding: "8px 14px" }}
+                  >
+                    <span>{testingApi === "huggingface" ? "Probando..." : "Probar"}</span>
+                  </button>
+                </div>
+                {apiTestResults.huggingface && (
+                  <span style={{ fontSize: "0.72rem", color: apiTestResults.huggingface.ok ? "#4ADE80" : "#F87171" }}>
+                    {apiTestResults.huggingface.msg} {apiTestResults.huggingface.latency ? `(${apiTestResults.huggingface.latency}ms)` : ""}
                   </span>
                 )}
               </div>

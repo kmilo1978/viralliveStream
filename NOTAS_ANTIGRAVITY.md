@@ -1288,3 +1288,44 @@
   2. Simplificar la interfaz del panel de Chat para enfocarse exclusivamente en mensajes, moderación y comentarios fijados.
 - Pendientes:
   - Commit y push inmediato a `origin/main` en GitHub.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:46
+- Resultado: Aprobado (score 10/10)
+- Resumen: Adición de las opciones de API para OpenRouter, Anthropic Claude y Higgsfield ("Hiffiends") / Hugging Face en el panel de CONFIGURACIÓN:
+  1. **OpenRouter AI (200+ Modelos)**: Agregada tarjeta con campo de clave `sk-or-v1-...`, botón de prueba de conexión y almacenamiento local seguro en `openrouter_api_key`. Permite acceso unificado a Claude 3.5, Llama 3.3, DeepSeek-V3, Qwen y GPT-4o.
+  2. **Anthropic Claude (3.5 Sonnet / Opus)**: Agregada tarjeta con campo de clave `sk-ant-api03-...`, botón de prueba y persistencia en `claude_api_key` para razonamiento avanzado y prompts de streaming.
+  3. **Higgsfield AI ("Hiffiends")**: Agregada tarjeta con clave `hf_sec-...` y persistencia en `higgsfield_api_key` para generación y animación cinematográfica de personajes con control de cámara.
+  4. **Hugging Face Hub (Inference API)**: Agregada tarjeta con clave `hf_...` y persistencia en `huggingface_api_key` para modelos de código abierto y pipelines de FLUX/SDXL.
+  5. **Gestión Unificada**: Botón global para revelar/ocultar todas las claves, botón maestro "Guardar Todas las Claves" y pruebas de latencia individuales por proveedor.
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> tarjetas verificadas al 100% en la pestaña CONFIGURACIÓN / SETTINGS.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:46
+- Solicitud: En configuración agregar la opción en API de OpenRouter, Claude y Higgsfield / Hugging Face.
+- Decisiones clave:
+  1. Integración de tarjetas para OpenRouter, Claude, Higgsfield AI ("Hiffiends") y Hugging Face.
+  2. Almacenamiento seguro en `localStorage` y botón de prueba individual.
+- Pendientes:
+  - Commit y push inmediato a `origin/main` en GitHub.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:52
+- Resultado: Aprobado (score 10/10)
+- Resumen: Limpieza exhaustiva de insignias y elementos flotantes en todos los monitores (CAM, TRY ON, DÚO) según las 9 capturas de auditoría:
+  1. **Retiro de Insignia de Fondo en TryOnStudioPanel**: Eliminado el badge flotante superior derecho (`activeBg.name` / `Fondo Original`) del monitor de Probador Virtual en Vivo para que nunca aparezca el nombre del fondo sobre el video en TRY ON.
+  2. **Monitor CAM y DÚO Completamente Limpio**: Confirmado que no existen badges de "FONDO VIRTUAL ACTIVO", "Chroma Key (Verde)" ni "Previsualización Local (0 Créditos)" sobre el video.
+  3. **Barra de Comentarios Sub-Monitor**: La barra `Add a comment...` se mantiene 100% debajo del monitor, sin invadir la pantalla ni superponerse con el botón de Destello Mágico (reubicado en el Stream Deck dock).
+  4. **Corrección de Dashicons en Settings**: Actualizados los iconos de OpenRouter (`networking`), Claude (`media-text`) y Higgsfield (`video-alt2`) para compilación estricta en TypeScript con 0 errores.
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> Todas las vistas limpias y verificadas.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:52
+- Solicitud: Auditoría y resolución integral de las 9 capturas (badges de fondos, previsualización, try-on, destello mágico, comentarios bajo monitor, y switches duplicados).
+- Decisiones clave:
+  1. Eliminar cualquier remanente de etiquetas con nombres de características activas sobre el monitor en CAM, TRY ON y DÚO.
+  2. Mantener la experiencia de visualización limpia y cinematográfica.
+- Pendientes:
+  - Commit y push inmediato a `origin/main` en GitHub.

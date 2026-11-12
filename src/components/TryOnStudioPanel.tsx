@@ -632,34 +632,6 @@ export function TryOnStudioPanel({
                   />
                 )}
 
-                {/* Badge de Fondo Activo en Pantalla */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 10,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "3px 8px",
-                    borderRadius: 6,
-                    backgroundColor: activeBg?.id === "bg-chroma-green" ? "rgba(0, 0, 0, 0.75)" : "rgba(0,0,0,0.75)",
-                    border: activeBg?.id === "bg-chroma-green" ? "1px solid #00FF00" : "1px solid rgba(255,255,255,0.2)",
-                    color: activeBg?.id === "bg-chroma-green" ? "#00FF00" : "#FFFFFF",
-                    fontSize: "0.68rem",
-                    fontWeight: 800,
-                    backdropFilter: "blur(4px)",
-                  }}
-                >
-                  <Dashicon
-                    name={activeBg?.id === "bg-chroma-green" ? "art" : "format-gallery"}
-                    size={13}
-                    color={activeBg?.id === "bg-chroma-green" ? "#00FF00" : "#A5B4FC"}
-                  />
-                  <span>{activeBg ? activeBg.name : "Fondo Original"}</span>
-                </div>
-
                 <video
                   ref={panelRemoteVideoRef}
                   autoPlay
