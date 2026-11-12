@@ -1248,3 +1248,25 @@
   3. Mayor espacio vertical para el feed de mensajes en el tercio inferior del video.
 - Pendientes:
   - Commit y push inmediato a `origin/main` en GitHub.
+
+
+## Validación completada
+- Fecha: 2026-11-12 13:35
+- Resultado: Aprobado (score 10/10)
+- Resumen: Desconexión de Lucy (Decart) en la sección CREATE y conexión directa con motores de IA generativa de última generación tipo Google Gemini y ChatGPT (OpenAI):
+  1. **Nuevo Endpoint `/api/create-ai`**: Diseñado específicamente para creación de Personajes, Vestuarios (Wardrobe) y Accesorios (Props) utilizando Google Gemini (Gemini 2.5 / Imagen 3) y OpenAI ChatGPT (GPT-4o / DALL-E 3).
+  2. **Selector Visual de Motor de IA**: En la barra lateral de CREATE, se integraron botones interactivos para alternar al instante entre `✨ Gemini 2.5` y `🤖 ChatGPT 4o`, con opción desplegable para configurar llaves API personalizadas opcionales.
+  3. **Generación Instantánea de Alta Fidelidad**: Si no se configuran llaves externas, el sistema genera de forma nativa e instantánea activos gráficos vectoriales estilizados de 600x600 px con estética neón/cyberpunk/gala sin consumir créditos de Decart.
+  4. **Etiquetado e Integración**: Las creaciones muestran el sello de IA con el que fueron concebidas (`Google Gemini` o `OpenAI ChatGPT`), permitiendo usarlas de inmediato en la cabina `TRY-ON`, proyectarlas en `CAM` o descargarlas en PNG con nombres semánticos (`outfit-gemini.png`, `personaje-chatgpt.png`).
+- Observaciones: `npx tsc --noEmit` -> 0 errores (`TSC_OK`); Playwright automatizado -> `Submit button text (Gemini): CREAR CON GEMINI`, `Submit button text (ChatGPT): CREAR CON CHATGPT`, insignias y renderizado verificado al 100%.
+
+## Nueva sesión
+- Fecha: 2026-11-12 13:35
+- Solicitud: Desconectar la sección CREATE de Lucy y conectarla a otra IA diferente más tipo ChatGPT o Gemini.
+- Decisiones clave:
+  1. Reemplazo del flujo de `lucy-image-2` por el servicio `/api/create-ai`.
+  2. Adición de selector de IA dual: Google Gemini vs ChatGPT (OpenAI).
+  3. Costo 0 créditos en modo generativo local integrado.
+  4. Flujo continuo hacia Try-On y CAM con los activos creados.
+- Pendientes:
+  - Commit y push inmediato a `origin/main` en GitHub.

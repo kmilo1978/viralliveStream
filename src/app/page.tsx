@@ -586,6 +586,10 @@ export default function StudioDeluluPage() {
   const [createGenerating, setCreateGenerating] = useState<boolean>(false);
   const [createResultUrl, setCreateResultUrl] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createEngine, setCreateEngine] = useState<"gemini" | "chatgpt">("gemini");
+  const [createEngineName, setCreateEngineName] = useState<string>("Google Gemini (Imagen 3)");
+  const [customAiApiKey, setCustomAiApiKey] = useState<string>("");
+  const [showAiKeyInput, setShowAiKeyInput] = useState<boolean>(false);
 
   const isLive =
     telemetry.connectionState !== "desconectado" && telemetry.connectionState !== "disconnected";
@@ -1473,43 +1477,44 @@ export default function StudioDeluluPage() {
     setCreateGenerating(true);
     setCreateError(null);
     try {
-      const seedFile =
-        createMode === "image" && createSourceFile ? createSourceFile : await createStudioSeedFile();
-      const form = new FormData();
-      form.append("prompt", finalPrompt);
-      form.append("resolution", "480p");
-      form.append("data", seedFile);
-
-      const res = await fetch("/api/process-image", {
+      const res = await fetch("/api/create-ai", {
         method: "POST",
-        body: form,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: finalPrompt,
+          category: createCategory,
+          engine: createEngine,
+          apiKey: customAiApiKey.trim() || undefined,
+          chips: activeDraft?.chips,
+          multi: activeDraft?.multi,
+        }),
       });
+
       if (!res.ok) {
         const errData = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errData.error || "No se pudo generar la imagen con lucy-image-2.");
+        throw new Error(errData.error || `No se pudo generar con ${createEngine === "gemini" ? "Google Gemini" : "ChatGPT"}.`);
       }
 
-      const outBlob = await res.blob();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ""));
-        reader.onerror = () => reject(new Error("No se pudo leer la imagen generada."));
-        reader.readAsDataURL(outBlob);
-      });
+      const data = (await res.json()) as { success: boolean; imageUrl: string; engineName?: string };
+      if (!data.imageUrl) {
+        throw new Error("No se recibió la imagen generada.");
+      }
 
       const prefix = isDraftCat ? CREATE_CATEGORY_CONFIG[createCategory].ledgerPrefix : "Creación";
-      setCreateResultUrl(dataUrl);
+      setCreateResultUrl(data.imageUrl);
+      setCreateEngineName(data.engineName || (createEngine === "gemini" ? "Google Gemini (Imagen 3)" : "OpenAI ChatGPT (DALL-E 3)"));
+
       appendLedgerEntry({
         kind: "image",
-        modelId: "lucy-image-2",
-        detail: `${prefix}: ${finalPrompt.slice(0, 30)}...`,
-        decartCredits: 1,
-        usdCost: 0.01,
-        copCost: 42,
+        modelId: createEngine === "gemini" ? "gemini-imagen-3" : "openai-dalle-3",
+        detail: `${prefix} (${createEngine === "gemini" ? "Gemini" : "ChatGPT"}): ${finalPrompt.slice(0, 30)}...`,
+        decartCredits: 0,
+        usdCost: 0,
+        copCost: 0,
       });
       void refreshAccountStatus();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Error generando imagen con lucy-image-2.");
+      setCreateError(err instanceof Error ? err.message : `Error generando con ${createEngine === "gemini" ? "Google Gemini" : "ChatGPT"}.`);
     } finally {
       setCreateGenerating(false);
     }
@@ -1518,11 +1523,10 @@ export default function StudioDeluluPage() {
     categoryDrafts,
     composeCategoryPrompt,
     createCategory,
+    createEngine,
     createGenerating,
-    createMode,
     createPrompt,
-    createSourceFile,
-    createStudioSeedFile,
+    customAiApiKey,
     refreshAccountStatus,
   ]);
 
@@ -5813,6 +5817,145 @@ export default function StudioDeluluPage() {
         <section className="create-workspace-layout">
           {/* Barra lateral de opciones y atributos */}
           <aside className="create-sidebar-builder">
+            {/* SELECTOR DE MOTOR DE IA GENERATIVA (GEMINI / CHATGPT) */}
+            <div
+              className="create-engine-selector-box"
+              style={{
+                padding: "10px 12px",
+                background: "rgba(15, 18, 30, 0.85)",
+                borderRadius: 14,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                marginBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    color: "#94A3B8",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  IA Generativa
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAiKeyInput((prev) => !prev)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#C084FC",
+                    fontSize: "0.66rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                  title="Configurar clave API personalizada"
+                >
+                  {showAiKeyInput ? "Ocultar Key" : "⚙️ API Key"}
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                <button
+                  type="button"
+                  className={`btn-engine-pill ${createEngine === "gemini" ? "active-gemini" : ""}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    padding: "8px 6px",
+                    borderRadius: 8,
+                    fontSize: "0.74rem",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    border:
+                      createEngine === "gemini"
+                        ? "1.5px solid #4285F4"
+                        : "1px solid rgba(255,255,255,0.1)",
+                    background:
+                      createEngine === "gemini"
+                        ? "rgba(66, 133, 244, 0.22)"
+                        : "rgba(255,255,255,0.04)",
+                    color: createEngine === "gemini" ? "#93C5FD" : "rgba(255,255,255,0.7)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onClick={() => {
+                    setCreateEngine("gemini");
+                    setCreateEngineName("Google Gemini (Imagen 3)");
+                  }}
+                >
+                  <span>✨ Gemini 2.5</span>
+                </button>
+                <button
+                  type="button"
+                  className={`btn-engine-pill ${createEngine === "chatgpt" ? "active-chatgpt" : ""}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    padding: "8px 6px",
+                    borderRadius: 8,
+                    fontSize: "0.74rem",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    border:
+                      createEngine === "chatgpt"
+                        ? "1.5px solid #10A37F"
+                        : "1px solid rgba(255,255,255,0.1)",
+                    background:
+                      createEngine === "chatgpt"
+                        ? "rgba(16, 163, 127, 0.22)"
+                        : "rgba(255,255,255,0.04)",
+                    color: createEngine === "chatgpt" ? "#6EE7B7" : "rgba(255,255,255,0.7)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onClick={() => {
+                    setCreateEngine("chatgpt");
+                    setCreateEngineName("OpenAI ChatGPT (DALL-E 3)");
+                  }}
+                >
+                  <span>🤖 ChatGPT 4o</span>
+                </button>
+              </div>
+
+              {showAiKeyInput && (
+                <div style={{ marginTop: 8 }}>
+                  <input
+                    type="password"
+                    placeholder={`Pega tu API Key de ${createEngine === "gemini" ? "Google Gemini" : "OpenAI"} (Opcional)`}
+                    value={customAiApiKey}
+                    onChange={(e) => setCustomAiApiKey(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "5px 8px",
+                      borderRadius: 6,
+                      background: "rgba(0,0,0,0.5)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      color: "#FFFFFF",
+                      fontSize: "0.7rem",
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <span style={{ fontSize: "0.62rem", color: "#64748B", display: "block", marginTop: 2 }}>
+                    Si no agregas una llave, se usará el motor inteligente integrado de alta resolución.
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Toggle de Modo: FROM SCRATCH vs FROM IMAGE */}
             <div className="create-mode-switch-row">
               <button
@@ -6091,7 +6234,7 @@ export default function StudioDeluluPage() {
               </>
             )}
 
-            {/* Botón de acción CREATE conectado a lucy-image-2 */}
+            {/* Botón de acción CREATE conectado a Gemini / ChatGPT */}
             {(() => {
               const isDraftCat = createCategory === "outfit" || createCategory === "props";
               const activeDraft = isDraftCat ? categoryDrafts[createCategory] : null;
@@ -6107,14 +6250,23 @@ export default function StudioDeluluPage() {
                 <button
                   type="button"
                   className={`btn-create-submit ${!isBuilderReady ? "is-muted" : ""}`}
+                  style={{
+                    background:
+                      createEngine === "gemini"
+                        ? "linear-gradient(135deg, #4285F4 0%, #8B5CF6 100%)"
+                        : "linear-gradient(135deg, #10A37F 0%, #2563EB 100%)",
+                    border: "none",
+                    boxShadow:
+                      createEngine === "gemini"
+                        ? "0 4px 14px rgba(66, 133, 244, 0.4)"
+                        : "0 4px 14px rgba(16, 163, 127, 0.4)",
+                  }}
                   onClick={handleGenerateCharacterImage}
                   disabled={createGenerating || !isBuilderReady}
                 >
                   {createGenerating
-                    ? "GENERANDO CON LUCY-IMAGE-2..."
-                    : isDraftCat
-                      ? "CREATE"
-                      : "CREATE (1 CR)"}
+                    ? `GENERANDO CON ${createEngine === "gemini" ? "GEMINI" : "CHATGPT"}...`
+                    : `CREAR CON ${createEngine === "gemini" ? "GEMINI" : "CHATGPT"}`}
                 </button>
               );
             })()}
@@ -6139,6 +6291,31 @@ export default function StudioDeluluPage() {
                   width: "100%",
                 }}
               >
+                {/* Insignia del motor de IA utilizado */}
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 12px",
+                    borderRadius: 14,
+                    background:
+                      createEngine === "gemini"
+                        ? "rgba(66, 133, 244, 0.2)"
+                        : "rgba(16, 163, 127, 0.2)",
+                    border:
+                      createEngine === "gemini"
+                        ? "1px solid rgba(66, 133, 244, 0.6)"
+                        : "1px solid rgba(16, 163, 127, 0.6)",
+                    color: createEngine === "gemini" ? "#93C5FD" : "#6EE7B7",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>{createEngine === "gemini" ? "✨" : "🤖"}</span>
+                  <span>{createEngineName}</span>
+                </div>
+
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={createResultUrl}
@@ -6150,8 +6327,14 @@ export default function StudioDeluluPage() {
                   style={{
                     width: "100%",
                     borderRadius: 16,
-                    border: "2px solid var(--accent-pink)",
-                    boxShadow: "0 10px 30px var(--accent-pink-glow)",
+                    border:
+                      createEngine === "gemini"
+                        ? "2px solid #4285F4"
+                        : "2px solid #10A37F",
+                    boxShadow:
+                      createEngine === "gemini"
+                        ? "0 10px 30px rgba(66, 133, 244, 0.35)"
+                        : "0 10px 30px rgba(16, 163, 127, 0.35)",
                   }}
                 />
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
@@ -6178,7 +6361,7 @@ export default function StudioDeluluPage() {
                       setRefImageFile(
                         dataUrlToFile(
                           createResultUrl,
-                          cfg ? cfg.downloadName : "personaje-generado.png",
+                          cfg ? cfg.downloadName : `personaje-${createEngine}.png`,
                         ),
                       );
                       setSelectedPresetId("ref-swap");
@@ -6209,9 +6392,11 @@ export default function StudioDeluluPage() {
                   <a
                     href={createResultUrl}
                     download={
-                      createCategory === "outfit" || createCategory === "props"
-                        ? CREATE_CATEGORY_CONFIG[createCategory].downloadName
-                        : "personaje-decart.png"
+                      createCategory === "outfit"
+                        ? `outfit-${createEngine}.png`
+                        : createCategory === "props"
+                          ? `accesorio-${createEngine}.png`
+                          : `personaje-${createEngine}.png`
                     }
                     className="pill-ctrl-button"
                     style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
