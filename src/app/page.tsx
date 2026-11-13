@@ -305,6 +305,17 @@ export default function StudioDeluluPage() {
   const [localVideoFileName, setLocalVideoFileName] = useState<string | null>(null);
   const [sourceError, setSourceError] = useState<string | null>(null);
   const [cameraStreamActive, setCameraStreamActive] = useState<boolean>(false);
+  const [clipsDualState, setClipsDualState] = useState<{
+    originalUrl: string | null;
+    processedUrl: string | null;
+    isProcessing: boolean;
+    fileName?: string | null;
+  }>({
+    originalUrl: null,
+    processedUrl: null,
+    isProcessing: false,
+    fileName: null,
+  });
 
   // Parámetros de IA
   const [selectedModelId, setSelectedModelId] = useState<SpikeRealtimeModelId>("lucy-2.6");
@@ -3384,8 +3395,10 @@ export default function StudioDeluluPage() {
                   setLocalVideoFileUrl(videoUrl);
                   if (fileName) setLocalVideoFileName(fileName);
                   setSourceMode("video_file");
+                  setClipsDualState((prev) => ({ ...prev, processedUrl: videoUrl, fileName: fileName || prev.fileName }));
                   setStreamInfo(`🎬 Clip "${fileName || "video"}" listo en el monitor central.`);
                 }}
+                onClipsDualUpdate={setClipsDualState}
                 onRefreshAccount={refreshAccountStatus}
               />
             ) : activeTab === "TIKTOK_LIVE" ? (
@@ -4862,154 +4875,270 @@ export default function StudioDeluluPage() {
                     className="monitor-video-feed"
                     style={{ display: isConnectedLive ? "block" : "none" }}
                   />
-                  {/* Video pregrabado o clip cargado en el monitor */}
-                  {localVideoFileUrl && !isConnectedLive && (
-                    <video
-                      key={localVideoFileUrl}
-                      src={localVideoFileUrl}
-                      autoPlay
-                      loop
-                      muted={!listenRemoteAudio}
-                      playsInline
-                      controls={activeTab === "CLIPS"}
-                      className="monitor-video-feed"
+                  {/* MONITOR DUAL DE CLIPS PREGRABADOS (ORIGINAL VS DESPUÉS / MEJORADO IA) */}
+                  {activeTab === "CLIPS" ? (
+                    <div
+                      className={`clips-dual-stage-split ${effectiveCropMode === "9:16" ? "split-vertical" : "split-horizontal"}`}
                       style={{
                         position: "absolute",
                         inset: 0,
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
-                        transform: mirrorInput ? "scaleX(-1)" : "none",
+                        display: "flex",
+                        flexDirection: effectiveCropMode === "9:16" ? "column" : "row",
+                        background: "#08080E",
                         zIndex: 2,
                       }}
-                    />
-                  )}
-
-                  {/* Standby visual si no hay stream activo todavía */}
-                  {!isConnectedLive && !localVideoFileUrl && !cameraStreamActive && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
-                    activeTab === "CLIPS" ? (
+                    >
+                      {/* 1. MITAD IZQUIERDA / SUPERIOR: VIDEO ORIGINAL (ANTES) */}
                       <div
+                        className="clips-split-screen clips-screen-original"
                         style={{
-                          position: "absolute",
-                          inset: 0,
+                          position: "relative",
+                          width: effectiveCropMode === "9:16" ? "100%" : "50%",
+                          height: effectiveCropMode === "9:16" ? "50%" : "100%",
+                          borderRight: effectiveCropMode === "9:16" ? "none" : "2px solid rgba(236, 72, 153, 0.45)",
+                          borderBottom: effectiveCropMode === "9:16" ? "2px solid rgba(236, 72, 153, 0.45)" : "none",
                           display: "flex",
-                          flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
-                          background: "radial-gradient(circle at center, rgba(236,72,153,0.16) 0%, rgba(10,10,18,0.95) 80%)",
-                          color: "#FFFFFF",
-                          padding: 16,
-                          zIndex: 1,
+                          overflow: "hidden",
+                          background: "radial-gradient(circle at center, rgba(30, 41, 59, 0.5) 0%, rgba(10, 10, 18, 0.96) 85%)",
                         }}
                       >
+                        {/* Badge Identificador Original */}
                         <div
                           style={{
-                            width: 64,
-                            height: 64,
-                            borderRadius: "50%",
-                            background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "1.7rem",
-                            boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
-                            marginBottom: 10,
-                          }}
-                        >
-                          🎬
-                        </div>
-                        <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF" }}>
-                          Cabina de Clips Pregrabados
-                        </span>
-                        <span style={{ fontSize: "0.74rem", color: "rgba(255,255,255,0.7)", marginTop: 4, maxWidth: 320, textAlign: "center" }}>
-                          Sube un video en la cabina izquierda o carga un clip terminado de la cola para reproducir aquí
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const fileInput = document.querySelector<HTMLInputElement>(".queue-clips-dock-panel input[type=file]");
-                            fileInput?.click();
-                          }}
-                          style={{
-                            marginTop: 12,
-                            padding: "6px 14px",
-                            borderRadius: 14,
-                            background: "rgba(236, 72, 153, 0.2)",
-                            border: "1px solid #EC4899",
-                            color: "#FFFFFF",
-                            fontSize: "0.74rem",
-                            fontWeight: 700,
-                            cursor: "pointer",
+                            position: "absolute",
+                            top: 10,
+                            left: 10,
+                            zIndex: 20,
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 5,
-                          }}
-                        >
-                          <Dashicon name="upload" size={13} color="#F472B6" />
-                          <span>Seleccionar Video MP4 / WebM</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "radial-gradient(circle at center, rgba(236,72,153,0.12) 0%, rgba(10,10,18,0.92) 80%)",
-                          color: "#FFFFFF",
-                          padding: 16,
-                          zIndex: 1,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 64,
-                            height: 64,
-                            borderRadius: "50%",
-                            background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "1.5rem",
+                            background: "rgba(0, 0, 0, 0.75)",
+                            backdropFilter: "blur(6px)",
+                            border: "1px solid rgba(59, 130, 246, 0.5)",
+                            borderRadius: 12,
+                            padding: "3px 9px",
+                            fontSize: "0.68rem",
                             fontWeight: 800,
-                            boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
-                            marginBottom: 10,
+                            color: "#93C5FD",
                           }}
                         >
-                          {streamerName ? streamerName.charAt(0).toUpperCase() : "M"}
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6" }} />
+                          <span>1. ORIGINAL (ANTES)</span>
                         </div>
-                        <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#FFFFFF" }}>
-                          {streamerName || "Maddy"}
-                        </span>
-                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
-                          Cámara en espera · Pulsa Iniciar o Cargar MP4
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => void startCamera()}
+
+                        {clipsDualState.originalUrl || (sourceMode === "video_file" && localVideoFileUrl) ? (
+                          <video
+                            key={clipsDualState.originalUrl || localVideoFileUrl || "orig-video"}
+                            src={clipsDualState.originalUrl || localVideoFileUrl || undefined}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            controls
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                          />
+                        ) : (
+                          <div style={{ textAlign: "center", padding: 16, color: "#94A3B8" }}>
+                            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(59, 130, 246, 0.15)", border: "1px solid rgba(59, 130, 246, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px auto", color: "#60A5FA" }}>
+                              <Dashicon name="upload" size={20} />
+                            </div>
+                            <span style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF" }}>
+                              Video Original
+                            </span>
+                            <span style={{ display: "block", fontSize: "0.68rem", color: "#94A3B8", marginTop: 2, maxWidth: 220 }}>
+                              Sube un archivo MP4 o WebM en la cabina izquierda
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const fi = document.querySelector<HTMLInputElement>(".queue-clips-dock-panel input[type=file]");
+                                fi?.click();
+                              }}
+                              style={{
+                                marginTop: 8,
+                                padding: "4px 10px",
+                                borderRadius: 10,
+                                background: "rgba(59, 130, 246, 0.2)",
+                                border: "1px solid #3B82F6",
+                                color: "#FFFFFF",
+                                fontSize: "0.68rem",
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Seleccionar Archivo
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 2. MITAD DERECHA / INFERIOR: VIDEO MEJORADO (DESPUÉS) */}
+                      <div
+                        className="clips-split-screen clips-screen-processed"
+                        style={{
+                          position: "relative",
+                          width: effectiveCropMode === "9:16" ? "100%" : "50%",
+                          height: effectiveCropMode === "9:16" ? "50%" : "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden",
+                          background: "radial-gradient(circle at center, rgba(236, 72, 153, 0.16) 0%, rgba(10, 10, 18, 0.96) 85%)",
+                        }}
+                      >
+                        {/* Badge Identificador Salida IA */}
+                        <div
                           style={{
-                            marginTop: 10,
-                            padding: "5px 12px",
-                            borderRadius: 14,
-                            background: "rgba(255, 255, 255, 0.12)",
-                            border: "1px solid rgba(255, 255, 255, 0.25)",
-                            color: "#FFFFFF",
-                            fontSize: "0.72rem",
-                            fontWeight: 700,
-                            cursor: "pointer",
+                            position: "absolute",
+                            top: 10,
+                            right: 10,
+                            zIndex: 20,
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 5,
+                            background: "rgba(0, 0, 0, 0.75)",
+                            backdropFilter: "blur(6px)",
+                            border: "1px solid rgba(236, 72, 153, 0.6)",
+                            borderRadius: 12,
+                            padding: "3px 9px",
+                            fontSize: "0.68rem",
+                            fontWeight: 800,
+                            color: "#F472B6",
                           }}
                         >
-                          <Dashicon name="video-alt2" size={12} color="#EC4899" />
-                          <span>Activar Cámara</span>
-                        </button>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EC4899", boxShadow: "0 0 8px #EC4899" }} />
+                          <span>2. DESPUÉS (TRANSFORMADO IA)</span>
+                        </div>
+
+                        {clipsDualState.processedUrl ? (
+                          <video
+                            key={clipsDualState.processedUrl}
+                            src={clipsDualState.processedUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            controls
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                          />
+                        ) : clipsDualState.isProcessing ? (
+                          <div style={{ textAlign: "center", padding: 16, color: "#F472B6" }}>
+                            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(236, 72, 153, 0.2)", border: "1px solid #EC4899", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px auto", animation: "pulseNeonLive 1.5s infinite" }}>
+                              <Dashicon name="clock" size={20} color="#EC4899" />
+                            </div>
+                            <span style={{ display: "block", fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                              Procesando con IA...
+                            </span>
+                            <span style={{ display: "block", fontSize: "0.68rem", color: "rgba(255,255,255,0.7)", marginTop: 2, maxWidth: 220 }}>
+                              Transformando clip en segundo plano con máxima nitidez 720p
+                            </span>
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: "center", padding: 16, color: "#94A3B8" }}>
+                            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(236, 72, 153, 0.15)", border: "1px solid rgba(236, 72, 153, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px auto", color: "#EC4899" }}>
+                              <Dashicon name="art" size={20} />
+                            </div>
+                            <span style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF" }}>
+                              Video Mejorado (Después)
+                            </span>
+                            <span style={{ display: "block", fontSize: "0.68rem", color: "#94A3B8", marginTop: 2, maxWidth: 220 }}>
+                              Aquí se reproducirá el clip transformado con IA al procesarlo
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )
+                    </div>
+                  ) : (
+                    <>
+                      {/* Video pregrabado o clip cargado en el monitor para otras cabinas */}
+                      {localVideoFileUrl && !isConnectedLive && (
+                        <video
+                          key={localVideoFileUrl}
+                          src={localVideoFileUrl}
+                          autoPlay
+                          loop
+                          muted={!listenRemoteAudio}
+                          playsInline
+                          className="monitor-video-feed"
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            transform: mirrorInput ? "scaleX(-1)" : "none",
+                            zIndex: 2,
+                          }}
+                        />
+                      )}
+
+                      {/* Standby visual si no hay stream activo todavía */}
+                      {!isConnectedLive && !localVideoFileUrl && !cameraStreamActive && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "radial-gradient(circle at center, rgba(236,72,153,0.12) 0%, rgba(10,10,18,0.92) 80%)",
+                            color: "#FFFFFF",
+                            padding: 16,
+                            zIndex: 1,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 64,
+                              height: 64,
+                              borderRadius: "50%",
+                              background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "1.5rem",
+                              fontWeight: 800,
+                              boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
+                              marginBottom: 10,
+                            }}
+                          >
+                            {streamerName ? streamerName.charAt(0).toUpperCase() : "M"}
+                          </div>
+                          <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#FFFFFF" }}>
+                            {streamerName || "Maddy"}
+                          </span>
+                          <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
+                            Cámara en espera · Pulsa Iniciar o Cargar MP4
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void startCamera()}
+                            style={{
+                              marginTop: 10,
+                              padding: "5px 12px",
+                              borderRadius: 14,
+                              background: "rgba(255, 255, 255, 0.12)",
+                              border: "1px solid rgba(255, 255, 255, 0.25)",
+                              color: "#FFFFFF",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                            }}
+                          >
+                            <Dashicon name="video-alt2" size={12} color="#EC4899" />
+                            <span>Activar Cámara</span>
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <video

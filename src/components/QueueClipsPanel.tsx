@@ -63,12 +63,19 @@ type QueueClipsPanelProps = {
   onLoadCompletedIntoMonitor: (videoUrl: string, fileName: string) => void;
   onRefreshAccount: () => void;
   dockMode?: boolean;
+  onClipsDualUpdate?: (data: {
+    originalUrl: string | null;
+    processedUrl: string | null;
+    isProcessing: boolean;
+    fileName?: string | null;
+  }) => void;
 };
 
 export function QueueClipsPanel({
   onLoadCompletedIntoMonitor,
   onRefreshAccount,
   dockMode = false,
+  onClipsDualUpdate,
 }: QueueClipsPanelProps) {
   const [modelId, setModelId] = useState<QueueModelId>("lucy-restyle-2");
   const [prompt, setPrompt] = useState<string>(DEFAULT_SAFE_PROMPT);
@@ -111,6 +118,17 @@ export function QueueClipsPanel({
       // Ignore malformed storage
     }
   }, []);
+
+  useEffect(() => {
+    if (onClipsDualUpdate) {
+      onClipsDualUpdate({
+        originalUrl: inputVideoUrl,
+        processedUrl: activeOutputUrl,
+        isProcessing: submitting,
+        fileName: videoFile?.name || null,
+      });
+    }
+  }, [activeOutputUrl, inputVideoUrl, onClipsDualUpdate, submitting, videoFile]);
 
   const persistJobs = useCallback((nextJobs: QueueJobRecord[]) => {
     setJobs(nextJobs);
