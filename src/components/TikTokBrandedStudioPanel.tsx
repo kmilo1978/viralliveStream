@@ -150,10 +150,10 @@ export function TikTokBrandedStudioPanel({
   const bgVideoUploadRef = useRef<HTMLInputElement | null>(null);
 
   // Blindaje de Contenido & Protección Anti-Descarga (DRM Shield)
-  const [drmProtection, setDrmProtection] = useState<boolean>(true);
-  const [drmBlockRightClick, setDrmBlockRightClick] = useState<boolean>(true);
-  const [drmForensicWatermark, setDrmForensicWatermark] = useState<boolean>(true);
-  const [drmHlsEncryption, setDrmHlsEncryption] = useState<boolean>(true);
+  const [drmProtection, setDrmProtection] = useState<boolean>(false);
+  const [drmBlockRightClick, setDrmBlockRightClick] = useState<boolean>(false);
+  const [drmForensicWatermark, setDrmForensicWatermark] = useState<boolean>(false);
+  const [drmHlsEncryption, setDrmHlsEncryption] = useState<boolean>(false);
   const [watermarkSessionId] = useState<string>(() => `TT-PROT-${Math.random().toString(36).substring(2, 7).toUpperCase()}`);
 
   // Sincronizar fondos si cambian en el padre

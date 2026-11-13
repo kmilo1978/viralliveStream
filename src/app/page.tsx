@@ -311,11 +311,11 @@ export default function StudioDeluluPage() {
   const [promptText, setPromptText] = useState<string>(REFERENCE_SWAP_PROMPT);
   const [refImageFile, setRefImageFile] = useState<File | null>(null);
   const [refImageDataUrl, setRefImageDataUrl] = useState<string | null>(null);
-  const [enhancePrompt, setEnhancePrompt] = useState<boolean>(true);
+  const [enhancePrompt, setEnhancePrompt] = useState<boolean>(false);
   const [useFastMode, setUseFastMode] = useState<boolean>(false);
   const [maxDurationSec, setMaxDurationSec] = useState<number>(30);
-  const [includeAudio, setIncludeAudio] = useState<boolean>(true);
-  const [listenRemoteAudio, setListenRemoteAudio] = useState<boolean>(true);
+  const [includeAudio, setIncludeAudio] = useState<boolean>(false);
+  const [listenRemoteAudio, setListenRemoteAudio] = useState<boolean>(false);
   const [mirrorInput, setMirrorInput] = useState<boolean>(false);
   const [preprocOpts, setPreprocOpts] = useState<VideoPreprocessorOptions>(DEFAULT_PREPROC);
 
@@ -384,7 +384,7 @@ export default function StudioDeluluPage() {
   const [teleprompterScript, setTeleprompterScript] = useState<string>(DEFAULT_TELEPROMPTER_SCRIPT);
   const [teleprompterSpeed, setTeleprompterSpeed] = useState<number>(2);
   const [teleprompterFontSize, setTeleprompterFontSize] = useState<number>(20);
-  const [teleprompterPlaying, setTeleprompterPlaying] = useState<boolean>(true);
+  const [teleprompterPlaying, setTeleprompterPlaying] = useState<boolean>(false);
   const [teleprompterScrollY, setTeleprompterScrollY] = useState<number>(0);
   const [teleprompterMirror, setTeleprompterMirror] = useState<boolean>(false);
   const [teleprompterPosition, setTeleprompterPosition] = useState<"top" | "center" | "dock">("top");
@@ -455,11 +455,11 @@ export default function StudioDeluluPage() {
     layout: "vertical",
     selectedGuest: DEFAULT_GUEST_PRESETS[0],
     currentPromptIndex: 0,
-    autoRotatePrompts: true,
-    guestMuted: false,
+    autoRotatePrompts: false,
+    guestMuted: true,
     guestVolume: 80,
     viewerRange: DEFAULT_VIEWER_RANGES[6], // 49K-51K (50.7K)
-    isGuestSpeaking: true,
+    isGuestSpeaking: false,
   });
   const [realFeelChatEnabled, setRealFeelChatEnabled] = useState<boolean>(false);
   const [underMonitorChatText, setUnderMonitorChatText] = useState<string>("");
@@ -497,7 +497,7 @@ export default function StudioDeluluPage() {
   const effectiveCropMode: CropAspectMode = isMobileViewport ? "9:16" : preprocOpts.cropMode;
   const showPhoneMockupFrame = !isMobileViewport && phoneMockupMode && effectiveCropMode === "9:16";
   const isCockpitTab = activeTab === "CAM" || activeTab === "TRY_ON" || activeTab === "DUO";
-  const isDuoSplitActive = activeTab === "DUO" || guestSplitConfig.active || splitView;
+  const isDuoSplitActive = Boolean(guestSplitConfig.active || splitView);
   const splitChatComposerToLeftInDuo = activeTab === "DUO" && !isMobileViewport && activeStudioTab === "chat";
   const isHostVideoFileActive = sourceMode === "video_file" && Boolean(localVideoFileUrl);
   const isGuestVideoFileActive =
@@ -533,8 +533,8 @@ export default function StudioDeluluPage() {
       }
       if (tab === "DUO") {
         setActiveTab("DUO");
-        setGuestSplitConfig((prev) => ({ ...prev, active: true }));
-        setSplitView(true);
+        setGuestSplitConfig((prev) => ({ ...prev, active: false }));
+        setSplitView(false);
         setActiveStudioTab("chat");
         return;
       }

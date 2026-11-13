@@ -144,11 +144,11 @@ function useUnifiedLiveChatController({
   }, [chatLanguage]);
 
   const [enabledPlatforms, setEnabledPlatforms] = useState<Record<ChatPlatformKey, boolean>>({
-    tiktok: true,
-    youtube: true,
-    twitch: true,
-    facebook: true,
-    instagram: true,
+    tiktok: false,
+    youtube: false,
+    twitch: false,
+    facebook: false,
+    instagram: false,
   });
   const [onlyDonations, setOnlyDonations] = useState<boolean>(false);
 
@@ -161,7 +161,7 @@ function useUnifiedLiveChatController({
   );
   const [aiCommentCount, setAiCommentCount] = useState<number>(5);
   const [aiGenerating, setAiGenerating] = useState<boolean>(false);
-  const [aiAutoResponderActive, setAiAutoResponderActive] = useState<boolean>(true);
+  const [aiAutoResponderActive, setAiAutoResponderActive] = useState<boolean>(false);
   const [aiBotName, setAiBotName] = useState<string>("StreamBot IA 🤖");
   const [aiPersonaPrompt, setAiPersonaPrompt] = useState<string>(
     "Asistente oficial del canal. Amable, entusiasta, responde preguntas de precio y envíos, agradece donaciones y ofrece el cupón LIVE20 con 20% OFF."
@@ -173,7 +173,7 @@ function useUnifiedLiveChatController({
   >("tiktok");
   const [simulatedAuthor, setSimulatedAuthor] = useState<string>("");
   const [simulatedText, setSimulatedText] = useState<string>("");
-  const [pinOnPublish, setPinOnPublish] = useState<boolean>(true);
+  const [pinOnPublish, setPinOnPublish] = useState<boolean>(false);
   const [editingPinnedId, setEditingPinnedId] = useState<string | null>(null);
   const [lastPinnedSnapshot, setLastPinnedSnapshot] = useState<UnifiedChatMessage | null>(null);
   const [isSuperChat, setIsSuperChat] = useState<boolean>(false);
@@ -245,11 +245,11 @@ function useUnifiedLiveChatController({
 
   const resetAllPlatformSwitches = () => {
     setEnabledPlatforms({
-      tiktok: true,
-      youtube: true,
-      twitch: true,
-      facebook: true,
-      instagram: true,
+      tiktok: false,
+      youtube: false,
+      twitch: false,
+      facebook: false,
+      instagram: false,
     });
     setOnlyDonations(false);
   };
@@ -842,8 +842,9 @@ PedroLiveStream\tApoyando la transmisión desde México, ¡sigue así crack!\tfa
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const anyPlatformEnabled = CHAT_PLATFORMS.some((p) => enabledPlatforms[p]);
   const filteredMessages = messages.filter((m) => {
-    if (!enabledPlatforms[m.platform]) return false;
+    if (anyPlatformEnabled && !enabledPlatforms[m.platform]) return false;
     if (onlyDonations && !m.isDonation) return false;
     return true;
   });
