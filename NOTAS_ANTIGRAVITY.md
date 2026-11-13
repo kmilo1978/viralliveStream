@@ -1567,3 +1567,29 @@
   - La columna derecha conserva las herramientas de escena, capas y el chat unificado multi-red.
 - Pendientes:
   - Todo completado y verificado.
+
+
+## Validación completada
+- Fecha: 2026-11-12 21:05
+- Resultado: Aprobado (score 10/10)
+- Resumen: Reubicación del banner de videollamadas (Zoom, Meet, Teams, WhatsApp) hacia la zona espaciosa del escenario central:
+  1. Descongestión de la Columna Izquierda: Retirados los bloques de botones y avisos de videollamadas comprimidos (`btn-vcam-guide-pill`, `tryon-vcam-helper-banner`, `duo-vcam-helper-banner`, `clips-vcam-helper-banner`, `tiktok-vcam-helper-banner`) de la columna izquierda de controles en todas las pestañas (`CAM`, `TRY_ON`, `DUO`, `CLIPS`, `TIKTOK_LIVE`). Esto liberó valioso espacio vertical para que los controles, botones de ejecución y selectores de IA se muestren sin apretarse.
+  2. Franja Horizontal Expandida en el Escenario Central: Ubicada directamente debajo de la barra de controles inferior del monitor (`delulu-bottom-controls-bar`) y de los avisos del sistema, aprovechando el amplio espacio libre señalado por el usuario.
+  3. Contenido en 1 sola línea nítida:
+     - Icono adaptativo según la pestaña (`📹` para CAM, `👗` para TRY ON, `👥` para DÚO, `🎬` para CLIPS, `📱` para TIKTOK).
+     - Título: `Transmite en Videollamadas en Vivo:`.
+     - Badges de aplicaciones con bordes neón y colores oficiales: `Zoom`, `Google Meet`, `Teams`, `WhatsApp`.
+     - Botón de llamada a la acción con flecha animada al hacer hover: `Paso a Paso ➔`.
+     - Interacción: Al hacer clic en cualquier parte de la franja se abre el modal completo de OBS y Cámara Virtual con la guía paso a paso.
+  4. Ancho Geométricamente Armónico: El ancho de la franja se sincroniza automáticamente con el tamaño del monitor (1020px a 1400px en formato 16:9, y 400px a 560px en formato 9:16 vertical).
+- Observaciones: `npx tsc --noEmit` -> Código de salida 0 (sin errores). Capturas y tests automatizados Playwright superados al 100% (`verified_videocall_stage_cam_16_9.png`, `verified_videocall_modal_opened.png`, `verified_videocall_stage_duo.png`, `verified_videocall_stage_tryon.png`).
+
+## Nueva sesión
+- Fecha: 2026-11-12 21:05
+- Solicitud: Relacionado imagen controladores en vivo videollamadas zoom, meet esto no se ve bien tienes demasiado espacio como para montarlo en cualquier lugar por ejemplo aquí hay suficiente espacio.
+- Decisiones clave:
+  - Eliminar definitivamente los botones de videollamadas apretados de la barra lateral izquierda.
+  - Aprovechar el espacio inferior amplio del escenario central para mostrar una franja cyberpunk elegante en una sola línea horizontal.
+  - Sincronizar el ancho de la franja con el monitor del escenario tanto en 16:9 como en 9:16 vertical.
+- Pendientes:
+  - Todo completado y verificado.
