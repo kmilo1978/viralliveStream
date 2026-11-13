@@ -1684,10 +1684,11 @@
 
 ## Nueva sesión
 - Fecha: 2026-11-13 13:00
-- Solicitud: Pero esta funcionaba correctamente hasta el día de ayer algo pasó, recuerda que funciona con OBS.
+- Solicitud: Pero esta funcionaba correctamente hasta el día de ayer algo pasó, recuerda que funciona con OBS (Error: Device in use).
 - Decisiones clave:
-  - Restaurar la detección y selección nativa de `OBS Virtual Camera` sin bloqueos de fuentes virtuales.
+  - Diagnóstico de error `Device in use`: OBS Studio mantiene abierta y capturada la cámara web física en Windows, bloqueando el acceso directo a otras aplicaciones.
+  - Priorizar `OBS Virtual Camera` por defecto en la detección de hardware.
+  - Detección inteligente de error `Device in use`: si ocurre, conmuta automáticamente a `OBS Virtual Camera` y muestra un botón directo en pantalla.
   - Guardar y respetar la cámara elegida por el usuario en `localStorage` (`virallive_preferred_camera`).
-  - Mantener la limpieza automática de videos pregrabados al activar la cámara para que nunca tapen el monitor.
 - Pendientes:
-  - Ninguno. OBS y cámara web totalmente integrados.
+  - Ninguno. OBS y cámara web totalmente integrados con auto-conmutación.

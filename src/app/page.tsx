@@ -787,10 +787,15 @@ export default function StudioDeluluPage() {
       setCameraDevices(cams);
       setAudioDevices(mics);
       if (!selectedCameraId && cams.length > 0) {
-        // Respetar cámara guardada por el usuario o predeterminar la primera disponible (100% compatible con OBS Studio y webcams)
+        // Respetar cámara guardada o priorizar OBS Virtual Camera (ya que OBS captura la webcam física)
         const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
         const matched = savedCam ? cams.find((c) => c.deviceId === savedCam) : null;
-        setSelectedCameraId(matched ? matched.deviceId : cams[0].deviceId);
+        if (matched) {
+          setSelectedCameraId(matched.deviceId);
+        } else {
+          const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
+          setSelectedCameraId(obsCam ? obsCam.deviceId : cams[0].deviceId);
+        }
       }
       if (!selectedAudioId && mics[0]) setSelectedAudioId(mics[0].deviceId);
     } catch {
@@ -971,14 +976,33 @@ export default function StudioDeluluPage() {
         void enumerateDevices();
       } catch (err) {
         setCameraStreamActive(false);
+        const errMsg = err instanceof Error ? err.message : "";
+        const isDeviceInUse = /in use|notreadable|busy|track start/i.test(errMsg);
+        const obsCam = cameraDevices.find((c) => /obs/i.test(c.label || ""));
+
+        // Si la cámara física está bloqueada porque OBS Studio la está usando, cambiar automáticamente a OBS Virtual Camera
+        if (isDeviceInUse && obsCam && camId !== obsCam.deviceId) {
+          setSourceError("Tu cámara física está en uso por OBS Studio. Conectando automáticamente a OBS Virtual Camera...");
+          setTimeout(() => {
+            setSelectedCameraId(obsCam.deviceId);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("virallive_preferred_camera", obsCam.deviceId);
+            }
+            void startCamera(obsCam.deviceId);
+          }, 350);
+          return;
+        }
+
         setSourceError(
           err instanceof Error
-            ? `No se pudo abrir la cámara: ${err.message}. Verifica los permisos de tu navegador o si otra aplicación la está usando.`
+            ? isDeviceInUse
+              ? `Tu cámara física está en uso por OBS Studio u otra app. Selecciona "OBS Virtual Camera" en el menú de abajo.`
+              : `No se pudo abrir la cámara: ${err.message}. Verifica los permisos de tu navegador.`
             : "Error abriendo cámara. Verifica permisos en el navegador.",
         );
       }
     },
-    [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
+    [attachNewLocalStream, cameraDevices, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
   );
 
   // Iniciar video pregrabado
@@ -5162,21 +5186,58 @@ export default function StudioDeluluPage() {
                             <div
                               style={{
                                 marginTop: 10,
-                                maxWidth: 360,
-                                padding: "6px 12px",
-                                background: "rgba(239, 68, 68, 0.15)",
-                                border: "1px solid rgba(239, 68, 68, 0.4)",
-                                borderRadius: 8,
+                                maxWidth: 380,
+                                padding: "8px 14px",
+                                background: "rgba(239, 68, 68, 0.18)",
+                                border: "1px solid rgba(239, 68, 68, 0.5)",
+                                borderRadius: 10,
                                 color: "#FCA5A5",
                                 fontSize: "0.72rem",
                                 textAlign: "center",
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
                                 gap: 6,
                               }}
                             >
-                              <Dashicon name="warning" size={14} color="#EF4444" />
-                              <span>{sourceError}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <Dashicon name="warning" size={14} color="#EF4444" />
+                                <span>{sourceError}</span>
+                              </div>
+                              {/* Botón de cambio directo a OBS Virtual Camera */}
+                              {cameraDevices.some((c) => /obs/i.test(c.label || "")) &&
+                                selectedCameraId !== cameraDevices.find((c) => /obs/i.test(c.label || ""))?.deviceId && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const obs = cameraDevices.find((c) => /obs/i.test(c.label || ""));
+                                    if (obs) {
+                                      setSelectedCameraId(obs.deviceId);
+                                      if (typeof window !== "undefined") {
+                                        localStorage.setItem("virallive_preferred_camera", obs.deviceId);
+                                      }
+                                      void startCamera(obs.deviceId);
+                                    }
+                                  }}
+                                  style={{
+                                    marginTop: 4,
+                                    padding: "5px 12px",
+                                    borderRadius: 10,
+                                    background: "#2563EB",
+                                    border: "1px solid #60A5FA",
+                                    color: "#FFFFFF",
+                                    fontSize: "0.72rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 5,
+                                  }}
+                                >
+                                  <Dashicon name="video-alt2" size={12} color="#FFFFFF" />
+                                  <span>Cambiar a OBS Virtual Camera</span>
+                                </button>
+                              )}
                             </div>
                           )}
 
