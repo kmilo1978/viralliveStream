@@ -3996,26 +3996,28 @@ export default function StudioDeluluPage() {
                 <span>STREAM CONFIG</span>
               </button>
 
-              {/* Botón Switch Modo Móvil y Selector de Tamaño (solo en escritorio/tablet cuando está en 9:16) */}
-              {!isMobileViewport && effectiveCropMode === "9:16" && (
+              {/* Selector de Tamaño de Monitor (Normal, Grande, Extra Grande) disponible en CAM, TRY ON y DÚO en cualquier formato */}
+              {!isMobileViewport && (
                 <>
-                  <button
-                    type="button"
-                    className={`multistream-stage-pill ${phoneMockupMode ? "active-pink" : ""}`}
-                    onClick={() => setPhoneMockupMode(!phoneMockupMode)}
-                    title="Alternar entre marco de smartphone realista o escenario completo vertical"
-                  >
-                    <Dashicon name={phoneMockupMode ? "smartphone" : "desktop"} size={14} />
-                    <span>{phoneMockupMode ? "VISTA MÓVIL" : "ESCENARIO"}</span>
-                  </button>
+                  {effectiveCropMode === "9:16" && (
+                    <button
+                      type="button"
+                      className={`multistream-stage-pill ${phoneMockupMode ? "active-pink" : ""}`}
+                      onClick={() => setPhoneMockupMode(!phoneMockupMode)}
+                      title="Alternar entre marco de smartphone realista o escenario completo vertical"
+                    >
+                      <Dashicon name={phoneMockupMode ? "smartphone" : "desktop"} size={14} />
+                      <span>{phoneMockupMode ? "VISTA MÓVIL" : "ESCENARIO"}</span>
+                    </button>
+                  )}
 
-                  {/* Selector de Tamaño para ver la versión móvil más grande */}
-                  <div className="mobile-size-pills-group" title="Tamaño de la versión móvil en pantalla">
+                  {/* Selector de Tamaño para CAM, TRY ON y DÚO en cualquier formato */}
+                  <div className="mobile-size-pills-group" title="Tamaño del monitor en pantalla (CAM, Try-On y Dúo)">
                     <span className="mobile-size-pills-label">TAMAÑO:</span>
                     {[
-                      { id: "md", label: "Normal (M)", tip: "400px ancho" },
-                      { id: "lg", label: "Grande (L)", tip: "480px ancho - Recomendado" },
-                      { id: "xl", label: "Extra Grande (XL)", tip: "560px ancho - Máxima visibilidad" },
+                      { id: "md", label: "Normal (M)", tip: effectiveCropMode === "9:16" ? "400px ancho" : "1020px panorámico" },
+                      { id: "lg", label: "Grande (L)", tip: effectiveCropMode === "9:16" ? "480px ancho - Recomendado" : "1240px panorámico - Recomendado" },
+                      { id: "xl", label: "Extra Grande (XL)", tip: effectiveCropMode === "9:16" ? "560px ancho - Máxima visibilidad" : "1400px panorámico - Máxima visibilidad" },
                     ].map((sz) => (
                       <button
                         key={sz.id}
@@ -4023,7 +4025,7 @@ export default function StudioDeluluPage() {
                         className={`mobile-size-opt-btn ${mobileViewScale === sz.id ? "active" : ""}`}
                         onClick={() => {
                           setMobileViewScale(sz.id as any);
-                          setStreamInfo(`Versión móvil ampliada a: ${sz.label}`);
+                          setStreamInfo(`Tamaño ajustado a: ${sz.label}`);
                         }}
                         title={sz.tip}
                       >
@@ -4032,7 +4034,7 @@ export default function StudioDeluluPage() {
                     ))}
                   </div>
 
-                  {phoneMockupMode && (
+                  {effectiveCropMode === "9:16" && phoneMockupMode && (
                     <button
                       type="button"
                       className={`multistream-stage-pill ${showPhoneMockupBottomDock ? "active-pink" : ""}`}
@@ -4048,36 +4050,42 @@ export default function StudioDeluluPage() {
             </div>
 
             {/* Monitor con esquinas neon rosa y formato de pantalla dinámico */}
-            <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
-              <div
-                className={`phone-mockup-outer-wrapper ${showPhoneMockupFrame ? "with-ambient" : ""}`}
-                style={{ position: "relative", display: "inline-flex", justifyContent: "center", width: "100%", maxWidth: "fit-content" }}
-              >
-                {showPhoneMockupFrame && (
-                  <>
-                    {/* Insignia Neón Flotante Superior Izquierda (alineada junto al chasis del móvil) */}
-                    <div className="neon-ambient-badge-live">
-                      <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
-                      <span>● LIVE</span>
-                    </div>
+            <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+              {showPhoneMockupFrame && (
+                <>
+                  {/* Insignia Neón Flotante Superior Izquierda (alineada al chasis del móvil) */}
+                  <div
+                    className="neon-ambient-badge-live"
+                    style={{
+                      left: mobileViewScale === "xl" ? "calc(50% - 370px)" : mobileViewScale === "lg" ? "calc(50% - 330px)" : "calc(50% - 290px)",
+                    }}
+                  >
+                    <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
+                    <span>● LIVE</span>
+                  </div>
 
-                    {/* Insignia Neón Flotante Superior Derecha (alineada junto al chasis del móvil) */}
-                    <div className="neon-ambient-badge-viewers">
-                      <Dashicon name="visibility" size={13} />
-                      <span>{guestSplitConfig.viewerRange.formattedCount}</span>
-                    </div>
+                  {/* Insignia Neón Flotante Superior Derecha (alineada al chasis del móvil) */}
+                  <div
+                    className="neon-ambient-badge-viewers"
+                    style={{
+                      right: mobileViewScale === "xl" ? "calc(50% - 370px)" : mobileViewScale === "lg" ? "calc(50% - 330px)" : "calc(50% - 290px)",
+                    }}
+                  >
+                    <Dashicon name="visibility" size={13} />
+                    <span>{guestSplitConfig.viewerRange.formattedCount}</span>
+                  </div>
 
-                    {/* Burbujas flotantes de reacciones ambientales */}
-                    <div className="neon-ambient-bubble" style={{ top: 120, left: -26, fontSize: "1.4rem" }}>❤️</div>
-                    <div className="neon-ambient-bubble" style={{ top: 250, left: -22, fontSize: "1.2rem", animationDelay: "1.2s" }}>👍</div>
-                    <div className="neon-ambient-bubble" style={{ top: 380, left: -28, fontSize: "1.3rem", animationDelay: "2.4s" }}>💬</div>
-                    <div className="neon-ambient-bubble" style={{ top: 150, right: -26, fontSize: "1.5rem", animationDelay: "0.8s" }}>✨</div>
-                    <div className="neon-ambient-bubble" style={{ top: 280, right: -24, fontSize: "1.3rem", animationDelay: "1.8s" }}>🔥</div>
-                    <div className="neon-ambient-bubble" style={{ top: 410, right: -28, fontSize: "1.4rem", animationDelay: "2.8s" }}>💖</div>
-                  </>
-                )}
+                  {/* Burbujas flotantes de reacciones ambientales */}
+                  <div className="neon-ambient-bubble" style={{ top: 120, left: mobileViewScale === "xl" ? "calc(50% - 310px)" : mobileViewScale === "lg" ? "calc(50% - 270px)" : "calc(50% - 230px)", fontSize: "1.4rem" }}>❤️</div>
+                  <div className="neon-ambient-bubble" style={{ top: 250, left: mobileViewScale === "xl" ? "calc(50% - 306px)" : mobileViewScale === "lg" ? "calc(50% - 266px)" : "calc(50% - 226px)", fontSize: "1.2rem", animationDelay: "1.2s" }}>👍</div>
+                  <div className="neon-ambient-bubble" style={{ top: 380, left: mobileViewScale === "xl" ? "calc(50% - 312px)" : mobileViewScale === "lg" ? "calc(50% - 272px)" : "calc(50% - 232px)", fontSize: "1.3rem", animationDelay: "2.4s" }}>💬</div>
+                  <div className="neon-ambient-bubble" style={{ top: 150, right: mobileViewScale === "xl" ? "calc(50% - 310px)" : mobileViewScale === "lg" ? "calc(50% - 270px)" : "calc(50% - 230px)", fontSize: "1.5rem", animationDelay: "0.8s" }}>✨</div>
+                  <div className="neon-ambient-bubble" style={{ top: 280, right: mobileViewScale === "xl" ? "calc(50% - 308px)" : mobileViewScale === "lg" ? "calc(50% - 268px)" : "calc(50% - 228px)", fontSize: "1.3rem", animationDelay: "1.8s" }}>🔥</div>
+                  <div className="neon-ambient-bubble" style={{ top: 410, right: mobileViewScale === "xl" ? "calc(50% - 312px)" : mobileViewScale === "lg" ? "calc(50% - 272px)" : "calc(50% - 232px)", fontSize: "1.4rem", animationDelay: "2.8s" }}>💖</div>
+                </>
+              )}
 
-                <div className={`delulu-monitor-container aspect-${effectiveCropMode.replace(":", "-")} ${showPhoneMockupFrame ? "in-phone-mockup" : ""} ${effectiveCropMode === "9:16" ? `scale-${mobileViewScale}` : ""} ${isDuoSplitActive ? "has-duo-split" : ""}`}>
+              <div className={`delulu-monitor-container aspect-${effectiveCropMode.replace(":", "-")} ${showPhoneMockupFrame ? "in-phone-mockup" : ""} scale-${mobileViewScale} ${isDuoSplitActive ? "has-duo-split" : ""}`}>
                 {showPhoneMockupFrame ? (
                   <>
                     {/* Dynamic Island de Smartphone */}
@@ -4440,24 +4448,89 @@ export default function StudioDeluluPage() {
                           height: "100%",
                           objectFit: "cover",
                           transform: mirrorInput ? "scaleX(-1)" : "none",
+                          zIndex: 1,
                         }}
                       />
                     ) : (
-                      <video
-                        ref={localVideoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="monitor-video-feed"
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          transform: mirrorInput ? "scaleX(-1)" : "none",
-                        }}
-                      />
+                      <>
+                        {/* Standby visual del Host en Dúo */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "radial-gradient(circle at center, rgba(236,72,153,0.18) 0%, rgba(10,10,18,0.95) 75%)",
+                            color: "#FFFFFF",
+                            padding: 12,
+                            zIndex: 1,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 52,
+                              height: 52,
+                              borderRadius: "50%",
+                              background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "1.25rem",
+                              fontWeight: 800,
+                              boxShadow: "0 0 20px rgba(236, 72, 153, 0.4)",
+                              marginBottom: 8,
+                            }}
+                          >
+                            {streamerName ? streamerName.charAt(0).toUpperCase() : "M"}
+                          </div>
+                          <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "#FFFFFF" }}>
+                            {streamerName || "Maddy (Tú)"}
+                          </span>
+                          <span style={{ fontSize: "0.66rem", color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+                            Host · Cámara en Standby
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void startCamera()}
+                            style={{
+                              marginTop: 8,
+                              padding: "4px 10px",
+                              borderRadius: 12,
+                              background: "rgba(255, 255, 255, 0.12)",
+                              border: "1px solid rgba(255, 255, 255, 0.25)",
+                              color: "#FFFFFF",
+                              fontSize: "0.68rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <Dashicon name="video-alt2" size={11} color="#EC4899" />
+                            <span>Activar Cámara</span>
+                          </button>
+                        </div>
+
+                        <video
+                          ref={localVideoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="monitor-video-feed"
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            transform: mirrorInput ? "scaleX(-1)" : "none",
+                            zIndex: 2,
+                          }}
+                        />
+                      </>
                     )}
                     {guestSplitConfig.layout === "horizontal" && (
                       <div className="duo-stage-source-tag host">
@@ -4793,6 +4866,69 @@ export default function StudioDeluluPage() {
                     className="monitor-video-feed"
                     style={{ display: isConnectedLive ? "block" : "none" }}
                   />
+                  {/* Standby visual en CAM si no hay stream activo todavía */}
+                  {!isConnectedLive && !localVideoFileUrl && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "radial-gradient(circle at center, rgba(236,72,153,0.12) 0%, rgba(10,10,18,0.92) 80%)",
+                        color: "#FFFFFF",
+                        padding: 16,
+                        zIndex: 1,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "1.5rem",
+                          fontWeight: 800,
+                          boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
+                          marginBottom: 10,
+                        }}
+                      >
+                        {streamerName ? streamerName.charAt(0).toUpperCase() : "M"}
+                      </div>
+                      <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#FFFFFF" }}>
+                        {streamerName || "Maddy"}
+                      </span>
+                      <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
+                        Cámara en espera · Pulsa Iniciar o Cargar MP4
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void startCamera()}
+                        style={{
+                          marginTop: 10,
+                          padding: "5px 12px",
+                          borderRadius: 14,
+                          background: "rgba(255, 255, 255, 0.12)",
+                          border: "1px solid rgba(255, 255, 255, 0.25)",
+                          color: "#FFFFFF",
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                        }}
+                      >
+                        <Dashicon name="video-alt2" size={12} color="#EC4899" />
+                        <span>Activar Cámara</span>
+                      </button>
+                    </div>
+                  )}
+
                   <video
                     ref={localVideoRef}
                     autoPlay
@@ -4811,6 +4947,7 @@ export default function StudioDeluluPage() {
                           ? "none"
                           : "block",
                       transform: mirrorInput ? "scaleX(-1)" : "none",
+                      zIndex: 2,
                     }}
                   />
                 </div>
@@ -5204,8 +5341,6 @@ export default function StudioDeluluPage() {
                 </div>
               )}
             </div>
-            {/* Cierre de phone-mockup-outer-wrapper */}
-            </div>
             {/* Cierre del envoltorio relativo del monitor */}
             </div>
 
@@ -5221,7 +5356,11 @@ export default function StudioDeluluPage() {
                       : mobileViewScale === "lg"
                       ? 480
                       : 400
-                    : 1360,
+                    : mobileViewScale === "xl"
+                    ? 1400
+                    : mobileViewScale === "lg"
+                    ? 1240
+                    : 1020,
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
