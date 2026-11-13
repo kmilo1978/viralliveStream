@@ -3315,140 +3315,6 @@ export default function StudioDeluluPage() {
               </button>
             </div>
 
-            {/* GUÍA PASO A PASO EN CADA MÓDULO (CAM, TRY ON, DÚO) */}
-            {activeTab === "CAM" && (
-              <button
-                type="button"
-                className="btn-vcam-guide-pill"
-                onClick={() => setShowObsModal(true)}
-                style={{
-                  background: "linear-gradient(90deg, rgba(236, 72, 153, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)",
-                  border: "1px solid rgba(236, 72, 153, 0.35)",
-                  borderRadius: 8,
-                  padding: "6px 10px",
-                  color: "#F472B6",
-                  fontSize: "0.74rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  marginBottom: 10,
-                }}
-                title="Paso a paso para Zoom, Google Meet, Microsoft Teams y WhatsApp"
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  📹 <strong>Videollamadas:</strong> Zoom, Meet, Teams, WhatsApp
-                </span>
-                <span style={{ fontSize: "0.68rem", color: "#A78BFA", textDecoration: "underline" }}>Paso a Paso ➔</span>
-              </button>
-            )}
-
-            {activeTab === "TRY_ON" && (
-              <div
-                className="tryon-vcam-helper-banner"
-                onClick={() => setShowObsModal(true)}
-                style={{
-                  background: "linear-gradient(90deg, rgba(139, 92, 246, 0.14) 0%, rgba(236, 72, 153, 0.14) 100%)",
-                  border: "1px dashed #8B5CF6",
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                }}
-                title="Aprende a usar tu ropa Try-On en videollamadas"
-              >
-                <span style={{ fontSize: "0.76rem", color: "#C4B5FD", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  👗 <span>Usa tu ropa Try-On en Zoom, Meet, Teams y WhatsApp</span>
-                </span>
-                <span style={{ fontSize: "0.7rem", color: "#A78BFA", textDecoration: "underline", fontWeight: 600 }}>
-                  Paso a Paso ➔
-                </span>
-              </div>
-            )}
-
-            {activeTab === "DUO" && (
-              <div
-                className="duo-vcam-helper-banner"
-                onClick={() => setShowObsModal(true)}
-                style={{
-                  background: "linear-gradient(90deg, rgba(59, 130, 246, 0.14) 0%, rgba(139, 92, 246, 0.14) 100%)",
-                  border: "1px dashed #3B82F6",
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                }}
-                title="Aprende a transmitir tu pantalla dividida Dúo a videollamadas"
-              >
-                <span style={{ fontSize: "0.76rem", color: "#93C5FD", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  👥 <span>Transmite Dúo / Batalla PK a Zoom, Meet, Teams y WhatsApp</span>
-                </span>
-                <span style={{ fontSize: "0.7rem", color: "#60A5FA", textDecoration: "underline", fontWeight: 600 }}>
-                  Paso a Paso ➔
-                </span>
-              </div>
-            )}
-
-            {activeTab === "CLIPS" && (
-              <div
-                className="clips-vcam-helper-banner"
-                onClick={() => setShowObsModal(true)}
-                style={{
-                  background: "linear-gradient(90deg, rgba(236, 72, 153, 0.14) 0%, rgba(139, 92, 246, 0.14) 100%)",
-                  border: "1px dashed #EC4899",
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                  cursor: "pointer",
-                }}
-                title="Procesa y transmite clips de video con Modelos IA"
-              >
-                <span style={{ fontSize: "0.76rem", color: "#F472B6", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  🎬 <span>Clips Pregrabados y Modelos de Video IA</span>
-                </span>
-                <span style={{ fontSize: "0.7rem", color: "#C084FC", textDecoration: "underline", fontWeight: 600 }}>
-                  Asíncrono ➔
-                </span>
-              </div>
-            )}
-
-            {activeTab === "TIKTOK_LIVE" && (
-              <div
-                className="tiktok-vcam-helper-banner"
-                onClick={() => setShowObsModal(true)}
-                style={{
-                  background: "linear-gradient(90deg, rgba(255, 0, 80, 0.14) 0%, rgba(0, 240, 255, 0.14) 100%)",
-                  border: "1px dashed #FF0050",
-                  borderRadius: 10,
-                  padding: "8px 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                  cursor: "pointer",
-                }}
-                title="Personaliza tu transmisión en vivo vertical 9:16 con Kits de Marca"
-              >
-                <span style={{ fontSize: "0.76rem", color: "#FF0050", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  📱 <span>Transmisión TikTok con Marca y Fondos</span>
-                </span>
-                <span style={{ fontSize: "0.7rem", color: "#00F0FF", textDecoration: "underline", fontWeight: 600 }}>
-                  En Vivo ➔
-                </span>
-              </div>
-            )}
-
             {activeTab === "DUO" ? (
               <>
                 <button
@@ -6091,6 +5957,56 @@ export default function StudioDeluluPage() {
                 ✓ {streamInfo}
               </div>
             )}
+
+            {/* BANNER EXPANDIDO DE VIDEOLLAMADAS EN EL ESCENARIO (ZOOM, MEET, TEAMS, WHATSAPP) */}
+            <div
+              className="stage-videocall-banner-strip"
+              onClick={() => setShowObsModal(true)}
+              style={{
+                width: "100%",
+                maxWidth: effectiveCropMode === "9:16" ? (mobileViewScale === "xl" ? 560 : mobileViewScale === "lg" ? 480 : 400) : (mobileViewScale === "xl" ? 1400 : mobileViewScale === "lg" ? 1240 : 1020),
+                margin: "12px auto 4px",
+                background: "linear-gradient(90deg, rgba(236, 72, 153, 0.12) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(59, 130, 246, 0.12) 100%)",
+                border: "1px solid rgba(236, 72, 153, 0.35)",
+                borderRadius: 14,
+                padding: "8px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                cursor: "pointer",
+                boxShadow: "0 4px 18px rgba(0, 0, 0, 0.35)",
+                transition: "all 0.2s ease",
+              }}
+              title="Aprende a conectar tu cámara y transmisión en vivo a Zoom, Google Meet, Microsoft Teams y WhatsApp"
+            >
+              <div className="stage-videocall-left">
+                <span className="stage-videocall-icon">
+                  {activeTab === "TRY_ON"
+                    ? "👗"
+                    : activeTab === "DUO"
+                      ? "👥"
+                      : activeTab === "CLIPS"
+                        ? "🎬"
+                        : activeTab === "TIKTOK_LIVE"
+                          ? "📱"
+                          : "📹"}
+                </span>
+                <span className="stage-videocall-text">
+                  Transmite en Videollamadas en Vivo:
+                </span>
+                <div className="stage-videocall-badges">
+                  <span className="vcam-app-tag vcam-tag-zoom">Zoom</span>
+                  <span className="vcam-app-tag vcam-tag-meet">Google Meet</span>
+                  <span className="vcam-app-tag vcam-tag-teams">Teams</span>
+                  <span className="vcam-app-tag vcam-tag-whatsapp">WhatsApp</span>
+                </div>
+              </div>
+              <div className="stage-videocall-right">
+                <span>Paso a Paso</span>
+                <span className="stage-videocall-arrow">➔</span>
+              </div>
+            </div>
           </main>
 
           {/* =============================================================
