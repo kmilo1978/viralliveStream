@@ -62,11 +62,13 @@ function getClipPixelDimensions(aspect: ClipAspectRatio, resolution: ClipResolut
 type QueueClipsPanelProps = {
   onLoadCompletedIntoMonitor: (videoUrl: string, fileName: string) => void;
   onRefreshAccount: () => void;
+  dockMode?: boolean;
 };
 
 export function QueueClipsPanel({
   onLoadCompletedIntoMonitor,
   onRefreshAccount,
+  dockMode = false,
 }: QueueClipsPanelProps) {
   const [modelId, setModelId] = useState<QueueModelId>("lucy-restyle-2");
   const [prompt, setPrompt] = useState<string>(DEFAULT_SAFE_PROMPT);
@@ -301,6 +303,270 @@ export function QueueClipsPanel({
   const activeAspectPreset =
     CLIP_ASPECT_OPTIONS.find((opt) => opt.id === dualAspect) ?? CLIP_ASPECT_OPTIONS[0];
   const activePixelDims = getClipPixelDimensions(dualAspect, dualResolution);
+
+  if (dockMode) {
+    return (
+      <div className="queue-clips-dock-panel" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {errorMsg && (
+          <div className="screen-limit-toast" style={{ background: "var(--danger-red)", padding: "8px 12px", borderRadius: 8, fontSize: "0.75rem", color: "#FFF" }}>
+            <span>{errorMsg}</span>
+            <button type="button" onClick={() => setErrorMsg(null)} style={{ background: "transparent", border: "none", color: "#FFF", marginLeft: 8, cursor: "pointer" }}>✕</button>
+          </div>
+        )}
+        {infoMsg && (
+          <div className="screen-limit-toast" style={{ background: "var(--ok-green)", padding: "8px 12px", borderRadius: 8, fontSize: "0.75rem", color: "#FFF" }}>
+            <span>{infoMsg}</span>
+            <button type="button" onClick={() => setInfoMsg(null)} style={{ background: "transparent", border: "none", color: "#FFF", marginLeft: 8, cursor: "pointer" }}>✕</button>
+          </div>
+        )}
+
+        {/* Tarjeta de Configuración del Clip */}
+        <div className="studio-dock-card" style={{ padding: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#FFFFFF", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Dashicon name="format-video" size={14} color="#EC4899" />
+              <span>Configurar Clip IA</span>
+            </span>
+            <span className="tag-pill" style={{ fontSize: "0.62rem" }}>
+              {dualAspect} · {dualResolution}
+            </span>
+          </div>
+
+          {/* Modelo IA */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8", fontWeight: 700, marginBottom: 4 }}>
+              Modelo de Procesamiento:
+            </label>
+            <select
+              className="select-control"
+              value={modelId}
+              onChange={(e) => setModelId(e.target.value as QueueModelId)}
+              style={{ width: "100%", fontSize: "0.74rem", padding: "6px 8px" }}
+            >
+              {QUEUE_VIDEO_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label} ({m.decartCreditsPerSec} cr/s)
+                </option>
+              ))}
+            </select>
+            <span style={{ display: "block", fontSize: "0.64rem", color: "#64748B", marginTop: 2 }}>
+              {selectedModelMeta.notes}
+            </span>
+          </div>
+
+          {/* Archivo de Video Original */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8", fontWeight: 700, marginBottom: 4 }}>
+              Subir Video Original (MP4 / WebM / MOV):
+            </label>
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/ogg,.mp4,.webm,.mov,.mkv,.m4v"
+              className="input-control"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                handleSelectVideoFile(f);
+                if (f) {
+                  const u = URL.createObjectURL(f);
+                  onLoadCompletedIntoMonitor(u, f.name);
+                }
+              }}
+              style={{ width: "100%", fontSize: "0.72rem", padding: "4px" }}
+            />
+            {videoFile && (
+              <span style={{ display: "block", fontSize: "0.66rem", color: "#10B981", marginTop: 2, fontWeight: 700 }}>
+                ✓ {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(1)} MB)
+              </span>
+            )}
+          </div>
+
+          {/* Imagen de Referencia Opcional */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8", fontWeight: 700, marginBottom: 4 }}>
+              Imagen de Referencia (Opcional):
+            </label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="input-control"
+              onChange={(e) => setRefFile(e.target.files?.[0] ?? null)}
+              style={{ width: "100%", fontSize: "0.72rem", padding: "4px" }}
+            />
+          </div>
+
+          {/* Prompt / Instrucción de Estilo */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: "0.7rem", color: "#94A3B8", fontWeight: 700, marginBottom: 4 }}>
+              Instrucción para el Clip:
+            </label>
+            <textarea
+              className="textarea-control"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              style={{ width: "100%", minHeight: 48, fontSize: "0.74rem", padding: "6px" }}
+            />
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>
+              {OFFICIAL_PROMPT_PRESETS.slice(0, 3).map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className="btn"
+                  style={{ fontSize: "0.62rem", padding: "2px 6px", minHeight: 20 }}
+                  onClick={() => setPrompt(p.prompt)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Formato & Proporción */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.68rem", color: "#94A3B8", fontWeight: 700, marginBottom: 2 }}>
+                Proporción:
+              </label>
+              <select
+                className="select-control"
+                value={dualAspect}
+                onChange={(e) => setDualAspect(e.target.value as ClipAspectRatio)}
+                style={{ width: "100%", fontSize: "0.72rem", padding: "4px" }}
+              >
+                {CLIP_ASPECT_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.shortLabel} ({opt.platformHint})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "0.68rem", color: "#94A3B8", fontWeight: 700, marginBottom: 2 }}>
+                Resolución:
+              </label>
+              <select
+                className="select-control"
+                value={dualResolution}
+                onChange={(e) => setDualResolution(e.target.value as ClipResolution)}
+                style={{ width: "100%", fontSize: "0.72rem", padding: "4px" }}
+              >
+                {(Object.keys(CLIP_RESOLUTION_BASE) as ClipResolution[]).map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <label className="checkbox-line" style={{ fontSize: "0.7rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={enhancePrompt}
+              onChange={(e) => setEnhancePrompt(e.target.checked)}
+            />
+            <span>Mejorar prompt automáticamente</span>
+          </label>
+
+          {/* Botón Submit */}
+          <button
+            type="button"
+            className="btn-execute running"
+            onClick={handleSubmit}
+            disabled={submitting || !videoFile}
+            style={{ width: "100%", fontSize: "0.76rem", padding: "9px 12px", cursor: submitting || !videoFile ? "not-allowed" : "pointer" }}
+          >
+            {submitting ? "SUBIENDO VIDEO A COLA..." : `PROCESAR CLIP (${selectedModelMeta.decartCreditsPerSec} cr/s)`}
+          </button>
+        </div>
+
+        {/* Historial de Clips en Cola */}
+        <div className="studio-dock-card" style={{ padding: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#FFFFFF", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Dashicon name="clock" size={14} color="#60A5FA" />
+              <span>Historial en Cola ({jobs.length})</span>
+            </span>
+          </div>
+
+          {jobs.length === 0 ? (
+            <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-muted)", textAlign: "center", padding: "10px 4px" }}>
+              Aún no has procesado clips. Sube un video arriba para enviar a la cola.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
+              {jobs.map((job) => (
+                <div
+                  key={job.jobId}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: 8,
+                    padding: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                    <strong style={{ fontSize: "0.74rem", color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 160 }}>
+                      {job.fileName}
+                    </strong>
+                    <span
+                      className={`tag-pill ${job.status === "completed" ? "active" : ""}`}
+                      style={{ fontSize: "0.62rem", padding: "1px 6px" }}
+                    >
+                      {job.status}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.64rem", color: "#94A3B8", marginTop: 2 }}>
+                    {job.modelId} · ID: {job.jobId.slice(0, 8)}...
+                  </div>
+                  <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
+                    {job.status === "completed" && (
+                      <>
+                        <button
+                          type="button"
+                          className="btn"
+                          style={{ fontSize: "0.65rem", padding: "3px 7px", background: "rgba(236,72,153,0.2)", borderColor: "#EC4899", color: "#F472B6" }}
+                          onClick={() => void loadCompletedVideo(job, true)}
+                          title="Cargar video en el monitor central"
+                        >
+                          ▶ Cargar al Monitor
+                        </button>
+                        <a
+                          href={`/api/queue/result?jobId=${encodeURIComponent(job.jobId)}`}
+                          download={`clip-${job.jobId}.mp4`}
+                          className="btn"
+                          style={{ fontSize: "0.65rem", padding: "3px 7px", textDecoration: "none" }}
+                        >
+                          ⬇ Descargar
+                        </a>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ fontSize: "0.62rem", padding: "2px 5px" }}
+                      onClick={() => void refreshJobStatus(job.jobId)}
+                      title="Actualizar estado"
+                    >
+                      ↻
+                    </button>
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ fontSize: "0.62rem", padding: "2px 5px", color: "#EF4444" }}
+                      onClick={() => persistJobs(jobs.filter((j) => j.jobId !== job.jobId))}
+                      title="Eliminar de la lista"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="cockpit-grid">

@@ -15,6 +15,7 @@ import { ViewerRangeControl } from "@/components/ViewerRangeControl";
 
 interface TikTokBrandedStudioPanelProps {
   onApplyThemeToCam?: (theme: TikTokBrandTheme, backgroundId?: string) => void;
+  onThemeChange?: (theme: TikTokBrandTheme) => void;
   onSelectCropAspect?: (aspect: "9:16" | "16:9" | "1:1") => void;
   virtualBackgrounds?: VirtualBackgroundItem[];
   selectedBgId?: string;
@@ -23,6 +24,8 @@ interface TikTokBrandedStudioPanelProps {
   viewerRange?: ViewerRangeOption;
   onSelectViewerRange?: (range: ViewerRangeOption) => void;
   hideViewerRangeCard?: boolean;
+  dockMode?: boolean;
+  activeThemeId?: string;
 }
 
 const TIKTOK_STYLE_COLOR_PRESETS: Array<{ label: string; hex: string }> = [
@@ -85,6 +88,7 @@ const TIKTOK_LOGO_STORAGE_KEY = "miplataformastream.tiktokStyleLogoPng.v1";
 
 export function TikTokBrandedStudioPanel({
   onApplyThemeToCam,
+  onThemeChange,
   onSelectCropAspect,
   virtualBackgrounds: propBackgrounds,
   selectedBgId: propSelectedBgId,
@@ -93,6 +97,8 @@ export function TikTokBrandedStudioPanel({
   viewerRange: propViewerRange,
   onSelectViewerRange,
   hideViewerRangeCard = false,
+  dockMode = false,
+  activeThemeId: propActiveThemeId,
 }: TikTokBrandedStudioPanelProps) {
   const [themes] = useState<TikTokBrandTheme[]>(DEFAULT_TIKTOK_BRAND_THEMES);
   const [activeThemeId, setActiveThemeId] = useState<string>("tt-beauty");
@@ -280,6 +286,26 @@ export function TikTokBrandedStudioPanel({
     reader.readAsDataURL(file);
   };
 
+  useEffect(() => {
+    if (propActiveThemeId && propActiveThemeId !== activeThemeId) {
+      setActiveThemeId(propActiveThemeId);
+    }
+  }, [propActiveThemeId, activeThemeId]);
+
+  useEffect(() => {
+    if (onThemeChange) {
+      const updatedTheme: TikTokBrandTheme = {
+        ...activeTheme,
+        brandName: customBrandName,
+        tagline: customTagline,
+        accentColor: activeTheme.accentColor,
+        secondaryColor: activeTheme.secondaryColor,
+        logoUrl: customLogoUrl || undefined,
+      };
+      onThemeChange(updatedTheme);
+    }
+  }, [activeTheme, customBrandName, customTagline, customLogoUrl, onThemeChange]);
+
   const handleApplyToCam = () => {
     const updatedTheme: TikTokBrandTheme = {
       ...activeTheme,
@@ -300,7 +326,7 @@ export function TikTokBrandedStudioPanel({
   };
 
   return (
-    <div className="tiktok-branded-studio-container">
+    <div className={`tiktok-branded-studio-container ${dockMode ? "dock-mode" : ""}`} style={dockMode ? { padding: 0 } : undefined}>
       {/* Toast informativo */}
       {toastMessage && (
         <div className="screen-limit-toast" style={{ background: "var(--accent-pink)" }}>
@@ -315,38 +341,41 @@ export function TikTokBrandedStudioPanel({
         </div>
       )}
 
-      {/* Cabecera explicativa */}
-      <div className="pro-panel-header-banner">
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <TikTokLogo size={28} />
-            <div>
-              <h2 style={{ margin: 0, fontSize: "1.15rem", color: "#FFFFFF" }}>
-                Transmisiones en Vivo de TikTok con Marcas & Fondos Virtuales
-              </h2>
-              <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-                Personaliza tu transmisión en vivo vertical (9:16) con superposiciones, logotipos, banners y <strong>fondos virtuales tipo Fondo Verde (Chroma Key #00FF00)</strong> para OBS o aislamiento perfecto de silueta.
-              </p>
+      {/* Cabecera explicativa (solo en full mode) */}
+      {!dockMode && (
+        <div className="pro-panel-header-banner">
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <TikTokLogo size={28} />
+              <div>
+                <h2 style={{ margin: 0, fontSize: "1.15rem", color: "#FFFFFF" }}>
+                  Transmisiones en Vivo de TikTok con Marcas & Fondos Virtuales
+                </h2>
+                <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                  Personaliza tu transmisión en vivo vertical (9:16) con superposiciones, logotipos, banners y <strong>fondos virtuales tipo Fondo Verde (Chroma Key #00FF00)</strong> para OBS o aislamiento perfecto de silueta.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          type="button"
-          className="btn-apply-cam-primary"
-          style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-          onClick={handleApplyToCam}
-          title="Configurar monitor CAM en vertical 9:16 y montar este marco de marca con el fondo seleccionado"
-        >
-          <SocialIcon network="tiktok" size={16} />
-          <span>APLICAR MARCO Y FONDO A CABINA CAM (9:16)</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            className="btn-apply-cam-primary"
+            style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            onClick={handleApplyToCam}
+            title="Configurar monitor CAM en vertical 9:16 y montar este marco de marca con el fondo seleccionado"
+          >
+            <SocialIcon network="tiktok" size={16} />
+            <span>APLICAR MARCO Y FONDO A CABINA CAM (9:16)</span>
+          </button>
+        </div>
+      )}
 
       {/* Disposición en dos columnas: Simulador 9:16 (izq) y Personalizador de Marcas y Fondos (der) */}
-      <div className="tiktok-branded-grid-layout">
-        {/* COLUMNA 1: SIMULADOR DE SMARTPHONE EN VIVO (ESTILO TIKTOK LIVE 9:16) */}
-        <div className="tiktok-phone-simulator-column">
+      <div className={`tiktok-branded-grid-layout ${dockMode ? "is-dock" : ""}`} style={dockMode ? { display: "block", width: "100%" } : undefined}>
+        {/* COLUMNA 1: SIMULADOR DE SMARTPHONE EN VIVO (ESTILO TIKTOK LIVE 9:16) (Solo en full mode) */}
+        {!dockMode && (
+          <div className="tiktok-phone-simulator-column">
           <div className="phone-device-bezel">
             {/* Dynamic Island / Notch */}
             <div className="phone-dynamic-island" />
@@ -635,9 +664,22 @@ export function TikTokBrandedStudioPanel({
             </div>
           </div>
         </div>
+        )}
 
         {/* COLUMNA 2: SELECTOR DE TEMAS, FONDOS VIRTUALES Y EDITOR DE MARCA */}
-        <div className="tiktok-customizer-column">
+        <div className={`tiktok-customizer-column ${dockMode ? "is-dock" : ""}`} style={dockMode ? { width: "100%", padding: 0 } : undefined}>
+          {dockMode && (
+            <button
+              type="button"
+              className="btn-execute running"
+              style={{ width: "100%", marginBottom: 12, padding: "10px", fontSize: "0.78rem" }}
+              onClick={handleApplyToCam}
+              title="Confirmar y aplicar este tema al monitor en vivo 9:16"
+            >
+              <Dashicon name="controls-play" size={14} />
+              <span>APLICAR MARCO TIKTOK AL MONITOR (9:16)</span>
+            </button>
+          )}
           {/* SECCIÓN 1: SELECCIONAR O SUBIR FONDOS (TIPO FONDO VERDE O ESCENARIO) */}
           <div className="customizer-card-box" style={{ border: "1px solid #10B981" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>

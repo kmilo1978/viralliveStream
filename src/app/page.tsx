@@ -496,7 +496,12 @@ export default function StudioDeluluPage() {
 
   const effectiveCropMode: CropAspectMode = isMobileViewport ? "9:16" : preprocOpts.cropMode;
   const showPhoneMockupFrame = !isMobileViewport && phoneMockupMode && effectiveCropMode === "9:16";
-  const isCockpitTab = activeTab === "CAM" || activeTab === "TRY_ON" || activeTab === "DUO";
+  const isCockpitTab =
+    activeTab === "CAM" ||
+    activeTab === "TRY_ON" ||
+    activeTab === "DUO" ||
+    activeTab === "CLIPS" ||
+    activeTab === "TIKTOK_LIVE";
   const isDuoSplitActive = Boolean(guestSplitConfig.active || splitView);
   const splitChatComposerToLeftInDuo = activeTab === "DUO" && !isMobileViewport && activeStudioTab === "chat";
   const isHostVideoFileActive = sourceMode === "video_file" && Boolean(localVideoFileUrl);
@@ -536,6 +541,23 @@ export default function StudioDeluluPage() {
         setGuestSplitConfig((prev) => ({ ...prev, active: false }));
         setSplitView(false);
         setActiveStudioTab("chat");
+        return;
+      }
+      if (tab === "CLIPS") {
+        setActiveTab("CLIPS");
+        setGuestSplitConfig((prev) => ({ ...prev, active: false }));
+        setSplitView(false);
+        return;
+      }
+      if (tab === "TIKTOK_LIVE") {
+        setActiveTab("TIKTOK_LIVE");
+        setGuestSplitConfig((prev) => ({ ...prev, active: false }));
+        setSplitView(false);
+        setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
+        setPhoneMockupMode(true);
+        if (!activeTikTokTheme) {
+          setActiveTikTokTheme(DEFAULT_TIKTOK_BRAND_THEMES[0]);
+        }
         return;
       }
       if (tab === "CAM") {
@@ -3266,10 +3288,20 @@ export default function StudioDeluluPage() {
                     ? "CABINA TRY-ON"
                     : activeTab === "DUO"
                       ? "CABINA DÚO · SPLIT"
-                      : "CONTROLES EN VIVO"}
+                      : activeTab === "CLIPS"
+                        ? "CABINA CLIPS PREGRABADOS"
+                        : activeTab === "TIKTOK_LIVE"
+                          ? "CABINA TIKTOK CON MARCAS"
+                          : "CONTROLES EN VIVO"}
                 </span>
                 {activeTab === "TRY_ON" && (
                   <span className="nav-badge-new" style={{ fontSize: "0.58rem" }}>VTON 3.6</span>
+                )}
+                {activeTab === "CLIPS" && (
+                  <span className="nav-badge-new" style={{ fontSize: "0.58rem", background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}>ASYNC IA</span>
+                )}
+                {activeTab === "TIKTOK_LIVE" && (
+                  <span className="nav-badge-new" style={{ fontSize: "0.58rem", background: "linear-gradient(135deg, #FF0050, #00F0FF)" }}>BRAND 9:16</span>
                 )}
               </span>
               <button
@@ -3365,6 +3397,58 @@ export default function StudioDeluluPage() {
               </div>
             )}
 
+            {activeTab === "CLIPS" && (
+              <div
+                className="clips-vcam-helper-banner"
+                onClick={() => setShowObsModal(true)}
+                style={{
+                  background: "linear-gradient(90deg, rgba(236, 72, 153, 0.14) 0%, rgba(139, 92, 246, 0.14) 100%)",
+                  border: "1px dashed #EC4899",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                  cursor: "pointer",
+                }}
+                title="Procesa y transmite clips de video con Modelos IA"
+              >
+                <span style={{ fontSize: "0.76rem", color: "#F472B6", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  🎬 <span>Clips Pregrabados y Modelos de Video IA</span>
+                </span>
+                <span style={{ fontSize: "0.7rem", color: "#C084FC", textDecoration: "underline", fontWeight: 600 }}>
+                  Asíncrono ➔
+                </span>
+              </div>
+            )}
+
+            {activeTab === "TIKTOK_LIVE" && (
+              <div
+                className="tiktok-vcam-helper-banner"
+                onClick={() => setShowObsModal(true)}
+                style={{
+                  background: "linear-gradient(90deg, rgba(255, 0, 80, 0.14) 0%, rgba(0, 240, 255, 0.14) 100%)",
+                  border: "1px dashed #FF0050",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                  cursor: "pointer",
+                }}
+                title="Personaliza tu transmisión en vivo vertical 9:16 con Kits de Marca"
+              >
+                <span style={{ fontSize: "0.76rem", color: "#FF0050", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  📱 <span>Transmisión TikTok con Marca y Fondos</span>
+                </span>
+                <span style={{ fontSize: "0.7rem", color: "#00F0FF", textDecoration: "underline", fontWeight: 600 }}>
+                  En Vivo ➔
+                </span>
+              </div>
+            )}
+
             {activeTab === "DUO" ? (
               <>
                 <button
@@ -3422,6 +3506,49 @@ export default function StudioDeluluPage() {
                   </div>
                 )}
               </>
+            ) : activeTab === "CLIPS" ? (
+              <QueueClipsPanel
+                dockMode={true}
+                onLoadCompletedIntoMonitor={(videoUrl, fileName) => {
+                  setLocalVideoFileUrl(videoUrl);
+                  if (fileName) setLocalVideoFileName(fileName);
+                  setSourceMode("video_file");
+                  setStreamInfo(`🎬 Clip "${fileName || "video"}" listo en el monitor central.`);
+                }}
+                onRefreshAccount={refreshAccountStatus}
+              />
+            ) : activeTab === "TIKTOK_LIVE" ? (
+              <TikTokBrandedStudioPanel
+                dockMode={true}
+                activeThemeId={activeTikTokTheme?.id}
+                viewerRange={guestSplitConfig.viewerRange}
+                onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
+                onApplyThemeToCam={(theme, bgId) => {
+                  setActiveTikTokTheme(theme);
+                  setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
+                  setPhoneMockupMode(true);
+                  if (bgId) {
+                    setSelectedBgId(bgId);
+                    setBgPreviewEnabled(true);
+                  }
+                  setStreamInfo(`📱 Marca TikTok "${theme.brandName}" activa en el monitor 9:16.`);
+                }}
+                onThemeChange={(theme) => {
+                  setActiveTikTokTheme(theme);
+                }}
+                onSelectCropAspect={(aspect) => {
+                  setPreprocOpts((prev) => ({ ...prev, cropMode: aspect as CropAspectMode }));
+                }}
+                virtualBackgrounds={virtualBackgrounds}
+                selectedBgId={selectedBgId}
+                onSelectBackground={(bg) => {
+                  setSelectedBgId(bg.id);
+                  setBgPreviewEnabled(true);
+                  setStreamInfo(`Fondo "${bg.name}" seleccionado.`);
+                }}
+                onAddCustomBackground={handleAddCustomBackground}
+                hideViewerRangeCard={true}
+              />
             ) : (
               <>
                 {/* Prompt input card (CAM / TRY ON) */}
@@ -3912,7 +4039,7 @@ export default function StudioDeluluPage() {
               </>
             )}
 
-            {activeTab !== "DUO" && (
+            {activeTab !== "DUO" && activeTab !== "CLIPS" && (
               <div className="viewer-range-dock-card">
                 <ViewerRangeControl
                   compact
@@ -4867,67 +4994,154 @@ export default function StudioDeluluPage() {
                     className="monitor-video-feed"
                     style={{ display: isConnectedLive ? "block" : "none" }}
                   />
-                  {/* Standby visual en CAM si no hay stream activo todavía */}
-                  {!isConnectedLive && !localVideoFileUrl && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
-                    <div
+                  {/* Video pregrabado o clip cargado en el monitor */}
+                  {localVideoFileUrl && !isConnectedLive && (
+                    <video
+                      key={localVideoFileUrl}
+                      src={localVideoFileUrl}
+                      autoPlay
+                      loop
+                      muted={!listenRemoteAudio}
+                      playsInline
+                      controls={activeTab === "CLIPS"}
+                      className="monitor-video-feed"
                       style={{
                         position: "absolute",
                         inset: 0,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "radial-gradient(circle at center, rgba(236,72,153,0.12) 0%, rgba(10,10,18,0.92) 80%)",
-                        color: "#FFFFFF",
-                        padding: 16,
-                        zIndex: 1,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        transform: mirrorInput ? "scaleX(-1)" : "none",
+                        zIndex: 2,
                       }}
-                    >
+                    />
+                  )}
+
+                  {/* Standby visual si no hay stream activo todavía */}
+                  {!isConnectedLive && !localVideoFileUrl && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
+                    activeTab === "CLIPS" ? (
                       <div
                         style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: "50%",
-                          background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                          position: "absolute",
+                          inset: 0,
                           display: "flex",
+                          flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: "1.5rem",
-                          fontWeight: 800,
-                          boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
-                          marginBottom: 10,
-                        }}
-                      >
-                        {streamerName ? streamerName.charAt(0).toUpperCase() : "M"}
-                      </div>
-                      <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#FFFFFF" }}>
-                        {streamerName || "Maddy"}
-                      </span>
-                      <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
-                        Cámara en espera · Pulsa Iniciar o Cargar MP4
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void startCamera()}
-                        style={{
-                          marginTop: 10,
-                          padding: "5px 12px",
-                          borderRadius: 14,
-                          background: "rgba(255, 255, 255, 0.12)",
-                          border: "1px solid rgba(255, 255, 255, 0.25)",
+                          background: "radial-gradient(circle at center, rgba(236,72,153,0.16) 0%, rgba(10,10,18,0.95) 80%)",
                           color: "#FFFFFF",
-                          fontSize: "0.72rem",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
+                          padding: 16,
+                          zIndex: 1,
                         }}
                       >
-                        <Dashicon name="video-alt2" size={12} color="#EC4899" />
-                        <span>Activar Cámara</span>
-                      </button>
-                    </div>
+                        <div
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "1.7rem",
+                            boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
+                            marginBottom: 10,
+                          }}
+                        >
+                          🎬
+                        </div>
+                        <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#FFFFFF" }}>
+                          Cabina de Clips Pregrabados
+                        </span>
+                        <span style={{ fontSize: "0.74rem", color: "rgba(255,255,255,0.7)", marginTop: 4, maxWidth: 320, textAlign: "center" }}>
+                          Sube un video en la cabina izquierda o carga un clip terminado de la cola para reproducir aquí
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const fileInput = document.querySelector<HTMLInputElement>(".queue-clips-dock-panel input[type=file]");
+                            fileInput?.click();
+                          }}
+                          style={{
+                            marginTop: 12,
+                            padding: "6px 14px",
+                            borderRadius: 14,
+                            background: "rgba(236, 72, 153, 0.2)",
+                            border: "1px solid #EC4899",
+                            color: "#FFFFFF",
+                            fontSize: "0.74rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <Dashicon name="upload" size={13} color="#F472B6" />
+                          <span>Seleccionar Video MP4 / WebM</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "radial-gradient(circle at center, rgba(236,72,153,0.12) 0%, rgba(10,10,18,0.92) 80%)",
+                          color: "#FFFFFF",
+                          padding: 16,
+                          zIndex: 1,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "1.5rem",
+                            fontWeight: 800,
+                            boxShadow: "0 0 25px rgba(236, 72, 153, 0.45)",
+                            marginBottom: 10,
+                          }}
+                        >
+                          {streamerName ? streamerName.charAt(0).toUpperCase() : "M"}
+                        </div>
+                        <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#FFFFFF" }}>
+                          {streamerName || "Maddy"}
+                        </span>
+                        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
+                          Cámara en espera · Pulsa Iniciar o Cargar MP4
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void startCamera()}
+                          style={{
+                            marginTop: 10,
+                            padding: "5px 12px",
+                            borderRadius: 14,
+                            background: "rgba(255, 255, 255, 0.12)",
+                            border: "1px solid rgba(255, 255, 255, 0.25)",
+                            color: "#FFFFFF",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <Dashicon name="video-alt2" size={12} color="#EC4899" />
+                          <span>Activar Cámara</span>
+                        </button>
+                      </div>
+                    )
                   )}
 
                   <video
@@ -4943,6 +5157,8 @@ export default function StudioDeluluPage() {
                     style={{
                       display:
                         isConnectedLive
+                          ? "none"
+                          : localVideoFileUrl
                           ? "none"
                           : bgPreviewEnabled && selectedBgId !== "bg-none" && bgPreviewMode === "backdrop"
                           ? "none"
@@ -8542,53 +8758,6 @@ export default function StudioDeluluPage() {
         </section>
       )}
 
-      {/* -------------------------------------------------------------
-          VISTA 3B: CLIPS PREGRABADOS (DESTACADO EN MENU DESPUÉS DE DÚO)
-          ------------------------------------------------------------- */}
-      {activeTab === "CLIPS" && (
-        <section className="pro-workspace-layout">
-          <QueueClipsPanel
-            onLoadCompletedIntoMonitor={(videoUrl) => {
-              setLocalVideoFileUrl(videoUrl);
-              setSourceMode("video_file");
-              setActiveTab("CAM");
-            }}
-            onRefreshAccount={refreshAccountStatus}
-          />
-        </section>
-      )}
-
-      {/* -------------------------------------------------------------
-          VISTA 3C: TIKTOK LIVE CON MARCAS (DESTACADO EN MENU DESPUÉS DE CLIPS)
-          ------------------------------------------------------------- */}
-      {activeTab === "TIKTOK_LIVE" && (
-        <section className="pro-workspace-layout">
-          <TikTokBrandedStudioPanel
-            viewerRange={guestSplitConfig.viewerRange}
-            onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
-            onApplyThemeToCam={(theme, bgId) => {
-              setActiveTikTokTheme(theme);
-              setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
-              if (bgId) {
-                setSelectedBgId(bgId);
-                setBgPreviewEnabled(true);
-              }
-              setStreamInfo(`📱 Marco TikTok "${theme.brandName}" aplicado en 9:16.`);
-              setActiveTab("CAM");
-            }}
-            onSelectCropAspect={(aspect) => {
-              setPreprocOpts((prev) => ({ ...prev, cropMode: aspect as CropAspectMode }));
-            }}
-            virtualBackgrounds={virtualBackgrounds}
-            selectedBgId={selectedBgId}
-            onSelectBackground={(bg) => {
-              setSelectedBgId(bg.id);
-              setBgPreviewEnabled(true);
-            }}
-            onAddCustomBackground={handleAddCustomBackground}
-          />
-        </section>
-      )}
 
       {/* -------------------------------------------------------------
           VISTA 4: MODULOS PRO (PLAYLIST, CHAT, SCHEDULE, OBS V2, VOZ, SKINS)

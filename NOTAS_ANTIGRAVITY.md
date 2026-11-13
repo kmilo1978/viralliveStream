@@ -1538,3 +1538,32 @@
   - Selector de Presets de 1 clic para configurar rápidamente botones frecuentes sin escribir datos manualmente.
 - Pendientes:
   - Todo completado y verificado. Listo para el siguiente módulo o solicitud del usuario.
+
+## Validación completada
+- Fecha: 2026-11-12 20:50
+- Resultado: Aprobado (score 10/10)
+- Resumen: Unificación arquitectónica de CLIPS PREGRABADOS y TIKTOK CON MARCAS al estándar maestro de 3 columnas (CAM, TRY ON, DÚO):
+  1. Extensión de `isCockpitTab`: Inclusión de `"CLIPS"` y `"TIKTOK_LIVE"` dentro del layout maestro de estudio de 3 columnas, garantizando consistencia total de navegación, monitor y docks.
+  2. Columna Izquierda (Dock de Cabina):
+     - Para `CLIPS`: Renderizado de `QueueClipsPanel` en modo dock (`dockMode={true}`) con selector de modelos de video IA (Lucy Restyle 2.0, Deep-Live Pro, CyberAnime 4K, etc.), subida de video MP4/WebM/MOV, imagen de referencia opcional, prompt con presets rápidos, proporción, resolución, botón `PROCESAR CLIP EN COLA` e historial asíncrono con acciones de 1 clic (`▶ Cargar al Monitor`, `⬇ Descargar`, `↻`, `✕`).
+     - Para `TIKTOK_LIVE`: Renderizado de `TikTokBrandedStudioPanel` en modo dock (`dockMode={true}`) con kits de marca (Beauty by Mia, Gamer Arena, Crypto Trader, etc.), editor de nombre y tagline, paleta neón RGB y secundaria, subida de logotipo PNG transparente, acciones de tienda TikTok, fondos virtuales tipo Chroma Key Verde (#00FF00) y blindaje DRM.
+  3. Columna Central (Monitor de Estudio):
+     - Compartido por todas las pestañas: barra superior de acciones (`TRANSMITE EN CUALQUIER APP O LLAMADA`, `MULTISTREAM`, `LIVE SHOPPING`, `STREAM CONFIG`), selector de escala universal (`Normal (M)`, `Grande (L)`, `Extra Grande (XL)`), monitor dinámico con formato smartphone 9:16 o panorámico 16:9.
+     - En `CLIPS`: Reproducción directa del video o clip seleccionado con controles nativos de bucle, o tarjeta visual de Standby con icono de claqueta 🎬 y botón de subida si aún no hay video cargado.
+     - En `TIKTOK_LIVE`: Montaje en vivo del marco de marca seleccionado sobre la señal de video o cámara vertical 9:16 con Dynamic Island, badges de viewers y reacciones.
+     - Debajo del monitor: Barra unificada de comentarios con input amplio, selector compacto de idioma rotativo (`[🇪🇸 ES ▾]`), botón de envío y burbuja de WhatsApp.
+  4. Columna Derecha (Dock de Herramientas, Capas y Chat):
+     - Mantenido idéntico y sincronizado en los 5 modos: panel de `Capas en Pantalla` (0/4 máx con switches en OFF por default), `Herramientas de Escena` y `Chat Unificado Multi-Red`.
+  5. Eliminación de Vistas Aisladas: Retirados los bloques aislados de página completa de las líneas 8548 y 8564 para que la experiencia fluya de forma 100% natural y coherente.
+- Observaciones: `npx tsc --noEmit` -> OK (cero errores); Verificación Playwright end-to-end con capturas visuales aprobadas en CAM, DUO, CLIPS y TIKTOK_LIVE (`verified_clips_3columns_layout.png`, `verified_tiktok_3columns_layout.png`, etc.).
+
+## Nueva sesión
+- Fecha: 2026-11-12 20:50
+- Solicitud: En Clips pregrabados como en TIKTOK MARCA tampoco tiene ninguna lógica la distribución teniendo en cuenta cómo se viene manejando todo por ejemplo en CAM, TRY ON, DUO. Sigue esta línea y la distribución de los elementos como de las pantallas.
+- Decisiones clave:
+  - Todas las 5 pestañas de estudio (`CAM`, `TRY_ON`, `DUO`, `CLIPS`, `TIKTOK_LIVE`) operan ahora bajo la misma arquitectura de 3 columnas (`isCockpitTab`).
+  - La columna izquierda alberga la cabina parametrizada según el modo seleccionado.
+  - La columna central mantiene el monitor con su barra superior e inferior unificada.
+  - La columna derecha conserva las herramientas de escena, capas y el chat unificado multi-red.
+- Pendientes:
+  - Todo completado y verificado.
