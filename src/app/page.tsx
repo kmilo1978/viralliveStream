@@ -6113,8 +6113,13 @@ export default function StudioDeluluPage() {
                 </div>
 
                 {/* Switch Botones */}
-                <div className="studio-layers-row-item" title="Alternar botones flotantes interactivos en pantalla">
-                  <div className="studio-layers-row-label">
+                <div className="studio-layers-row-item" title="Alternar botones flotantes interactivos en pantalla (Clic en el texto para personalizar en Herramientas)">
+                  <div
+                    className="studio-layers-row-label"
+                    onClick={() => setActiveStudioTab("deck")}
+                    style={{ cursor: "pointer" }}
+                    title="Clic para abrir y personalizar Botones Interactivos"
+                  >
                     <Dashicon name="controls-play" size={14} />
                     <span>Botones Interactivos</span>
                   </div>
@@ -6278,11 +6283,13 @@ export default function StudioDeluluPage() {
                   type="button"
                   className={`studio-tools-nav-btn ${activeStudioTab === "deck" ? "active" : ""}`}
                   onClick={() => setActiveStudioTab("deck")}
-                  title="Stream Deck y Botones de acción rápida"
+                  title="Botones Interactivos en Pantalla y Stream Deck: Crear, personalizar (+ Nuevo Botón, color, posición, enlace)"
                 >
                   <Dashicon name="controls-play" size={16} />
-                  <span className="tool-label">Deck</span>
-                  <span className="tool-counter">{actionButtons.length}</span>
+                  <span className="tool-label">Botones</span>
+                  <span className="tool-counter" style={{ color: screenButtonsVisible ? "#25D366" : undefined }}>
+                    {screenButtonsVisible ? "LIVE" : actionButtons.length}
+                  </span>
                 </button>
 
                 <button
@@ -7308,10 +7315,10 @@ export default function StudioDeluluPage() {
                   <div className="studio-dock-header-info">
                     <h3 className="studio-dock-header-title">
                       <Dashicon name="controls-play" size={16} />
-                      <span>Stream Deck ({actionButtons.length})</span>
+                      <span>Botones Interactivos &amp; Deck ({actionButtons.length})</span>
                     </h3>
                     <p className="studio-dock-header-subtitle">
-                      Disparadores de acción rápida para efectos, enlaces URL, sonido y pantalla
+                      Personaliza y coloca botones flotantes en pantalla con efectos, enlaces URL, sonido y alertas
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
