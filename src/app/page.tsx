@@ -304,6 +304,7 @@ export default function StudioDeluluPage() {
   const [localVideoFileUrl, setLocalVideoFileUrl] = useState<string | null>(null);
   const [localVideoFileName, setLocalVideoFileName] = useState<string | null>(null);
   const [sourceError, setSourceError] = useState<string | null>(null);
+  const [cameraStreamActive, setCameraStreamActive] = useState<boolean>(false);
 
   // Parámetros de IA
   const [selectedModelId, setSelectedModelId] = useState<SpikeRealtimeModelId>("lucy-2.6");
@@ -852,6 +853,7 @@ export default function StudioDeluluPage() {
       localStreamRef.current = null;
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    setCameraStreamActive(false);
   }, [tearDownVuMeter]);
 
   const attachNewLocalStream = useCallback(
@@ -877,6 +879,7 @@ export default function StudioDeluluPage() {
         await localVideoRef.current.play().catch(() => {});
       }
 
+      setCameraStreamActive(true);
       setupVuMeter(stream);
     },
     [mirrorInput, preprocOpts, selectedModelId, setupVuMeter, stopLocalSource],
@@ -4445,6 +4448,7 @@ export default function StudioDeluluPage() {
                     ) : (
                       <>
                         {/* Standby visual del Host en Dúo */}
+                        {!cameraStreamActive && !isConnectedLive && (
                         <div
                           style={{
                             position: "absolute",
@@ -4504,6 +4508,7 @@ export default function StudioDeluluPage() {
                             <span>Activar Cámara</span>
                           </button>
                         </div>
+                        )}
 
                         <video
                           ref={localVideoRef}
@@ -4881,7 +4886,7 @@ export default function StudioDeluluPage() {
                   )}
 
                   {/* Standby visual si no hay stream activo todavía */}
-                  {!isConnectedLive && !localVideoFileUrl && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
+                  {!isConnectedLive && !localVideoFileUrl && !cameraStreamActive && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
                     activeTab === "CLIPS" ? (
                       <div
                         style={{
