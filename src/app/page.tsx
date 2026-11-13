@@ -471,6 +471,7 @@ export default function StudioDeluluPage() {
       if (e) e.preventDefault();
       const text = underMonitorChatText.trim();
       if (!text) return;
+      setRealFeelChatEnabled(true);
       setUnderMonitorChatPush({
         nonce: underMonitorNonceRef.current++,
         text,
@@ -5380,7 +5381,7 @@ export default function StudioDeluluPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
-                    padding: "6px 14px",
+                    padding: "6px 12px",
                     background: "rgba(18, 18, 28, 0.94)",
                     backdropFilter: "blur(12px)",
                     WebkitBackdropFilter: "blur(12px)",
@@ -5391,67 +5392,68 @@ export default function StudioDeluluPage() {
                     boxSizing: "border-box",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", opacity: 0.8 }}><Dashicon name="format-chat" size={16} color="rgba(255,255,255,0.8)" /></span>
-                    <input
-                      type="text"
-                      placeholder={
-                        chatLanguage === "en"
-                          ? "Add a comment... (Press Enter to send live)"
-                          : chatLanguage === "both"
-                          ? "Escribe o Add a comment... (Enter para enviar)"
-                          : "Escribe un comentario... (Presiona Enter para enviar en vivo)"
-                      }
-                      value={underMonitorChatText}
-                      onChange={(e) => setUnderMonitorChatText(e.target.value)}
-                      style={{
-                        flex: 1,
-                        background: "transparent",
-                        border: "none",
-                        outline: "none",
-                        color: "#FFFFFF",
-                        fontSize: "0.82rem",
-                        fontWeight: 500,
-                        minWidth: 0,
-                      }}
-                    />
-                  </div>
-                  {/* Selector rápido de idioma en la barra inferior del monitor */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 3, marginRight: 6 }}>
-                    <button
-                      type="button"
-                      className={`chat-lang-compact-badge ${chatLanguage === "es" ? "active" : ""}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleUpdateChatLanguage("es");
-                      }}
-                      title="Cambiar comentarios en vivo a Español (Por defecto)"
-                    >
-                      🇪🇸 ES
-                    </button>
-                    <button
-                      type="button"
-                      className={`chat-lang-compact-badge ${chatLanguage === "en" ? "active" : ""}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleUpdateChatLanguage("en");
-                      }}
-                      title="Cambiar comentarios en vivo a Inglés"
-                    >
-                      🇺🇸 EN
-                    </button>
-                    <button
-                      type="button"
-                      className={`chat-lang-compact-badge ${chatLanguage === "both" ? "active" : ""}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleUpdateChatLanguage("both");
-                      }}
-                      title="Cambiar comentarios en vivo a Ambos idiomas (Bilingüe)"
-                    >
-                      🌎 Ambos
-                    </button>
-                  </div>
+                  <span style={{ display: "inline-flex", alignItems: "center", opacity: 0.8, flexShrink: 0 }}>
+                    <Dashicon name="format-chat" size={16} color="rgba(255,255,255,0.8)" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={
+                      chatLanguage === "en"
+                        ? "Add a comment..."
+                        : chatLanguage === "both"
+                        ? "Escribe un comentario / Add comment..."
+                        : "Escribe un comentario..."
+                    }
+                    value={underMonitorChatText}
+                    onChange={(e) => setUnderMonitorChatText(e.target.value)}
+                    style={{
+                      flex: 1,
+                      minWidth: 100,
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      color: "#FFFFFF",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                    }}
+                  />
+
+                  {/* Selector rápido de idioma en la barra inferior (badge compacto de 1 clic para no robar espacio al input) */}
+                  <button
+                    type="button"
+                    className="chat-lang-compact-badge active"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const nextLang = chatLanguage === "es" ? "en" : chatLanguage === "en" ? "both" : "es";
+                      handleUpdateChatLanguage(nextLang);
+                    }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "4px 8px",
+                      borderRadius: 12,
+                      fontSize: "0.68rem",
+                      fontWeight: 800,
+                      background: "rgba(236, 72, 153, 0.18)",
+                      border: "1px solid rgba(236, 72, 153, 0.5)",
+                      color: "#FFFFFF",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                      whiteSpace: "nowrap",
+                    }}
+                    title={`Idioma actual: ${
+                      chatLanguage === "es"
+                        ? "Español (Clic para cambiar a Inglés)"
+                        : chatLanguage === "en"
+                        ? "English (Clic para cambiar a Ambos)"
+                        : "Ambos idiomas (Clic para cambiar a Español)"
+                    }`}
+                  >
+                    <span>{chatLanguage === "es" ? "🇪🇸 ES" : chatLanguage === "en" ? "🇺🇸 EN" : "🌎 Ambos"}</span>
+                    <span style={{ fontSize: "0.55rem", opacity: 0.7 }}>▾</span>
+                  </button>
+
                   <button
                     type="submit"
                     disabled={!underMonitorChatText.trim()}
@@ -5474,49 +5476,56 @@ export default function StudioDeluluPage() {
                       transition: "all 0.15s ease",
                       flexShrink: 0,
                     }}
-                    title="Enviar comentario en vivo"
+                    title="Enviar comentario en vivo (o presiona Enter)"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
                   </button>
                 </form>
 
-                {/* BURBUJA DE WHATSAPP AL LADO DE MENSAJES */}
+                {/* BURBUJA DE WHATSAPP AL LADO DE MENSAJES (Burbuja circular en vista móvil para maximizar el ancho del chat) */}
                 <div style={{ position: "relative", flexShrink: 0 }}>
                   <button
                     type="button"
                     className="whatsapp-bubble-beside-messages"
                     onClick={() => setShowWhatsAppBubblePopover((prev) => !prev)}
                     style={{
-                      height: 44,
-                      borderRadius: 24,
-                      padding: "0 14px",
+                      height: 42,
+                      width: effectiveCropMode === "9:16" ? 42 : "auto",
+                      minWidth: 42,
+                      borderRadius: effectiveCropMode === "9:16" ? "50%" : 24,
+                      padding: effectiveCropMode === "9:16" ? "0" : "0 12px",
+                      justifyContent: "center",
                       background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
                       border: "1.5px solid rgba(255, 255, 255, 0.35)",
                       boxShadow: "0 4px 16px rgba(37, 211, 102, 0.45)",
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
+                      gap: 6,
                       cursor: "pointer",
                       color: "#FFFFFF",
                       fontSize: "0.78rem",
                       fontWeight: 800,
                       transition: "all 0.2s ease",
                       userSelect: "none",
+                      position: "relative",
                     }}
                     title="Escríbenos a WhatsApp en vivo"
                   >
-                    <SocialIcon network="whatsapp" size={20} />
-                    <span>WhatsApp</span>
+                    <SocialIcon network="whatsapp" size={effectiveCropMode === "9:16" ? 22 : 18} />
+                    {effectiveCropMode !== "9:16" && <span>WhatsApp</span>}
                     {whatsappConfig.aiAgentEnabled && (
                       <span
                         style={{
+                          position: effectiveCropMode === "9:16" ? "absolute" : "static",
+                          top: effectiveCropMode === "9:16" ? -2 : "auto",
+                          right: effectiveCropMode === "9:16" ? -2 : "auto",
                           background: "#FFFFFF",
                           color: "#128C7E",
-                          fontSize: "0.6rem",
+                          fontSize: "0.55rem",
                           fontWeight: 900,
-                          padding: "1px 6px",
+                          padding: "1px 4px",
                           borderRadius: 999,
-                          boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
                         }}
                       >
                         IA
