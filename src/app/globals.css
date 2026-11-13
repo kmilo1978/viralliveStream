@@ -5676,9 +5676,9 @@ button {
 /* Insignias Neón Flotantes Exteriores (Idénticas a Delulu Stream) */
 .neon-ambient-badge-live {
   position: absolute;
-  top: 36px;
-  left: -86px;
-  z-index: 50;
+  top: 8px;
+  left: 12px;
+  z-index: 90;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -5706,9 +5706,9 @@ button {
 
 .neon-ambient-badge-viewers {
   position: absolute;
-  top: 36px;
-  right: -86px;
-  z-index: 50;
+  top: 8px;
+  right: 12px;
+  z-index: 90;
   display: flex;
   align-items: center;
   gap: 6px;

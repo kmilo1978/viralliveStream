@@ -4047,51 +4047,36 @@ export default function StudioDeluluPage() {
 
             {/* Monitor con esquinas neon rosa y formato de pantalla dinámico */}
             <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-              {showPhoneMockupFrame && (
-                <>
-                  {/* Insignia Neón Flotante Superior Izquierda (alineada al chasis del móvil) */}
-                  {hudLiveVisible && (
-                  <div
-                    className="neon-ambient-badge-live"
-                    style={{
-                      left: mobileViewScale === "xl" ? "calc(50% - 370px)" : mobileViewScale === "lg" ? "calc(50% - 330px)" : "calc(50% - 290px)",
-                    }}
-                  >
-                    <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
-                    <span>● LIVE</span>
-                  </div>
-                  )}
-
-                  {/* Insignia Neón Flotante Superior Derecha (alineada al chasis del móvil) */}
-                  {hudLiveVisible && (
-                  <div
-                    className="neon-ambient-badge-viewers"
-                    style={{
-                      right: mobileViewScale === "xl" ? "calc(50% - 370px)" : mobileViewScale === "lg" ? "calc(50% - 330px)" : "calc(50% - 290px)",
-                    }}
-                  >
-                    <Dashicon name="visibility" size={13} />
-                    <span>{guestSplitConfig.viewerRange.formattedCount}</span>
-                  </div>
-                  )}
-
-                  {/* Burbujas flotantes de reacciones ambientales */}
-                  {showPhoneAmbientFx && (
-                  <>
-                  <div className="neon-ambient-bubble" style={{ top: 120, left: mobileViewScale === "xl" ? "calc(50% - 310px)" : mobileViewScale === "lg" ? "calc(50% - 270px)" : "calc(50% - 230px)", fontSize: "1.4rem" }}>❤️</div>
-                  <div className="neon-ambient-bubble" style={{ top: 250, left: mobileViewScale === "xl" ? "calc(50% - 306px)" : mobileViewScale === "lg" ? "calc(50% - 266px)" : "calc(50% - 226px)", fontSize: "1.2rem", animationDelay: "1.2s" }}>👍</div>
-                  <div className="neon-ambient-bubble" style={{ top: 380, left: mobileViewScale === "xl" ? "calc(50% - 312px)" : mobileViewScale === "lg" ? "calc(50% - 272px)" : "calc(50% - 232px)", fontSize: "1.3rem", animationDelay: "2.4s" }}>💬</div>
-                  <div className="neon-ambient-bubble" style={{ top: 150, right: mobileViewScale === "xl" ? "calc(50% - 310px)" : mobileViewScale === "lg" ? "calc(50% - 270px)" : "calc(50% - 230px)", fontSize: "1.5rem", animationDelay: "0.8s" }}>✨</div>
-                  <div className="neon-ambient-bubble" style={{ top: 280, right: mobileViewScale === "xl" ? "calc(50% - 308px)" : mobileViewScale === "lg" ? "calc(50% - 268px)" : "calc(50% - 228px)", fontSize: "1.3rem", animationDelay: "1.8s" }}>🔥</div>
-                  <div className="neon-ambient-bubble" style={{ top: 410, right: mobileViewScale === "xl" ? "calc(50% - 312px)" : mobileViewScale === "lg" ? "calc(50% - 272px)" : "calc(50% - 232px)", fontSize: "1.4rem", animationDelay: "2.8s" }}>💖</div>
-                  </>
-                  )}
-                </>
-              )}
 
               <div className={`delulu-monitor-container aspect-${effectiveCropMode.replace(":", "-")} ${showPhoneMockupFrame ? "in-phone-mockup" : ""} scale-${mobileViewScale} ${isDuoSplitActive ? "has-duo-split" : ""}`}>
                 {showPhoneMockupFrame ? (
                   <>
+                    {/* Insignias LIVE y Viewers DENTRO del mockup móvil (esquina superior) */}
+                    {hudLiveVisible && (
+                    <>
+                      <div className="neon-ambient-badge-live" style={{ position: "absolute", top: 8, left: 12, zIndex: 90 }}>
+                        <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
+                        <span>● LIVE</span>
+                      </div>
+                      <div className="neon-ambient-badge-viewers" style={{ position: "absolute", top: 8, right: 12, zIndex: 90 }}>
+                        <Dashicon name="visibility" size={13} />
+                        <span>{guestSplitConfig.viewerRange.formattedCount}</span>
+                      </div>
+                    </>
+                    )}
+
+                    {/* Burbujas flotantes de reacciones DENTRO del mockup móvil */}
+                    {showPhoneAmbientFx && (
+                    <>
+                      <div className="neon-ambient-bubble" style={{ position: "absolute", top: 120, left: 8, fontSize: "1.4rem", zIndex: 85 }}>❤️</div>
+                      <div className="neon-ambient-bubble" style={{ position: "absolute", top: 250, left: 12, fontSize: "1.2rem", animationDelay: "1.2s", zIndex: 85 }}>👍</div>
+                      <div className="neon-ambient-bubble" style={{ position: "absolute", top: 380, left: 6, fontSize: "1.3rem", animationDelay: "2.4s", zIndex: 85 }}>💬</div>
+                      <div className="neon-ambient-bubble" style={{ position: "absolute", top: 150, right: 8, fontSize: "1.5rem", animationDelay: "0.8s", zIndex: 85 }}>✨</div>
+                      <div className="neon-ambient-bubble" style={{ position: "absolute", top: 280, right: 10, fontSize: "1.3rem", animationDelay: "1.8s", zIndex: 85 }}>🔥</div>
+                      <div className="neon-ambient-bubble" style={{ position: "absolute", top: 410, right: 6, fontSize: "1.4rem", animationDelay: "2.8s", zIndex: 85 }}>💖</div>
+                    </>
+                    )}
+
                     {/* Dynamic Island de Smartphone */}
                     <div className="phone-dynamic-island">
                       <span className="phone-island-cam" />
