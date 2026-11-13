@@ -787,9 +787,10 @@ export default function StudioDeluluPage() {
       setCameraDevices(cams);
       setAudioDevices(mics);
       if (!selectedCameraId && cams.length > 0) {
-        // Priorizar cámaras físicas reales sobre OBS Virtual Camera o fuentes virtuales
-        const preferredCam = cams.find((c) => !/obs|virtual|fake|droidcam/i.test(c.label || "")) || cams[0];
-        setSelectedCameraId(preferredCam.deviceId);
+        // Respetar cámara guardada por el usuario o predeterminar la primera disponible (100% compatible con OBS Studio y webcams)
+        const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
+        const matched = savedCam ? cams.find((c) => c.deviceId === savedCam) : null;
+        setSelectedCameraId(matched ? matched.deviceId : cams[0].deviceId);
       }
       if (!selectedAudioId && mics[0]) setSelectedAudioId(mics[0].deviceId);
     } catch {
@@ -5187,6 +5188,9 @@ export default function StudioDeluluPage() {
                                 onChange={(e) => {
                                   const id = e.target.value;
                                   setSelectedCameraId(id);
+                                  if (typeof window !== "undefined") {
+                                    localStorage.setItem("virallive_preferred_camera", id);
+                                  }
                                   void startCamera(id);
                                 }}
                                 style={{
@@ -6055,6 +6059,9 @@ export default function StudioDeluluPage() {
                   onChange={(e) => {
                     const newCamId = e.target.value;
                     setSelectedCameraId(newCamId);
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("virallive_preferred_camera", newCamId);
+                    }
                     void startCamera(newCamId);
                   }}
                 >

@@ -1666,9 +1666,28 @@
 - Fecha: 2026-11-13 12:00
 - Solicitud: Ya no está funcionando la cámara cuando le doy activar.
 - Decisiones clave:
-  - Filtrar automáticamente fuentes virtuales (`OBS`, `Virtual`, `DroidCam`) en la enumeración de dispositivos para priorizar cámaras físicas integradas o USB.
   - Reemplazar restricciones estrictas `{ exact: deviceId }` por `{ ideal: deviceId }` con triple fallback de recuperación (ideal con audio -> ideal sin audio -> genérico).
   - Pasar el ID seleccionado directamente a `startCamera(newCamId)` para evitar desfases de estado en closures.
   - Añadir selector rápido de dispositivo y aviso visible de errores de permisos directamente en la tarjeta de standby.
 - Pendientes:
   - Ninguno. Cámara 100% operativa y tolerante a fallos.
+
+## Validación completada
+- Fecha: 2026-11-13T13:00:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Soporte total y prioritario para OBS Studio y OBS Virtual Camera sin exclusiones de dispositivos, con persistencia local en `localStorage` de la cámara seleccionada por el usuario y compatibilidad bidireccional.
+- Observaciones:
+  - Se eliminó el filtro que excluía `OBS Virtual Camera` para garantizar que el flujo de trabajo con OBS Studio funcione al 100% tal como operaba previamente.
+  - La selección de cámara elegida por el usuario se guarda en `localStorage` (`virallive_preferred_camera`) para que permanezca activa en futuras recargas.
+  - Compatible tanto con la entrada de video desde OBS Virtual Camera como con la salida limpia hacia OBS Studio vía `/obs-stage`.
+  - TypeScript `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-13 13:00
+- Solicitud: Pero esta funcionaba correctamente hasta el día de ayer algo pasó, recuerda que funciona con OBS.
+- Decisiones clave:
+  - Restaurar la detección y selección nativa de `OBS Virtual Camera` sin bloqueos de fuentes virtuales.
+  - Guardar y respetar la cámara elegida por el usuario en `localStorage` (`virallive_preferred_camera`).
+  - Mantener la limpieza automática de videos pregrabados al activar la cámara para que nunca tapen el monitor.
+- Pendientes:
+  - Ninguno. OBS y cámara web totalmente integrados.
