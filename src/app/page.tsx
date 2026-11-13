@@ -491,7 +491,9 @@ export default function StudioDeluluPage() {
   const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(false);
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
   const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
-  const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(true);
+  const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(false);
+  const [showPhoneHudBar, setShowPhoneHudBar] = useState<boolean>(false);
+  const [showPhoneAmbientFx, setShowPhoneAmbientFx] = useState<boolean>(false);
   const [showPhoneMockupBottomDock, setShowPhoneMockupBottomDock] = useState<boolean>(false);
 
   const effectiveCropMode: CropAspectMode = isMobileViewport ? "9:16" : preprocOpts.cropMode;
@@ -4048,6 +4050,7 @@ export default function StudioDeluluPage() {
               {showPhoneMockupFrame && (
                 <>
                   {/* Insignia Neón Flotante Superior Izquierda (alineada al chasis del móvil) */}
+                  {hudLiveVisible && (
                   <div
                     className="neon-ambient-badge-live"
                     style={{
@@ -4057,8 +4060,10 @@ export default function StudioDeluluPage() {
                     <span className="rec-pulse-dot" style={{ width: 8, height: 8, backgroundColor: "#FFFFFF" }} />
                     <span>● LIVE</span>
                   </div>
+                  )}
 
                   {/* Insignia Neón Flotante Superior Derecha (alineada al chasis del móvil) */}
+                  {hudLiveVisible && (
                   <div
                     className="neon-ambient-badge-viewers"
                     style={{
@@ -4068,14 +4073,19 @@ export default function StudioDeluluPage() {
                     <Dashicon name="visibility" size={13} />
                     <span>{guestSplitConfig.viewerRange.formattedCount}</span>
                   </div>
+                  )}
 
                   {/* Burbujas flotantes de reacciones ambientales */}
+                  {showPhoneAmbientFx && (
+                  <>
                   <div className="neon-ambient-bubble" style={{ top: 120, left: mobileViewScale === "xl" ? "calc(50% - 310px)" : mobileViewScale === "lg" ? "calc(50% - 270px)" : "calc(50% - 230px)", fontSize: "1.4rem" }}>❤️</div>
                   <div className="neon-ambient-bubble" style={{ top: 250, left: mobileViewScale === "xl" ? "calc(50% - 306px)" : mobileViewScale === "lg" ? "calc(50% - 266px)" : "calc(50% - 226px)", fontSize: "1.2rem", animationDelay: "1.2s" }}>👍</div>
                   <div className="neon-ambient-bubble" style={{ top: 380, left: mobileViewScale === "xl" ? "calc(50% - 312px)" : mobileViewScale === "lg" ? "calc(50% - 272px)" : "calc(50% - 232px)", fontSize: "1.3rem", animationDelay: "2.4s" }}>💬</div>
                   <div className="neon-ambient-bubble" style={{ top: 150, right: mobileViewScale === "xl" ? "calc(50% - 310px)" : mobileViewScale === "lg" ? "calc(50% - 270px)" : "calc(50% - 230px)", fontSize: "1.5rem", animationDelay: "0.8s" }}>✨</div>
                   <div className="neon-ambient-bubble" style={{ top: 280, right: mobileViewScale === "xl" ? "calc(50% - 308px)" : mobileViewScale === "lg" ? "calc(50% - 268px)" : "calc(50% - 228px)", fontSize: "1.3rem", animationDelay: "1.8s" }}>🔥</div>
                   <div className="neon-ambient-bubble" style={{ top: 410, right: mobileViewScale === "xl" ? "calc(50% - 312px)" : mobileViewScale === "lg" ? "calc(50% - 272px)" : "calc(50% - 232px)", fontSize: "1.4rem", animationDelay: "2.8s" }}>💖</div>
+                  </>
+                  )}
                 </>
               )}
 
@@ -4089,6 +4099,7 @@ export default function StudioDeluluPage() {
                     </div>
 
                     {/* HUD Superior Móvil del Teléfono (Fotos 5 y 7) */}
+                    {showPhoneHudBar && (
                     <div className="phone-top-hud-bar">
                       <div className="phone-hud-user-row">
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -4140,6 +4151,7 @@ export default function StudioDeluluPage() {
                         </div>
                       </div>
                     </div>
+                    )}
                   </>
                 ) : (
                   <>
@@ -6161,6 +6173,48 @@ export default function StudioDeluluPage() {
                       if (next) setActiveTab("DUO");
                       else if (activeTab === "DUO") setActiveTab("CAM");
                     }}
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
+                {/* Switch HUD Superior Móvil (Timer, Usuario, Likes, Subnav, Goals) */}
+                <div className="studio-layers-row-item" title="Alternar barra HUD superior del mockup móvil (timer, nombre, likes, viewers, chat, ranking, goals)">
+                  <div className="studio-layers-row-label">
+                    <Dashicon name="smartphone" size={14} />
+                    <span>HUD Superior Móvil</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${showPhoneHudBar ? "active-green" : ""}`}
+                    onClick={() => setShowPhoneHudBar((prev) => !prev)}
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
+                {/* Switch Insignias LIVE y Viewers Externas */}
+                <div className="studio-layers-row-item" title="Alternar insignias flotantes LIVE y viewers fuera del mockup móvil">
+                  <div className="studio-layers-row-label">
+                    <Dashicon name="star-filled" size={14} />
+                    <span>Insignias LIVE Externas</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${hudLiveVisible ? "active-green" : ""}`}
+                    onClick={() => setHudLiveVisible((prev) => !prev)}
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
+                {/* Switch Burbujas y Reacciones Ambientales */}
+                <div className="studio-layers-row-item" title="Alternar burbujas flotantes de emojis y reacciones alrededor del mockup">
+                  <div className="studio-layers-row-label">
+                    <Dashicon name="heart" size={14} />
+                    <span>Burbujas y Reacciones</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${showPhoneAmbientFx ? "active-green" : ""}`}
+                    onClick={() => setShowPhoneAmbientFx((prev) => !prev)}
                   >
                     <div className="switchy-thumb" />
                   </div>
