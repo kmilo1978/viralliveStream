@@ -4413,8 +4413,8 @@ export default function StudioDeluluPage() {
                 </>
               )}
 
-              {/* Badge de estado en monitor con audiencia sincronizada (sólo en modo estudio panorámico) */}
-              {!showPhoneMockupFrame && (
+              {/* Badge de estado en monitor con audiencia sincronizada (sólo en modo estudio panorámico para transmisiones en directo) */}
+              {!showPhoneMockupFrame && activeTab !== "CLIPS" && (
                 <div className={`badge-monitor-status ${isConnectedLive ? "live" : ""}`}>
                   <span className={`live-indicator-dot ${isConnectedLive ? "active" : ""}`} />
                   <span>{isConnectedLive ? "EN VIVO" : "+ STANDBY"}</span>

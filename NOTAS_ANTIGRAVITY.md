@@ -1626,3 +1626,27 @@
   - Al pulsarlo, abre el panel "Botones Interactivos & Deck" con todas las capacidades de edición y creación.
   - Verificación visual documentada en artifact `verificacion_botones_interactivos_escena.md`.
   - TypeScript `tsc --noEmit` exit code 0 y cambios subidos a GitHub rama `main`.
+
+## Validación completada
+- Fecha: 2026-11-13T10:05:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Monitor central de Clips Pregrabados dividido en dos pantallas simétricas (Original vs Después Transformado con IA) adaptables automáticamente a 16:9 (horizontal 50/50) y 9:16 (vertical 50/50).
+- Observaciones:
+  - Verificado con subagente browser en http://localhost:3000 con 0 errores de consola.
+  - En 16:9, la pantalla se divide verticalmente en dos mitades (izquierda Original con badge azul cian, derecha Después IA con badge rosa neón) separadas por un divisor iluminado.
+  - En 9:16, la pantalla se divide horizontalmente (arriba Original, abajo Después IA) para optimizar la visualización vertical en móviles.
+  - Ocultado el badge general de transmisión en vivo en la pestaña CLIPS para evitar solapamientos con las etiquetas del monitor dual.
+  - Sincronización bidireccional entre la carga de video en el dock izquierdo de clips y el monitor central.
+  - Verificación visual documentada en artifact `verificacion_clips_pantalla_dividida.md`.
+  - TypeScript `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-13 10:05
+- Solicitud: Clips pregrabados, la pantalla se debe de ver separada en dos el video original y el despues.
+- Decisiones clave:
+  - Crear estructura de monitor dual `.clips-dual-stage-split` dentro de `src/app/page.tsx` cuando `activeTab === "CLIPS"`.
+  - En formato 16:9: distribución horizontal con dos tarjetas de video al 50% cada una y bordes neón diferenciados (Azul para entrada, Rosa para IA).
+  - En formato 9:16: distribución vertical apilada al 50% de altura cada una para aprovechar el formato de celular.
+  - Conectar el callback `onClipsDualUpdate` desde `QueueClipsPanel.tsx` hacia el estado en `page.tsx` para sincronizar video original subido y video generado por la cola de IA.
+- Pendientes:
+  - Ninguno. 100% verificado y funcional en local.
