@@ -786,7 +786,11 @@ export default function StudioDeluluPage() {
       const mics = list.filter((d) => d.kind === "audioinput");
       setCameraDevices(cams);
       setAudioDevices(mics);
-      if (!selectedCameraId && cams[0]) setSelectedCameraId(cams[0].deviceId);
+      if (!selectedCameraId && cams.length > 0) {
+        // Priorizar cámaras físicas reales sobre OBS Virtual Camera o fuentes virtuales
+        const preferredCam = cams.find((c) => !/obs|virtual|fake|droidcam/i.test(c.label || "")) || cams[0];
+        setSelectedCameraId(preferredCam.deviceId);
+      }
       if (!selectedAudioId && mics[0]) setSelectedAudioId(mics[0].deviceId);
     } catch {
       // Ignorar permisos
@@ -887,7 +891,14 @@ export default function StudioDeluluPage() {
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = processedStream;
-        await localVideoRef.current.play().catch(() => {});
+        try {
+          await localVideoRef.current.play();
+        } catch {
+          if (localVideoRef.current) {
+            localVideoRef.current.muted = true;
+            await localVideoRef.current.play().catch(() => {});
+          }
+        }
       }
 
       setCameraStreamActive(true);
@@ -896,18 +907,24 @@ export default function StudioDeluluPage() {
     [mirrorInput, preprocOpts, selectedModelId, setupVuMeter, stopLocalSource],
   );
 
-  // Iniciar cámara
-  const startCamera = useCallback(async () => {
-    setSourceError(null);
-    setSourceMode("camera");
-    try {
-      const spec = models.realtime(selectedModelId);
-      const rawFps = resolveFpsNumber(spec.fps);
-      const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
-      const constraints: MediaStreamConstraints = {
-        video: selectedCameraId
+  // Iniciar cámara web con fallback automático
+  const startCamera = useCallback(
+    async (overrideCameraId?: string, overrideAudioId?: string) => {
+      setSourceError(null);
+      setSourceMode("camera");
+      setLocalVideoFileUrl(null); // Asegurar que ningún video pregrabado oculte el feed en vivo
+
+      const camId = overrideCameraId !== undefined ? overrideCameraId : selectedCameraId;
+      const micId = overrideAudioId !== undefined ? overrideAudioId : selectedAudioId;
+
+      try {
+        const spec = models.realtime(selectedModelId);
+        const rawFps = resolveFpsNumber(spec.fps);
+        const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
+
+        const videoConstraint: MediaTrackConstraints = camId
           ? {
-              deviceId: { exact: selectedCameraId },
+              deviceId: { ideal: camId },
               width: { ideal: spec.width },
               height: { ideal: spec.height },
               frameRate: { ideal: targetFps, max: targetFps },
@@ -916,29 +933,52 @@ export default function StudioDeluluPage() {
               width: { ideal: spec.width },
               height: { ideal: spec.height },
               frameRate: { ideal: targetFps, max: targetFps },
-            },
-        audio: includeAudio
-          ? selectedAudioId
+            };
+
+        const audioConstraint: boolean | MediaTrackConstraints = includeAudio
+          ? micId
             ? {
-                deviceId: { exact: selectedAudioId },
+                deviceId: { ideal: micId },
                 echoCancellation: true,
                 noiseSuppression: true,
               }
             : { echoCancellation: true, noiseSuppression: true }
-          : false,
-      };
+          : false;
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      await attachNewLocalStream(stream);
-      void enumerateDevices();
-    } catch (err) {
-      setSourceError(
-        err instanceof Error
-          ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
-          : "Error abriendo cámara.",
-      );
-    }
-  }, [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId]);
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraint,
+            audio: audioConstraint,
+          });
+        } catch (firstErr) {
+          console.warn("Intento principal de getUserMedia falló, reintentando solo con video...", firstErr);
+          // Fallback 1: Reintentar sin audio si el micrófono causó el error
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: videoConstraint,
+              audio: false,
+            });
+          } catch (secondErr) {
+            console.warn("Fallback de video ideal falló, intentando con video genérico...", secondErr);
+            // Fallback 2: Video genérico sin restricciones
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          }
+        }
+
+        await attachNewLocalStream(stream);
+        void enumerateDevices();
+      } catch (err) {
+        setCameraStreamActive(false);
+        setSourceError(
+          err instanceof Error
+            ? `No se pudo abrir la cámara: ${err.message}. Verifica los permisos de tu navegador o si otra aplicación la está usando.`
+            : "Error abriendo cámara. Verifica permisos en el navegador.",
+        );
+      }
+    },
+    [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
+  );
 
   // Iniciar video pregrabado
   const handleVideoFileSelected = useCallback(
@@ -5077,7 +5117,7 @@ export default function StudioDeluluPage() {
                       )}
 
                       {/* Standby visual si no hay stream activo todavía */}
-                      {!isConnectedLive && !localVideoFileUrl && !cameraStreamActive && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
+                      {!isConnectedLive && !(sourceMode === "video_file" && localVideoFileUrl) && !cameraStreamActive && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
                         <div
                           style={{
                             position: "absolute",
@@ -5115,25 +5155,81 @@ export default function StudioDeluluPage() {
                           <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
                             Cámara en espera · Pulsa Iniciar o Cargar MP4
                           </span>
+
+                          {/* Mensaje de error si la cámara falla */}
+                          {sourceError && (
+                            <div
+                              style={{
+                                marginTop: 10,
+                                maxWidth: 360,
+                                padding: "6px 12px",
+                                background: "rgba(239, 68, 68, 0.15)",
+                                border: "1px solid rgba(239, 68, 68, 0.4)",
+                                borderRadius: 8,
+                                color: "#FCA5A5",
+                                fontSize: "0.72rem",
+                                textAlign: "center",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <Dashicon name="warning" size={14} color="#EF4444" />
+                              <span>{sourceError}</span>
+                            </div>
+                          )}
+
+                          {/* Selector rápido de cámara si hay más de un dispositivo */}
+                          {cameraDevices.length > 1 && (
+                            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                              <select
+                                value={selectedCameraId}
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  setSelectedCameraId(id);
+                                  void startCamera(id);
+                                }}
+                                style={{
+                                  background: "rgba(0,0,0,0.6)",
+                                  border: "1px solid rgba(236, 72, 153, 0.4)",
+                                  borderRadius: 12,
+                                  color: "#FFFFFF",
+                                  fontSize: "0.68rem",
+                                  padding: "3px 8px",
+                                  outline: "none",
+                                  cursor: "pointer",
+                                  maxWidth: 240,
+                                }}
+                              >
+                                {cameraDevices.map((d) => (
+                                  <option key={d.deviceId} value={d.deviceId}>
+                                    {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => void startCamera()}
                             style={{
                               marginTop: 10,
-                              padding: "5px 12px",
+                              padding: "6px 14px",
                               borderRadius: 14,
-                              background: "rgba(255, 255, 255, 0.12)",
-                              border: "1px solid rgba(255, 255, 255, 0.25)",
+                              background: "rgba(236, 72, 153, 0.25)",
+                              border: "1px solid rgba(236, 72, 153, 0.6)",
                               color: "#FFFFFF",
-                              fontSize: "0.72rem",
+                              fontSize: "0.75rem",
                               fontWeight: 700,
                               cursor: "pointer",
                               display: "inline-flex",
                               alignItems: "center",
-                              gap: 5,
+                              gap: 6,
+                              boxShadow: "0 0 15px rgba(236, 72, 153, 0.35)",
                             }}
                           >
-                            <Dashicon name="video-alt2" size={12} color="#EC4899" />
+                            <Dashicon name="video-alt2" size={13} color="#EC4899" />
                             <span>Activar Cámara</span>
                           </button>
                         </div>
@@ -5155,7 +5251,7 @@ export default function StudioDeluluPage() {
                       display:
                         isConnectedLive
                           ? "none"
-                          : localVideoFileUrl
+                          : sourceMode === "video_file" && localVideoFileUrl
                           ? "none"
                           : bgPreviewEnabled && selectedBgId !== "bg-none" && bgPreviewMode === "backdrop"
                           ? "none"
@@ -5957,8 +6053,9 @@ export default function StudioDeluluPage() {
                   aria-label="Seleccionar cámara"
                   value={selectedCameraId}
                   onChange={(e) => {
-                    setSelectedCameraId(e.target.value);
-                    setTimeout(() => void startCamera(), 50);
+                    const newCamId = e.target.value;
+                    setSelectedCameraId(newCamId);
+                    void startCamera(newCamId);
                   }}
                 >
                   {cameraDevices.map((d) => (
@@ -5996,7 +6093,7 @@ export default function StudioDeluluPage() {
                   const newId = e.target.value;
                   setSelectedAudioId(newId);
                   if (sourceMode === "camera") {
-                    setTimeout(() => void startCamera(), 50);
+                    void startCamera(undefined, newId);
                   } else if (sourceMode === "video_file") {
                     setTimeout(() => void captureFromVideoElement(), 50);
                   }

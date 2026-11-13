@@ -1650,3 +1650,25 @@
   - Conectar el callback `onClipsDualUpdate` desde `QueueClipsPanel.tsx` hacia el estado en `page.tsx` para sincronizar video original subido y video generado por la cola de IA.
 - Pendientes:
   - Ninguno. 100% verificado y funcional en local.
+
+## Validación completada
+- Fecha: 2026-11-13T12:00:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección integral de la activación de la cámara web: priorización de hardware físico real sobre fuentes virtuales como OBS Virtual Camera, triple nivel de fallback WebRTC, selector directo en la tarjeta de espera y visualización clara de alertas de permisos.
+- Observaciones:
+  - Verificado con subagente browser en http://localhost:3000 con 0 errores de consola (`ConsoleErrors: 0`).
+  - Se confirmó que el selector predetermina la cámara web física `Web Camera (5843:7884)`.
+  - Al pulsar "Activar Cámara", la tarjeta de standby se oculta y el elemento `<video>` reproduce activamente el stream.
+  - Verificación visual documentada en artifact `verificacion_activar_camara_resolucion.md`.
+  - TypeScript `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-13 12:00
+- Solicitud: Ya no está funcionando la cámara cuando le doy activar.
+- Decisiones clave:
+  - Filtrar automáticamente fuentes virtuales (`OBS`, `Virtual`, `DroidCam`) en la enumeración de dispositivos para priorizar cámaras físicas integradas o USB.
+  - Reemplazar restricciones estrictas `{ exact: deviceId }` por `{ ideal: deviceId }` con triple fallback de recuperación (ideal con audio -> ideal sin audio -> genérico).
+  - Pasar el ID seleccionado directamente a `startCamera(newCamId)` para evitar desfases de estado en closures.
+  - Añadir selector rápido de dispositivo y aviso visible de errores de permisos directamente en la tarjeta de standby.
+- Pendientes:
+  - Ninguno. Cámara 100% operativa y tolerante a fallos.
