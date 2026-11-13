@@ -1615,3 +1615,14 @@
   - Al pulsar "Activar Cámara", el avatar "M", el texto de espera y el botón desaparecen por completo, mostrando el video limpio sin obstrucción.
   - Verificación visual documentada en artifact `verificacion_activar_camara_overlay.md`.
   - TypeScript `tsc --noEmit` exit code 0 y cambios subidos a GitHub rama `main`.
+
+## Validación completada
+- Fecha: 2026-11-13T08:44:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Integración clara y unificada de "Botones" en Herramientas de Escena (reemplazando "Deck") y enlace directo desde "Botones Interactivos" en Capas en Pantalla hacia su panel de personalización (+ Nuevo Botón, edición ✎, filtros y ubicación).
+- Observaciones:
+  - Verificado con subagente browser en http://localhost:3000 con 0 errores de consola.
+  - El botón "Botones" en la cuadrícula de Herramientas de Escena encaja con simetría y muestra el contador de botones creados.
+  - Al pulsarlo, abre el panel "Botones Interactivos & Deck" con todas las capacidades de edición y creación.
+  - Verificación visual documentada en artifact `verificacion_botones_interactivos_escena.md`.
+  - TypeScript `tsc --noEmit` exit code 0 y cambios subidos a GitHub rama `main`.
