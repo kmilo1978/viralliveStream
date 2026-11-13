@@ -1604,3 +1604,14 @@
   - El campo "Mensaje Inicial Predeterminado" y las "Instrucciones del Agente IA (System Prompt de Ventas)" ocupan el 100% del ancho con textareas ergonómicos y estilos de foco claros.
   - Verificación visual documentada en artifact `verificacion_teleprompter_whatsapp.md`.
   - Código compilado con `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
+
+## Validación completada
+- Fecha: 2026-11-13T08:02:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección de visibilidad del overlay de Standby ("Cámara en espera · Pulsa Iniciar o Cargar MP4") para que se oculte inmediatamente al iniciarse el flujo de la cámara web o video tanto en CAM como en DÚO.
+- Observaciones:
+  - Se introdujo el estado reactivo `cameraStreamActive` acoplado a `attachNewLocalStream` y `stopLocalSource`.
+  - Verificado con subagente browser en http://localhost:3000 con 0 errores de consola.
+  - Al pulsar "Activar Cámara", el avatar "M", el texto de espera y el botón desaparecen por completo, mostrando el video limpio sin obstrucción.
+  - Verificación visual documentada en artifact `verificacion_activar_camara_overlay.md`.
+  - TypeScript `tsc --noEmit` exit code 0 y cambios subidos a GitHub rama `main`.
