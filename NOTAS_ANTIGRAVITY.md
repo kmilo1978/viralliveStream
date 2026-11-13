@@ -1593,3 +1593,14 @@
   - Sincronizar el ancho de la franja con el monitor del escenario tanto en 16:9 como en 9:16 vertical.
 - Pendientes:
   - Todo completado y verificado.
+
+## Validación completada
+- Fecha: 2026-11-13T07:22:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección de solapamiento del switch Teleprompter en Capas en Pantalla y normalización de distribución vertical para campos de configuración de WhatsApp y Agente IA (textareas ampliados y legibles al 100% de ancho).
+- Observaciones:
+  - Verificado con subagente browser en http://localhost:3000 con 0 errores de consola.
+  - El switch Teleprompter encaja en su cuadrícula de 2 columnas sin desbordar ni tapar elementos adyacentes.
+  - El campo "Mensaje Inicial Predeterminado" y las "Instrucciones del Agente IA (System Prompt de Ventas)" ocupan el 100% del ancho con textareas ergonómicos y estilos de foco claros.
+  - Verificación visual documentada en artifact `verificacion_teleprompter_whatsapp.md`.
+  - Código compilado con `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
