@@ -1514,12 +1514,27 @@
   6. Persistencia automática en `localStorage` con la clave `miplataformastream.chatLanguage.v1`.
 - Observaciones: `npx tsc --noEmit` -> OK (cero errores); Verificación Playwright end-to-end con capturas visuales aprobadas en todos los estados.
 
+## Validación completada
+- Fecha: 2026-11-12 19:25
+- Resultado: Aprobado (score 10/10)
+- Resumen: Se implementó la personalización total de botones de acción rápida (Stream Deck y Botones en Pantalla) con URLs externas, imágenes personalizadas, edición completa y 9 ubicaciones disponibles:
+  1. Personalización y Edición Completa (`✎ Editar`): Ahora todos los botones (existentes y nuevos) cuentan con un botón `✎` que abre el modal con sus datos precargados para modificar su nombre, icono, color, imagen, enlace URL, acción y ubicación.
+  2. Integración de URLs Web: Se incorporó el campo `url` y el tipo de acción `url` para redirigir a páginas web, redes sociales (WhatsApp, Instagram, TikTok, YouTube) o tiendas al hacer clic, con indicador `[🔗 URL]` y feedback HUD.
+  3. Soporte Integral de Imágenes: Carga de imágenes locales desde disco (PNG, JPG, SVG, WebP), entrada directa para URLs de imágenes web, y galería de presets rápidos de 1 clic (WhatsApp, Instagram, TikTok, YouTube, Tienda Web, Cupón 20%, Neón Cyber, Espejo).
+  4. 9 Ubicaciones Disponibles (Placements):
+     - Botonera Inferior: `deck` (Stream Deck)
+     - Flotantes en Pantalla: `screen-top-left`, `screen-top-center` (Banner superior), `screen-top-right`, `screen-center-left`, `screen-center-right`, `screen-bottom-left`, `screen-bottom-center` (Lower-third / Zona inferior sobre comentarios), y `screen-bottom-right`.
+  5. Filtros y Control en Stream Deck: Filtros por pestaña `[ Todos ]`, `[ Botonera Deck ]`, y `[ En Pantalla ]`, junto con un switch directo `[ 📺 En Pantalla: ON/OFF ]` en la cabecera del dock.
+  6. Auto-activación inteligente de pantalla al guardar botones con ubicación de pantalla.
+- Observaciones: `npx tsc --noEmit` -> OK (cero errores); Verificación Playwright end-to-end con capturas visuales aprobadas en 16:9 panorámico y 9:16 vertical móvil.
+
 ## Nueva sesión
-- Fecha: 2026-11-12 18:50
-- Solicitud: Poder personalizar si los mensajes son en inglés, español por defecto o ambas.
+- Fecha: 2026-11-12 19:25
+- Solicitud: Los botones se deberían de poder personalizar y agregar url e imágenes y poder personalizar las ubicaciones.
 - Decisiones clave:
-  - Default establecido en `es` (Español) con etiqueta visual verde `DEFECTO` para garantizar que la experiencia inicial sea en español.
-  - Sincronización bidireccional entre la barra rápida del monitor, el panel lateral unificado y el generador de IA.
-  - Detección semántica automática en el auto-respondedor para el modo bilingüe ("ambas").
+  - Soporte de 9 posiciones completas cubriendo los cuadrantes, centros y la botonera Stream Deck.
+  - Activación automática de la capa de pantalla cuando se asigna una ubicación de monitor a un botón.
+  - Indicadores visuales en cada botón del Deck mostrando su ubicación (`[Deck]`, `[Arriba Ctr]`, `[Abajo Ctr]`, etc.) y distintivo `[🔗 URL]` si tiene enlace asignado.
+  - Selector de Presets de 1 clic para configurar rápidamente botones frecuentes sin escribir datos manualmente.
 - Pendientes:
-  - Ninguno para este requerimiento. Todo funcionando y verificado.
+  - Todo completado y verificado. Listo para el siguiente módulo o solicitud del usuario.

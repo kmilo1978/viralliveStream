@@ -61,6 +61,7 @@ import {
   type CustomActionButton,
   type ButtonSize,
   type ButtonPlacement,
+  type ButtonActionType,
   DEFAULT_VIRTUAL_BACKGROUNDS,
   type VirtualBackgroundItem,
   DEFAULT_SCHEDULED_OVERLAYS,
@@ -336,14 +337,17 @@ export default function StudioDeluluPage() {
   const BUTTONS_STORAGE_KEY = "miplataformastream.customActionButtons.v1";
   const [actionButtons, setActionButtons] = useState<CustomActionButton[]>(DEFAULT_ACTION_BUTTONS);
   const [showAddButtonModal, setShowAddButtonModal] = useState<boolean>(false);
+  const [editingButtonId, setEditingButtonId] = useState<string | null>(null);
   const [newBtnLabel, setNewBtnLabel] = useState<string>("");
   const [newBtnIcon, setNewBtnIcon] = useState<string>("⚡");
   const [newBtnColor, setNewBtnColor] = useState<string>("#8B5CF6");
-  const [newBtnType, setNewBtnType] = useState<"prompt" | "tryon" | "alert" | "control">("prompt");
+  const [newBtnType, setNewBtnType] = useState<ButtonActionType>("prompt");
   const [newBtnPayload, setNewBtnPayload] = useState<string>("");
+  const [newBtnUrl, setNewBtnUrl] = useState<string>("");
   const [newBtnSize, setNewBtnSize] = useState<ButtonSize>("md");
   const [newBtnPlacement, setNewBtnPlacement] = useState<ButtonPlacement>("deck");
   const [newBtnImageUrl, setNewBtnImageUrl] = useState<string>("");
+  const [deckFilterPlacement, setDeckFilterPlacement] = useState<"all" | "deck" | "screen">("all");
   const btnImageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   // Logos y Banners Programados en Pantalla
@@ -2005,12 +2009,28 @@ export default function StudioDeluluPage() {
     async (btn: CustomActionButton) => {
       // 1. Confirmación visual inmediata en monitor (HUD)
       setLastActionFeedback({
-        badge: btn.icon || "⚡",
-        text: `${btn.label}: ¡Acción ejecutada!`,
+        badge: btn.icon || (btn.url ? "🔗" : "⚡"),
+        text: btn.url ? `${btn.label}: Abriendo enlace externo` : `${btn.label}: ¡Acción ejecutada!`,
       });
       setTimeout(() => setLastActionFeedback(null), 3500);
 
-      // 2. Ejecutar según tipo de acción
+      // 2. Si es de tipo enlace o tiene URL asignada, abrir enlace en navegador
+      if (btn.actionType === "url" || (btn.url && btn.url.trim() !== "")) {
+        const rawTarget = (btn.url || btn.payload || "").trim();
+        if (rawTarget) {
+          const formattedUrl =
+            rawTarget.startsWith("http://") || rawTarget.startsWith("https://")
+              ? rawTarget
+              : `https://${rawTarget}`;
+          if (typeof window !== "undefined") {
+            window.open(formattedUrl, "_blank", "noopener,noreferrer");
+          }
+          setStreamInfo(`Enlace abierto: ${btn.label} (${formattedUrl})`);
+          return;
+        }
+      }
+
+      // 3. Ejecutar según tipo de acción
       if (btn.actionType === "prompt") {
         setPromptText(btn.payload);
         setStreamInfo(`Prompt aplicado: ${btn.label}`);
@@ -2090,29 +2110,97 @@ export default function StudioDeluluPage() {
     ],
   );
 
-  const handleCreateCustomButton = useCallback(() => {
+  const handleOpenEditButton = useCallback((btn: CustomActionButton, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingButtonId(btn.id);
+    setNewBtnLabel(btn.label);
+    setNewBtnIcon(btn.icon || "⚡");
+    setNewBtnColor(btn.color || "#8B5CF6");
+    setNewBtnType(btn.actionType);
+    setNewBtnPayload(btn.payload || "");
+    setNewBtnUrl(btn.url || "");
+    setNewBtnImageUrl(btn.customImageUrl || "");
+    setNewBtnSize(btn.size || "md");
+    setNewBtnPlacement(btn.placement || "deck");
+    setShowAddButtonModal(true);
+  }, []);
+
+  const handleOpenCreateButton = useCallback(() => {
+    setEditingButtonId(null);
+    setNewBtnLabel("");
+    setNewBtnIcon("⚡");
+    setNewBtnColor("#8B5CF6");
+    setNewBtnType("prompt");
+    setNewBtnPayload("");
+    setNewBtnUrl("");
+    setNewBtnImageUrl("");
+    setNewBtnSize("md");
+    setNewBtnPlacement("deck");
+    setShowAddButtonModal(true);
+  }, []);
+
+  const handleSaveCustomButton = useCallback(() => {
     if (!newBtnLabel.trim()) return;
-    const newBtn: CustomActionButton = {
-      id: `btn-custom-${Date.now()}`,
-      label: newBtnLabel.trim(),
-      icon: newBtnIcon || "⚡",
-      color: newBtnColor || "#8B5CF6",
-      actionType: newBtnType,
-      payload: newBtnPayload.trim() || (newBtnType === "prompt" ? promptText : "toggle_mirror"),
-      customImageUrl: newBtnImageUrl ? newBtnImageUrl : undefined,
-      size: newBtnSize,
-      placement: newBtnPlacement,
-    };
-    const updated = [...actionButtons, newBtn];
-    persistActionButtons(updated);
+
+    const resolvedType = newBtnType;
+    const resolvedPayload =
+      resolvedType === "url"
+        ? newBtnUrl.trim() || newBtnPayload.trim()
+        : newBtnPayload.trim() || (resolvedType === "prompt" ? promptText : "toggle_mirror");
+
+    if (editingButtonId) {
+      const updated = actionButtons.map((btn) => {
+        if (btn.id === editingButtonId) {
+          return {
+            ...btn,
+            label: newBtnLabel.trim(),
+            icon: newBtnIcon || "⚡",
+            color: newBtnColor || "#8B5CF6",
+            actionType: resolvedType,
+            payload: resolvedPayload,
+            url: newBtnUrl.trim() || undefined,
+            customImageUrl: newBtnImageUrl.trim() ? newBtnImageUrl.trim() : undefined,
+            size: newBtnSize,
+            placement: newBtnPlacement,
+          };
+        }
+        return btn;
+      });
+      persistActionButtons(updated);
+      setStreamInfo(`Botón actualizado: ${newBtnLabel.trim()}`);
+    } else {
+      const newBtn: CustomActionButton = {
+        id: `btn-custom-${Date.now()}`,
+        label: newBtnLabel.trim(),
+        icon: newBtnIcon || "⚡",
+        color: newBtnColor || "#8B5CF6",
+        actionType: resolvedType,
+        payload: resolvedPayload,
+        url: newBtnUrl.trim() || undefined,
+        customImageUrl: newBtnImageUrl.trim() ? newBtnImageUrl.trim() : undefined,
+        size: newBtnSize,
+        placement: newBtnPlacement,
+      };
+      const updated = [...actionButtons, newBtn];
+      persistActionButtons(updated);
+      setStreamInfo(`Botón creado: ${newBtnLabel.trim()}`);
+    }
+
+    if (newBtnPlacement !== "deck") {
+      setScreenButtonsVisible(true);
+    }
+
     setShowAddButtonModal(false);
+    setEditingButtonId(null);
     setNewBtnLabel("");
     setNewBtnPayload("");
+    setNewBtnUrl("");
     setNewBtnImageUrl("");
     setNewBtnSize("md");
     setNewBtnPlacement("deck");
   }, [
     actionButtons,
+    editingButtonId,
     newBtnColor,
     newBtnIcon,
     newBtnImageUrl,
@@ -2121,6 +2209,7 @@ export default function StudioDeluluPage() {
     newBtnPlacement,
     newBtnSize,
     newBtnType,
+    newBtnUrl,
     persistActionButtons,
     promptText,
   ]);
@@ -4262,40 +4351,50 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
-              {/* BOTONES INTERACTIVOS FLOTANTES UBICADOS EN PANTALLA (agrupados por cuadrante para evitar solapamientos) */}
+              {/* BOTONES INTERACTIVOS FLOTANTES UBICADOS EN PANTALLA (agrupados por posición para evitar solapamientos) */}
               {screenButtonsVisible && (
                 <>
-                  {(["screen-top-right", "screen-top-left", "screen-bottom-right", "screen-bottom-left"] as const).map(
-                    (placementKey) => {
-                      const placedButtons = actionButtons.filter((btn) => btn.placement === placementKey);
-                      if (placedButtons.length === 0) return null;
-                      return (
-                        <div key={placementKey} className={`screen-floating-actions-group pos-${placementKey}`}>
-                          {placedButtons.map((btn) => {
-                            const btnSize = btn.size || "md";
-                            return (
-                              <button
-                                key={btn.id}
-                                type="button"
-                                className={`screen-floating-action-btn size-${btnSize}`}
-                                style={{ borderColor: btn.color }}
-                                onClick={() => void handleExecuteActionButton(btn)}
-                                title={`Botón en pantalla: ${btn.label}`}
-                              >
-                                {btn.customImageUrl ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={btn.customImageUrl} alt={btn.label} />
-                                ) : (
-                                  <span className="floating-icon">{btn.icon}</span>
-                                )}
-                                <span>{btn.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-                  )}
+                  {(
+                    [
+                      "screen-top-left",
+                      "screen-top-center",
+                      "screen-top-right",
+                      "screen-center-left",
+                      "screen-center-right",
+                      "screen-bottom-left",
+                      "screen-bottom-center",
+                      "screen-bottom-right",
+                    ] as const
+                  ).map((placementKey) => {
+                    const placedButtons = actionButtons.filter((btn) => btn.placement === placementKey);
+                    if (placedButtons.length === 0) return null;
+                    return (
+                      <div key={placementKey} className={`screen-floating-actions-group pos-${placementKey}`}>
+                        {placedButtons.map((btn) => {
+                          const btnSize = btn.size || "md";
+                          return (
+                            <button
+                              key={btn.id}
+                              type="button"
+                              className={`screen-floating-action-btn size-${btnSize}`}
+                              style={{ borderColor: btn.color }}
+                              onClick={() => void handleExecuteActionButton(btn)}
+                              title={`Botón en pantalla: ${btn.label}${btn.url ? ` | Enlace: ${btn.url}` : ""}`}
+                            >
+                              {btn.customImageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={btn.customImageUrl} alt={btn.label} />
+                              ) : (
+                                <span className="floating-icon">{btn.icon}</span>
+                              )}
+                              <span>{btn.label}</span>
+                              {btn.url && <span className="floating-url-badge">↗</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
                 </>
               )}
 
@@ -6893,55 +6992,125 @@ export default function StudioDeluluPage() {
                   <div className="studio-dock-header-info">
                     <h3 className="studio-dock-header-title">
                       <Dashicon name="controls-play" size={16} />
-                      <span>Stream Deck</span>
+                      <span>Stream Deck ({actionButtons.length})</span>
                     </h3>
                     <p className="studio-dock-header-subtitle">
-                      Disparadores de acción rápida para efectos, sonido y pantalla
+                      Disparadores de acción rápida para efectos, enlaces URL, sonido y pantalla
                     </p>
                   </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className={`studio-action-button ${screenButtonsVisible ? "active-green" : ""}`}
+                      style={{ flex: "0 0 auto", padding: "6px 12px", fontSize: "0.72rem" }}
+                      onClick={handleToggleButtonsMaster}
+                      title="Mostrar u ocultar los botones asignados a la pantalla"
+                    >
+                      <span>{screenButtonsVisible ? "📺 En Pantalla: ON" : "📺 En Pantalla: OFF"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="studio-action-button primary"
+                      style={{ flex: "0 0 auto", padding: "6px 14px" }}
+                      onClick={handleOpenCreateButton}
+                      title="Crear y personalizar un nuevo botón de acción rápida"
+                    >
+                      <span>+ Nuevo Botón</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filtros de ubicación para gestión rápida */}
+                <div className="deck-filter-tabs">
                   <button
                     type="button"
-                    className="studio-action-button primary"
-                    style={{ flex: "0 0 auto", padding: "6px 14px" }}
-                    onClick={() => setShowAddButtonModal(true)}
-                    title="Crear y personalizar un nuevo botón de acción rápida"
+                    className={`deck-filter-tab ${deckFilterPlacement === "all" ? "active" : ""}`}
+                    onClick={() => setDeckFilterPlacement("all")}
                   >
-                    <span>+ Nuevo Botón</span>
+                    Todos ({actionButtons.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`deck-filter-tab ${deckFilterPlacement === "deck" ? "active" : ""}`}
+                    onClick={() => setDeckFilterPlacement("deck")}
+                  >
+                    📋 Botonera Deck ({actionButtons.filter((b) => !b.placement || b.placement === "deck").length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`deck-filter-tab ${deckFilterPlacement === "screen" ? "active" : ""}`}
+                    onClick={() => setDeckFilterPlacement("screen")}
+                  >
+                    📺 En Pantalla ({actionButtons.filter((b) => b.placement && b.placement !== "deck").length})
                   </button>
                 </div>
 
-              <div className="action-deck-grid">
-                {actionButtons
-                  .filter((btn) => !btn.placement || btn.placement === "deck")
-                  .map((btn) => {
-                    const btnSize = btn.size || "md";
-                    return (
-                      <button
-                        key={btn.id}
-                        className={`custom-deck-btn size-${btnSize}`}
-                        onClick={() => void handleExecuteActionButton(btn)}
-                        style={{ borderColor: btn.color }}
-                        title={`Acción: ${btn.actionType} | Tamaño: ${btnSize} | Payload: ${btn.payload}`}
-                      >
-                        {btn.customImageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={btn.customImageUrl} alt={btn.label} className="deck-btn-img" />
-                        ) : (
-                          <span className="deck-btn-icon">{btn.icon}</span>
-                        )}
-                        <span>{btn.label}</span>
-                        <span
-                          className="deck-btn-del"
-                          onClick={(e) => handleDeleteActionButton(btn.id, e)}
-                          title="Eliminar botón"
+                <div className="action-deck-grid">
+                  {actionButtons
+                    .filter((btn) => {
+                      if (deckFilterPlacement === "deck") return !btn.placement || btn.placement === "deck";
+                      if (deckFilterPlacement === "screen") return btn.placement && btn.placement !== "deck";
+                      return true;
+                    })
+                    .map((btn) => {
+                      const btnSize = btn.size || "md";
+                      const placementLabel =
+                        !btn.placement || btn.placement === "deck"
+                          ? "Deck"
+                          : btn.placement === "screen-top-center"
+                          ? "Arriba Ctr"
+                          : btn.placement === "screen-bottom-center"
+                          ? "Abajo Ctr"
+                          : btn.placement === "screen-top-left"
+                          ? "Arriba Izq"
+                          : btn.placement === "screen-top-right"
+                          ? "Arriba Der"
+                          : btn.placement === "screen-center-left"
+                          ? "Centro Izq"
+                          : btn.placement === "screen-center-right"
+                          ? "Centro Der"
+                          : btn.placement === "screen-bottom-left"
+                          ? "Abajo Izq"
+                          : "Abajo Der";
+
+                      return (
+                        <button
+                          key={btn.id}
+                          className={`custom-deck-btn size-${btnSize}`}
+                          onClick={() => void handleExecuteActionButton(btn)}
+                          style={{ borderColor: btn.color }}
+                          title={`Acción: ${btn.actionType} | Ubicación: ${placementLabel} | Clic para ejecutar | ✎ Editar`}
                         >
-                          ×
-                        </span>
-                      </button>
-                    );
-                  })}
+                          <span
+                            className="deck-btn-edit"
+                            onClick={(e) => handleOpenEditButton(btn, e)}
+                            title="Editar botón (nombre, color, enlace, imagen, ubicación)"
+                          >
+                            ✎
+                          </span>
+                          {btn.customImageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={btn.customImageUrl} alt={btn.label} className="deck-btn-img" />
+                          ) : (
+                            <span className="deck-btn-icon">{btn.icon}</span>
+                          )}
+                          <span>{btn.label}</span>
+                          <span className="deck-btn-badges-row">
+                            <span className="deck-btn-placement-pill">{placementLabel}</span>
+                            {btn.url && <span className="deck-btn-url-pill">🔗 URL</span>}
+                          </span>
+                          <span
+                            className="deck-btn-del"
+                            onClick={(e) => handleDeleteActionButton(btn.id, e)}
+                            title="Eliminar botón"
+                          >
+                            ×
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
-            </div>
             )}
 
             {(isDockStackedView || activeStudioTab === "recording") && (
@@ -8721,15 +8890,20 @@ export default function StudioDeluluPage() {
             zIndex: 1000,
             padding: 20,
           }}
-          onClick={() => setShowAddButtonModal(false)}
+          onClick={() => {
+            setShowAddButtonModal(false);
+            setEditingButtonId(null);
+          }}
         >
           <div
             style={{
               backgroundColor: "var(--surface)",
               border: "1px solid var(--accent-pink)",
               borderRadius: 16,
-              maxWidth: 500,
+              maxWidth: 540,
               width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
               padding: 24,
               boxShadow: "0 10px 40px var(--accent-pink-glow)",
               display: "flex",
@@ -8741,11 +8915,14 @@ export default function StudioDeluluPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
                 <Dashicon name="controls-play" size={18} color="#EC4899" />
-                <span>Personalizar Nuevo Botón de Acción</span>
+                <span>{editingButtonId ? `✎ Editar Botón: ${newBtnLabel || "Acción"}` : "Personalizar Nuevo Botón de Acción"}</span>
               </h3>
               <button
                 className="btn-prompt-icon"
-                onClick={() => setShowAddButtonModal(false)}
+                onClick={() => {
+                  setShowAddButtonModal(false);
+                  setEditingButtonId(null);
+                }}
                 style={{ fontSize: "1.2rem" }}
               >
                 ✕
@@ -8753,9 +8930,49 @@ export default function StudioDeluluPage() {
             </div>
 
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
-              Crea un botón personalizado de 1 clic para cambiar estilo IA, prenda o control de cabina.
+              {editingButtonId
+                ? "Modifica el texto, enlace URL, imagen, iconos, colores o la ubicación de este botón."
+                : "Crea un botón personalizado de 1 clic para abrir enlaces URL, cambiar estilo IA, prenda o controles."}
             </p>
 
+            {/* Presets Rápidos de 1 Clic */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
+                Presets Rápidos (1-Clic para configurar icono, color y enlace/acción):
+              </label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[
+                  { name: "WhatsApp", icon: "💬", color: "#25D366", type: "url" as const, url: "https://wa.me/573001234567" },
+                  { name: "Instagram", icon: "📷", color: "#E1306C", type: "url" as const, url: "https://instagram.com/" },
+                  { name: "TikTok", icon: "🎵", color: "#FE2C55", type: "url" as const, url: "https://tiktok.com/@" },
+                  { name: "YouTube", icon: "▶️", color: "#FF0000", type: "url" as const, url: "https://youtube.com/" },
+                  { name: "Tienda Web", icon: "🛍️", color: "#FF2E93", type: "url" as const, url: "https://mitienda.com" },
+                  { name: "Cupón 20%", icon: "🎟️", color: "#F59E0B", type: "alert" as const, payload: "¡Código PROMO20 activado!" },
+                  { name: "Neón Cyber", icon: "⚡", color: "#8B5CF6", type: "prompt" as const, payload: "Cyberpunk studio with vibrant neon magenta and cyan lighting" },
+                  { name: "Espejo", icon: "🪞", color: "#3B82F6", type: "control" as const, payload: "toggle_mirror" },
+                ].map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    className="pill-ctrl-button"
+                    style={{ padding: "4px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 4 }}
+                    onClick={() => {
+                      if (!newBtnLabel || newBtnLabel === "Nuevo Botón") setNewBtnLabel(preset.name);
+                      setNewBtnIcon(preset.icon);
+                      setNewBtnColor(preset.color);
+                      setNewBtnType(preset.type);
+                      if (preset.url) setNewBtnUrl(preset.url);
+                      if (preset.payload) setNewBtnPayload(preset.payload);
+                    }}
+                  >
+                    <span>{preset.icon}</span>
+                    <span>{preset.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Nombre del Botón */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
                 Nombre del Botón (Etiqueta):
@@ -8763,20 +8980,44 @@ export default function StudioDeluluPage() {
               <input
                 type="text"
                 className="input-prompt-hero"
-                placeholder="Ej. Ciberpunk Neón / Mute / Traje"
+                placeholder="Ej. Mi Tienda / WhatsApp / Ciberpunk Neón / Mute"
                 value={newBtnLabel}
                 onChange={(e) => setNewBtnLabel(e.target.value)}
-                maxLength={22}
+                maxLength={24}
               />
             </div>
 
+            {/* Enlace URL de Destino (Para URL o redirección externa) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)", display: "flex", alignItems: "center", gap: 6 }}>
+                <Dashicon name="admin-links" size={14} color="#60A5FA" />
+                <span>Enlace URL de Destino (Opcional o para tipo Enlace URL):</span>
+              </label>
+              <input
+                type="url"
+                className="input-prompt-hero"
+                placeholder="https://mitienda.com o https://wa.me/573001234567"
+                value={newBtnUrl}
+                onChange={(e) => {
+                  setNewBtnUrl(e.target.value);
+                  if (e.target.value && newBtnType !== "url" && !editingButtonId) {
+                    setNewBtnType("url");
+                  }
+                }}
+              />
+              <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                Al hacer clic, el botón abrirá este enlace web en una nueva pestaña (WhatsApp, Instagram, tienda, etc.).
+              </span>
+            </div>
+
+            {/* Iconos y Color */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
                   Ícono o Emoji:
                 </label>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {["⚡", "🤖", "👗", "🪞", "🔊", "✨", "🔥", "🎭", "🕶️", "💼"].map((ico) => (
+                  {["⚡", "🤖", "👗", "🪞", "🔊", "✨", "🔥", "🎭", "🕶️", "💼", "🔗", "💬", "🛍️", "🎟️", "▶️"].map((ico) => (
                     <button
                       key={ico}
                       type="button"
@@ -8794,8 +9035,8 @@ export default function StudioDeluluPage() {
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
                   Color del Botón:
                 </label>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  {["#FF2E93", "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444"].map((c) => (
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  {["#FF2E93", "#8B5CF6", "#3B82F6", "#10B981", "#25D366", "#F59E0B", "#EF4444", "#FE2C55"].map((c) => (
                     <div
                       key={c}
                       onClick={() => setNewBtnColor(c)}
@@ -8814,11 +9055,11 @@ export default function StudioDeluluPage() {
               </div>
             </div>
 
-            {/* Imagen PNG personalizada (Opcional) */}
+            {/* Imagen PNG / Logo personalizada */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                  Imagen PNG / Icono Personalizado (Opcional):
+                  Imagen / Logo Personalizado (Opcional):
                 </label>
                 {newBtnImageUrl && (
                   <button
@@ -8830,7 +9071,7 @@ export default function StudioDeluluPage() {
                   </button>
                 )}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <input
                   type="file"
                   ref={btnImageUploadInputRef}
@@ -8848,27 +9089,31 @@ export default function StudioDeluluPage() {
                   style={{ display: "flex", alignItems: "center", gap: 6 }}
                 >
                   <span>🖼️</span>
-                  <span>{newBtnImageUrl ? "Cambiar PNG" : "Subir Imagen PNG"}</span>
+                  <span>{newBtnImageUrl ? "Cambiar Imagen" : "Subir Archivo (PNG/SVG)"}</span>
                 </button>
-                {newBtnImageUrl ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(255,255,255,0.06)", padding: "4px 8px", borderRadius: 8 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={newBtnImageUrl}
-                      alt="Preview botón"
-                      style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }}
-                    />
-                    <span style={{ fontSize: "0.72rem", color: "var(--accent-pink)" }}>PNG cargado ✓</span>
-                  </div>
-                ) : (
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
-                    Soporta PNG transparente, SVG o WebP
-                  </span>
-                )}
+                <input
+                  type="text"
+                  className="input-prompt-hero"
+                  placeholder="O pega URL de imagen: https://.../icono.png"
+                  value={newBtnImageUrl.startsWith("data:") ? "" : newBtnImageUrl}
+                  onChange={(e) => setNewBtnImageUrl(e.target.value)}
+                  style={{ flex: 1, minWidth: 200, fontSize: "0.74rem", padding: "6px 10px" }}
+                />
               </div>
+              {newBtnImageUrl && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(255,255,255,0.06)", padding: "4px 8px", borderRadius: 8 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={newBtnImageUrl}
+                    alt="Preview botón"
+                    style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }}
+                  />
+                  <span style={{ fontSize: "0.72rem", color: "var(--accent-pink)" }}>Imagen asignada ✓</span>
+                </div>
+              )}
             </div>
 
-            {/* Configuración de Tamaño y Ubicación */}
+            {/* Configuración de Tamaño y Ubicación (9 Ubicaciones completas) */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
@@ -8895,40 +9140,68 @@ export default function StudioDeluluPage() {
                   value={newBtnPlacement}
                   onChange={(e) => setNewBtnPlacement(e.target.value as ButtonPlacement)}
                 >
-                  <option value="deck">📋 En la Botonera Inferior (Stream Deck)</option>
-                  <option value="screen-top-left">↖ Flotante en Pantalla (Arriba Izquierda)</option>
-                  <option value="screen-top-right">↗ Flotante en Pantalla (Arriba Derecha)</option>
-                  <option value="screen-bottom-left">↙ Flotante en Pantalla (Abajo Izquierda)</option>
-                  <option value="screen-bottom-right">↘ Flotante en Pantalla (Abajo Derecha)</option>
+                  <optgroup label="📋 Botonera Inferior">
+                    <option value="deck">📋 En la Botonera Inferior (Stream Deck)</option>
+                  </optgroup>
+                  <optgroup label="📺 Sobre la Pantalla / Video">
+                    <option value="screen-top-left">↖ Flotante: Arriba Izquierda</option>
+                    <option value="screen-top-center">⬆ Flotante: Arriba Centro (Banner Superior)</option>
+                    <option value="screen-top-right">↗ Flotante: Arriba Derecha</option>
+                    <option value="screen-center-left">⬅ Flotante: Centro Izquierda</option>
+                    <option value="screen-center-right">➡ Flotante: Centro Derecha</option>
+                    <option value="screen-bottom-left">↙ Flotante: Abajo Izquierda</option>
+                    <option value="screen-bottom-center">⬇ Flotante: Abajo Centro (Lower-Third)</option>
+                    <option value="screen-bottom-right">↘ Flotante: Abajo Derecha</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
 
+            {/* Tipo de Acción */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                Tipo de Acción:
+                Tipo de Acción al Hacer Clic:
               </label>
               <select
                 className="select-model-dropdown"
                 value={newBtnType}
-                onChange={(e) => setNewBtnType(e.target.value as "prompt" | "tryon" | "alert" | "control")}
+                onChange={(e) => setNewBtnType(e.target.value as ButtonActionType)}
               >
+                <option value="url">🔗 Abrir Enlace URL / Red Social / Tienda Web</option>
                 <option value="prompt">🎨 Cambiar Prompt IA en vivo</option>
-                <option value="control">🎛️ Control de Cabina (Mute / Espejo / Split)</option>
+                <option value="control">🎛️ Control de Cabina (Mute / Espejo / Split / Rec / WhatsApp)</option>
+                <option value="alert">🔔 Alerta / Notificación en Pantalla</option>
               </select>
             </div>
 
+            {/* Parámetro de la Acción */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                {newBtnType === "prompt"
+                {newBtnType === "url"
+                  ? "Configuración de Enlace:"
+                  : newBtnType === "prompt"
                   ? "Texto del Prompt a aplicar:"
-                  : "Comando de Control (toggle_mirror / toggle_audio / toggle_split):"}
+                  : newBtnType === "alert"
+                  ? "Texto de la Alerta en Pantalla:"
+                  : "Comando de Control de Cabina:"}
               </label>
-              {newBtnType === "prompt" ? (
+              {newBtnType === "url" ? (
+                <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", backgroundColor: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
+                  🔗 Al presionar el botón se abrirá la URL configurada arriba: <strong style={{ color: "var(--accent-pink)" }}>{newBtnUrl || "(Ingresa la URL en el campo superior)"}</strong>
+                </div>
+              ) : newBtnType === "prompt" ? (
                 <textarea
                   className="input-prompt-hero"
                   rows={2}
                   placeholder="Ej: A futuristic warrior in neon armor, cinematic 8k"
+                  value={newBtnPayload}
+                  onChange={(e) => setNewBtnPayload(e.target.value)}
+                />
+              ) : newBtnType === "alert" ? (
+                <input
+                  type="text"
+                  className="input-prompt-hero"
+                  placeholder="Ej: ¡Nuevo suscriptor VIP en vivo!"
                   value={newBtnPayload}
                   onChange={(e) => setNewBtnPayload(e.target.value)}
                 />
@@ -8941,6 +9214,9 @@ export default function StudioDeluluPage() {
                   <option value="toggle_mirror">🪞 Alternar Efecto Espejo (Mirror)</option>
                   <option value="toggle_audio">🔊 Alternar Sonido On / Mute</option>
                   <option value="toggle_split">◫ Alternar Pantalla Dividida</option>
+                  <option value="toggle_shop">🛍️ Alternar Banner de Compra (Live Shopping)</option>
+                  <option value="toggle_whatsapp">💬 Alternar WhatsApp en Pantalla</option>
+                  <option value="toggle_rec">⏺️ Iniciar / Detener Grabación de Video</option>
                 </select>
               )}
             </div>
@@ -8949,16 +9225,19 @@ export default function StudioDeluluPage() {
               <button
                 type="button"
                 className="pill-ctrl-button"
-                onClick={() => setShowAddButtonModal(false)}
+                onClick={() => {
+                  setShowAddButtonModal(false);
+                  setEditingButtonId(null);
+                }}
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 className="pill-ctrl-button active-pink"
-                onClick={handleCreateCustomButton}
+                onClick={handleSaveCustomButton}
               >
-                Guardar Botón
+                {editingButtonId ? "Guardar Cambios ✓" : "Guardar Botón ✓"}
               </button>
             </div>
           </div>

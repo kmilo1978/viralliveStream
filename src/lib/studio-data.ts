@@ -815,17 +815,24 @@ export type ButtonSize = "sm" | "md" | "lg" | "xl";
 export type ButtonPlacement =
   | "deck"
   | "screen-top-left"
+  | "screen-top-center"
   | "screen-top-right"
+  | "screen-center-left"
+  | "screen-center-right"
   | "screen-bottom-left"
+  | "screen-bottom-center"
   | "screen-bottom-right";
+
+export type ButtonActionType = "prompt" | "tryon" | "alert" | "control" | "url";
 
 export type CustomActionButton = {
   id: string;
   label: string;
   icon: string;
   customImageUrl?: string;
+  url?: string;
   color: string;
-  actionType: "prompt" | "tryon" | "alert" | "control";
+  actionType: ButtonActionType;
   payload: string;
   description?: string;
   size?: ButtonSize;
