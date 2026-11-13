@@ -225,19 +225,19 @@ export function WhatsAppStudioPanel({
             </div>
           </div>
 
-          <div className="studio-input-group">
-            <label htmlFor={defaultMsgInputId} className="studio-input-label">
-              <span>Mensaje Inicial Predeterminado</span>
-              <span className="muted-hint">El cliente lo envía con 1 toque</span>
+          <div className="studio-input-group" style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+            <label htmlFor={defaultMsgInputId} className="studio-input-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <span style={{ fontWeight: 700, color: "#E2E8F0" }}>Mensaje Inicial Predeterminado</span>
+              <span className="muted-hint" style={{ fontSize: "0.72rem", color: "#94A3B8" }}>El cliente lo envía con 1 toque</span>
             </label>
             <textarea
               id={defaultMsgInputId}
               className="studio-textarea"
-              rows={2}
+              rows={3}
               value={config.defaultMessage}
               onChange={(e) => onChangeConfig({ ...config, defaultMessage: e.target.value })}
               placeholder="Ej: ¡Hola! Te vi en vivo en la transmisión y quiero comprar / más información."
-              style={{ fontSize: "0.8rem", resize: "none" }}
+              style={{ fontSize: "0.84rem", minHeight: 74, width: "100%", display: "block" }}
             />
           </div>
 
@@ -490,19 +490,19 @@ export function WhatsAppStudioPanel({
             />
           </div>
 
-          <div className="studio-input-group">
-            <label htmlFor={aiPromptTextareaId} className="studio-input-label">
-              <span>Instrucciones del Agente IA (System Prompt de Ventas)</span>
-              <span style={{ color: "#25D366" }}>Personalizable</span>
+          <div className="studio-input-group" style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+            <label htmlFor={aiPromptTextareaId} className="studio-input-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <span style={{ fontWeight: 700, color: "#E2E8F0" }}>Instrucciones del Agente IA (System Prompt de Ventas)</span>
+              <span style={{ color: "#25D366", fontSize: "0.72rem", fontWeight: 700, background: "rgba(37,211,102,0.15)", padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(37,211,102,0.3)" }}>Personalizable</span>
             </label>
             <textarea
               id={aiPromptTextareaId}
               className="studio-textarea"
-              rows={3}
+              rows={5}
               value={config.aiSystemPrompt}
               onChange={(e) => onChangeConfig({ ...config, aiSystemPrompt: e.target.value })}
               placeholder="Define la personalidad, productos que vendes, precios y cómo cerrar la compra..."
-              style={{ fontSize: "0.78rem" }}
+              style={{ fontSize: "0.84rem", minHeight: 110, width: "100%", display: "block" }}
             />
           </div>
 

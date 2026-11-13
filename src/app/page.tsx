@@ -6094,18 +6094,10 @@ export default function StudioDeluluPage() {
                 </div>
 
                 {/* Switch Prompter (Herramienta Privada del Streamer) */}
-                <div className="studio-layers-row-item prompter-private-row" title="Alternar teleprompter / guion de lectura (Herramienta Privada del Streamer: Solo visible para ti)">
+                <div className="studio-layers-row-item" title="Alternar teleprompter / guion de lectura (Solo visible para ti, invisible para audiencia y OBS)">
                   <div className="studio-layers-row-label">
-                    <Dashicon name="lock" size={14} color="#10B981" />
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span>Teleprompter / Guion</span>
-                        <span className="teleprompter-private-chip">🔒 Solo tú lo ves</span>
-                      </div>
-                      <span style={{ fontSize: "0.64rem", color: "#64748B", display: "block" }}>
-                        Invisible para la audiencia y OBS
-                      </span>
-                    </div>
+                    <Dashicon name="media-text" size={14} />
+                    <span>Teleprompter / Guion</span>
                   </div>
                   <div
                     className={`switchy-toggle ${teleprompterActive ? "active-green" : ""}`}
