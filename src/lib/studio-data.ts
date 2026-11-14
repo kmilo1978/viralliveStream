@@ -825,10 +825,23 @@ export type ButtonPlacement =
 
 export type ButtonActionType = "prompt" | "tryon" | "alert" | "control" | "url";
 
+export type SocialButtonNetwork =
+  | "whatsapp"
+  | "instagram"
+  | "tiktok"
+  | "youtube"
+  | "telegram"
+  | "facebook"
+  | "twitter-x"
+  | "custom";
+
 export type CustomActionButton = {
   id: string;
   label: string;
+  subtitle?: string; // Subtítulo o dato de contacto (ej: "+55 62981632286" o "@mi_cuenta")
   icon: string;
+  socialNetwork?: SocialButtonNetwork;
+  styleVariant?: "standard" | "social_pill"; // "social_pill" para banner redondeado con subtítulo y edición rápida
   customImageUrl?: string;
   url?: string;
   color: string;
@@ -840,6 +853,36 @@ export type CustomActionButton = {
 };
 
 export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
+  {
+    id: "act-whatsapp-pill",
+    label: "Conversar no WhatsApp",
+    subtitle: "+55 62981632286",
+    icon: "💬",
+    socialNetwork: "whatsapp",
+    styleVariant: "social_pill",
+    color: "#00A884",
+    actionType: "url",
+    url: "https://wa.me/5562981632286",
+    payload: "https://wa.me/5562981632286",
+    description: "Sticker banner interactivo de WhatsApp con redirección y edición rápida",
+    size: "md",
+    placement: "screen-bottom-left",
+  },
+  {
+    id: "act-instagram-pill",
+    label: "Síguenos en Instagram",
+    subtitle: "@localrank.live",
+    icon: "📷",
+    socialNetwork: "instagram",
+    styleVariant: "social_pill",
+    color: "#E1306C",
+    actionType: "url",
+    url: "https://instagram.com/",
+    payload: "https://instagram.com/",
+    description: "Sticker banner interactivo de Instagram con redirección directa",
+    size: "md",
+    placement: "deck",
+  },
   {
     id: "act-cyber-neon",
     label: "Neón Cyber",

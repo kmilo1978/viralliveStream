@@ -1722,3 +1722,26 @@
   3. Vincular la visibilidad del overlay de espera a `!cameraStreamActive` para que el feed de video quede completamente libre una vez activado.
 - Pendientes:
   - Ninguno. Cámara web y OBS Virtual Camera funcionando de manera transparente y limpia.
+
+## Validación completada
+- Fecha: 2026-11-14T08:10:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Creación e integración del nuevo Sticker / Botón Interactivo de Redes Sociales (WhatsApp, Instagram, TikTok, Telegram, etc.) con redirección a URL externa y botón de edición directa en pantalla.
+- Observaciones:
+  - Formato píldora redondeada idéntico a la referencia proporcionada por el usuario (icono circular, título de dos líneas, subtítulo para número o arroba, y botón directo "Editar").
+  - Al hacer clic en el banner se abre de inmediato la URL en una nueva pestaña (ej. `https://wa.me/5562981632286`).
+  - Al hacer clic en "Editar" se abre el modal para cambiar títulos, subtítulos, red social, color o enlace con vista previa en vivo.
+  - Soporte para 1 Clic en WhatsApp, Instagram, TikTok, Telegram, YouTube, Facebook y tiendas web.
+  - TypeScript compilado con código de salida 0 (`npx tsc --noEmit`).
+  - Verificado en http://localhost:3000 con el subagente Browser, cero errores de consola.
+
+## Nueva sesión
+- Fecha: 2026-11-14 08:10
+- Solicitud: Crear un botón para personalizar estilo WhatsApp o Instagram o cualquier otra red social con opción de redirigir a una URL.
+- Decisiones clave:
+  1. Extender `CustomActionButton` con `subtitle`, `styleVariant: "social_pill"` y `socialNetwork`.
+  2. Implementar renderizado flotante en pantalla con estilos CSS dedicados (`.screen-floating-social-pill`).
+  3. Añadir botón "+ Botón Redes" en la botonera lateral y presets rápidos de 1 clic en el modal de configuración.
+  4. Incluir generador dinámico de enlaces para WhatsApp (`wa.me/<numero>`) y vista previa en tiempo real.
+- Pendientes:
+  - Ninguno. Sistema de stickers y botones sociales 100% operativo.

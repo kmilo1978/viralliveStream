@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createDecartClient,
@@ -62,6 +62,7 @@ import {
   type ButtonSize,
   type ButtonPlacement,
   type ButtonActionType,
+  type SocialButtonNetwork,
   DEFAULT_VIRTUAL_BACKGROUNDS,
   type VirtualBackgroundItem,
   DEFAULT_SCHEDULED_OVERLAYS,
@@ -351,6 +352,7 @@ export default function StudioDeluluPage() {
   const [showAddButtonModal, setShowAddButtonModal] = useState<boolean>(false);
   const [editingButtonId, setEditingButtonId] = useState<string | null>(null);
   const [newBtnLabel, setNewBtnLabel] = useState<string>("");
+  const [newBtnSubtitle, setNewBtnSubtitle] = useState<string>("");
   const [newBtnIcon, setNewBtnIcon] = useState<string>("⚡");
   const [newBtnColor, setNewBtnColor] = useState<string>("#8B5CF6");
   const [newBtnType, setNewBtnType] = useState<ButtonActionType>("prompt");
@@ -359,6 +361,8 @@ export default function StudioDeluluPage() {
   const [newBtnSize, setNewBtnSize] = useState<ButtonSize>("md");
   const [newBtnPlacement, setNewBtnPlacement] = useState<ButtonPlacement>("deck");
   const [newBtnImageUrl, setNewBtnImageUrl] = useState<string>("");
+  const [newBtnStyleVariant, setNewBtnStyleVariant] = useState<"standard" | "social_pill">("standard");
+  const [newBtnSocialNetwork, setNewBtnSocialNetwork] = useState<SocialButtonNetwork>("whatsapp");
   const [deckFilterPlacement, setDeckFilterPlacement] = useState<"all" | "deck" | "screen">("all");
   const btnImageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -502,7 +506,7 @@ export default function StudioDeluluPage() {
   // Previsualización de Fondos en el momento sin gastar créditos
   const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(false);
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
-  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
+  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(true);
   const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(false);
   const [showPhoneHudBar, setShowPhoneHudBar] = useState<boolean>(false);
   const [showPhoneAmbientFx, setShowPhoneAmbientFx] = useState<boolean>(false);
@@ -2026,19 +2030,15 @@ export default function StudioDeluluPage() {
       if (stored) {
         const parsed = JSON.parse(stored) as CustomActionButton[];
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const hasOnScreen = parsed.some((b) => b.placement && b.placement !== "deck");
-          const sanitized = parsed.map((b) => {
-            if (!hasOnScreen && (b.id === "act-screen-magic" || b.id === "act-turbo-boost")) {
-              return { ...b, placement: "screen-top-right" as const };
-            }
-            if (b.placement === "screen-bottom-left") {
-              return { ...b, placement: "screen-top-right" as const };
-            }
-            return b;
-          });
-          setActionButtons(sanitized);
+          const hasWhatsAppPill = parsed.some((b) => b.id === "act-whatsapp-pill" || b.styleVariant === "social_pill");
+          let merged = parsed;
+          if (!hasWhatsAppPill) {
+            const defaultPill = DEFAULT_ACTION_BUTTONS.find((b) => b.id === "act-whatsapp-pill");
+            if (defaultPill) merged = [defaultPill, ...parsed];
+          }
+          setActionButtons(merged);
           try {
-            window.localStorage.setItem(BUTTONS_STORAGE_KEY, JSON.stringify(sanitized));
+            window.localStorage.setItem(BUTTONS_STORAGE_KEY, JSON.stringify(merged));
           } catch {}
           return;
         }
@@ -2162,28 +2162,62 @@ export default function StudioDeluluPage() {
     if (e) e.stopPropagation();
     setEditingButtonId(btn.id);
     setNewBtnLabel(btn.label);
+    setNewBtnSubtitle(btn.subtitle || "");
     setNewBtnIcon(btn.icon || "⚡");
     setNewBtnColor(btn.color || "#8B5CF6");
     setNewBtnType(btn.actionType);
     setNewBtnPayload(btn.payload || "");
-    setNewBtnUrl(btn.url || "");
+    setNewBtnUrl(btn.url || (btn.actionType === "url" ? btn.payload : ""));
     setNewBtnImageUrl(btn.customImageUrl || "");
     setNewBtnSize(btn.size || "md");
     setNewBtnPlacement(btn.placement || "deck");
+    setNewBtnStyleVariant(btn.styleVariant || (btn.subtitle || btn.socialNetwork ? "social_pill" : "standard"));
+    setNewBtnSocialNetwork(btn.socialNetwork || "custom");
     setShowAddButtonModal(true);
   }, []);
 
-  const handleOpenCreateButton = useCallback(() => {
+  const handleOpenCreateButton = useCallback((presetNetwork?: SocialButtonNetwork) => {
     setEditingButtonId(null);
-    setNewBtnLabel("");
-    setNewBtnIcon("⚡");
-    setNewBtnColor("#8B5CF6");
-    setNewBtnType("prompt");
-    setNewBtnPayload("");
-    setNewBtnUrl("");
-    setNewBtnImageUrl("");
-    setNewBtnSize("md");
-    setNewBtnPlacement("deck");
+    if (presetNetwork === "whatsapp") {
+      setNewBtnLabel("Conversar no WhatsApp");
+      setNewBtnSubtitle("+55 62981632286");
+      setNewBtnIcon("💬");
+      setNewBtnColor("#00A884");
+      setNewBtnType("url");
+      setNewBtnPayload("https://wa.me/5562981632286");
+      setNewBtnUrl("https://wa.me/5562981632286");
+      setNewBtnImageUrl("");
+      setNewBtnSize("md");
+      setNewBtnPlacement("screen-bottom-left");
+      setNewBtnStyleVariant("social_pill");
+      setNewBtnSocialNetwork("whatsapp");
+    } else if (presetNetwork === "instagram") {
+      setNewBtnLabel("Síguenos en Instagram");
+      setNewBtnSubtitle("@tu_cuenta");
+      setNewBtnIcon("📷");
+      setNewBtnColor("#E1306C");
+      setNewBtnType("url");
+      setNewBtnPayload("https://instagram.com/");
+      setNewBtnUrl("https://instagram.com/");
+      setNewBtnImageUrl("");
+      setNewBtnSize("md");
+      setNewBtnPlacement("screen-bottom-left");
+      setNewBtnStyleVariant("social_pill");
+      setNewBtnSocialNetwork("instagram");
+    } else {
+      setNewBtnLabel("");
+      setNewBtnSubtitle("");
+      setNewBtnIcon("⚡");
+      setNewBtnColor("#8B5CF6");
+      setNewBtnType("prompt");
+      setNewBtnPayload("");
+      setNewBtnUrl("");
+      setNewBtnImageUrl("");
+      setNewBtnSize("md");
+      setNewBtnPlacement("deck");
+      setNewBtnStyleVariant("standard");
+      setNewBtnSocialNetwork("custom");
+    }
     setShowAddButtonModal(true);
   }, []);
 
@@ -2202,6 +2236,7 @@ export default function StudioDeluluPage() {
           return {
             ...btn,
             label: newBtnLabel.trim(),
+            subtitle: newBtnSubtitle.trim() || undefined,
             icon: newBtnIcon || "⚡",
             color: newBtnColor || "#8B5CF6",
             actionType: resolvedType,
@@ -2210,6 +2245,8 @@ export default function StudioDeluluPage() {
             customImageUrl: newBtnImageUrl.trim() ? newBtnImageUrl.trim() : undefined,
             size: newBtnSize,
             placement: newBtnPlacement,
+            styleVariant: newBtnStyleVariant,
+            socialNetwork: newBtnSocialNetwork,
           };
         }
         return btn;
@@ -2220,6 +2257,7 @@ export default function StudioDeluluPage() {
       const newBtn: CustomActionButton = {
         id: `btn-custom-${Date.now()}`,
         label: newBtnLabel.trim(),
+        subtitle: newBtnSubtitle.trim() || undefined,
         icon: newBtnIcon || "⚡",
         color: newBtnColor || "#8B5CF6",
         actionType: resolvedType,
@@ -2228,6 +2266,8 @@ export default function StudioDeluluPage() {
         customImageUrl: newBtnImageUrl.trim() ? newBtnImageUrl.trim() : undefined,
         size: newBtnSize,
         placement: newBtnPlacement,
+        styleVariant: newBtnStyleVariant,
+        socialNetwork: newBtnSocialNetwork,
       };
       const updated = [...actionButtons, newBtn];
       persistActionButtons(updated);
@@ -2241,11 +2281,14 @@ export default function StudioDeluluPage() {
     setShowAddButtonModal(false);
     setEditingButtonId(null);
     setNewBtnLabel("");
+    setNewBtnSubtitle("");
     setNewBtnPayload("");
     setNewBtnUrl("");
     setNewBtnImageUrl("");
     setNewBtnSize("md");
     setNewBtnPlacement("deck");
+    setNewBtnStyleVariant("standard");
+    setNewBtnSocialNetwork("custom");
   }, [
     actionButtons,
     editingButtonId,
@@ -2256,6 +2299,9 @@ export default function StudioDeluluPage() {
     newBtnPayload,
     newBtnPlacement,
     newBtnSize,
+    newBtnSocialNetwork,
+    newBtnStyleVariant,
+    newBtnSubtitle,
     newBtnType,
     newBtnUrl,
     persistActionButtons,
@@ -4395,6 +4441,56 @@ export default function StudioDeluluPage() {
                     return (
                       <div key={placementKey} className={`screen-floating-actions-group pos-${placementKey}`}>
                         {placedButtons.map((btn) => {
+                          if (btn.styleVariant === "social_pill") {
+                            const isTwitter = btn.socialNetwork === "twitter-x";
+                            const isCustomNet = !btn.socialNetwork || btn.socialNetwork === "custom";
+                            const fallbackIcon = btn.icon || "💬";
+                            return (
+                              <div
+                                key={btn.id}
+                                className="screen-floating-social-pill"
+                                style={{
+                                  backgroundColor: btn.color || "#00A884",
+                                  boxShadow: `0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px ${btn.color ? `${btn.color}66` : "rgba(0,168,132,0.35)"}`,
+                                }}
+                                onClick={() => void handleExecuteActionButton(btn)}
+                                title={`Clic para redirigir a: ${btn.url || btn.payload || btn.label} (Clic en 'Editar' para personalizar)`}
+                              >
+                                <div className="social-pill-icon-circle">
+                                  {!isCustomNet && btn.socialNetwork ? (
+                                    <SocialIcon network={isTwitter ? "twitter-x" : (btn.socialNetwork as SocialNetworkName)} size={16} />
+                                  ) : btn.customImageUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={btn.customImageUrl} alt={btn.label} style={{ width: 18, height: 18, objectFit: "contain" }} />
+                                  ) : (
+                                    <span style={{ fontSize: "1rem" }}>{fallbackIcon}</span>
+                                  )}
+                                </div>
+                                <div className="social-pill-text-col">
+                                  <span className="social-pill-title">{btn.label}</span>
+                                  {btn.subtitle && <span className="social-pill-subtitle">{btn.subtitle}</span>}
+                                </div>
+                                <div className="social-pill-divider" />
+                                <button
+                                  type="button"
+                                  className="social-pill-edit-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEditButton(btn, e);
+                                  }}
+                                  title="Personalizar texto, teléfono/usuario, red social o enlace"
+                                >
+                                  <span>Editar</span>
+                                </button>
+                                {btn.url && (
+                                  <span style={{ fontSize: "0.75rem", opacity: 0.9, marginLeft: 2 }} title="Redirige a URL externa">
+                                    ↗
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }
+
                           const btnSize = btn.size || "md";
                           return (
                             <button
@@ -7472,9 +7568,28 @@ export default function StudioDeluluPage() {
                     </button>
                     <button
                       type="button"
+                      className="studio-action-button"
+                      style={{
+                        flex: "0 0 auto",
+                        padding: "6px 12px",
+                        background: "rgba(0, 168, 132, 0.2)",
+                        border: "1px solid #00A884",
+                        color: "#FFFFFF",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                      onClick={() => handleOpenCreateButton("whatsapp")}
+                      title="Añadir Sticker Banner de WhatsApp o Redes Sociales"
+                    >
+                      <SocialIcon network="whatsapp" size={14} />
+                      <span>+ Botón Redes</span>
+                    </button>
+                    <button
+                      type="button"
                       className="studio-action-button primary"
                       style={{ flex: "0 0 auto", padding: "6px 14px" }}
-                      onClick={handleOpenCreateButton}
+                      onClick={() => handleOpenCreateButton()}
                       title="Crear y personalizar un nuevo botón de acción rápida"
                     >
                       <span>+ Nuevo Botón</span>
@@ -7538,25 +7653,37 @@ export default function StudioDeluluPage() {
                       return (
                         <button
                           key={btn.id}
-                          className={`custom-deck-btn size-${btnSize}`}
+                          className={`custom-deck-btn size-${btnSize} ${btn.styleVariant === "social_pill" ? "deck-btn-social-pill" : ""}`}
                           onClick={() => void handleExecuteActionButton(btn)}
-                          style={{ borderColor: btn.color }}
-                          title={`Acción: ${btn.actionType} | Ubicación: ${placementLabel} | Clic para ejecutar | ✎ Editar`}
+                          style={{
+                            borderColor: btn.color,
+                            background: btn.styleVariant === "social_pill" ? `linear-gradient(135deg, rgba(20,20,30,0.9), ${btn.color}25)` : undefined,
+                          }}
+                          title={`Acción: ${btn.actionType} | Ubicación: ${placementLabel} | Clic para redirigir | ✎ Editar`}
                         >
                           <span
                             className="deck-btn-edit"
                             onClick={(e) => handleOpenEditButton(btn, e)}
-                            title="Editar botón (nombre, color, enlace, imagen, ubicación)"
+                            title="Editar botón (nombre, subtítulo, color, enlace, imagen, ubicación)"
                           >
                             ✎
                           </span>
-                          {btn.customImageUrl ? (
+                          {btn.styleVariant === "social_pill" && btn.socialNetwork && btn.socialNetwork !== "custom" ? (
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: btn.color || "#00A884", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <SocialIcon network={btn.socialNetwork === "twitter-x" ? "twitter-x" : (btn.socialNetwork as SocialNetworkName)} size={15} />
+                            </div>
+                          ) : btn.customImageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={btn.customImageUrl} alt={btn.label} className="deck-btn-img" />
                           ) : (
                             <span className="deck-btn-icon">{btn.icon}</span>
                           )}
-                          <span>{btn.label}</span>
+                          <span style={{ fontWeight: 800 }}>{btn.label}</span>
+                          {btn.subtitle && (
+                            <span style={{ fontSize: "0.64rem", color: "#A7F3D0", opacity: 0.95, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
+                              {btn.subtitle}
+                            </span>
+                          )}
                           <span className="deck-btn-badges-row">
                             <span className="deck-btn-placement-pill">{placementLabel}</span>
                             {btn.url && <span className="deck-btn-url-pill">🔗 URL</span>}
@@ -9350,68 +9477,264 @@ export default function StudioDeluluPage() {
                 : "Crea un botón personalizado de 1 clic para abrir enlaces URL, cambiar estilo IA, prenda o controles."}
             </p>
 
-            {/* Presets Rápidos de 1 Clic */}
+            {/* Formato y Diseño del Botón */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                Presets Rápidos (1-Clic para configurar icono, color y enlace/acción):
+                Formato y Estilo Visual:
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <button
+                  type="button"
+                  className={`pill-ctrl-button ${newBtnStyleVariant === "social_pill" ? "active-pink" : ""}`}
+                  style={{ padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontWeight: 700 }}
+                  onClick={() => {
+                    setNewBtnStyleVariant("social_pill");
+                    if (newBtnType !== "url") setNewBtnType("url");
+                    if (newBtnPlacement === "deck") setNewBtnPlacement("screen-bottom-left");
+                    if (!newBtnColor || newBtnColor === "#8B5CF6") setNewBtnColor("#00A884");
+                    if (!newBtnSubtitle) setNewBtnSubtitle("+55 62981632286");
+                  }}
+                >
+                  <span>📱</span>
+                  <span>Sticker / Banner Red Social</span>
+                </button>
+                <button
+                  type="button"
+                  className={`pill-ctrl-button ${newBtnStyleVariant === "standard" ? "active-pink" : ""}`}
+                  style={{ padding: "8px 10px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontWeight: 700 }}
+                  onClick={() => setNewBtnStyleVariant("standard")}
+                >
+                  <span>🔘</span>
+                  <span>Botón Estándar (Deck)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Presets Rápidos de Redes Sociales (1 Clic) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)", display: "flex", alignItems: "center", gap: 5 }}>
+                <span>⚡</span>
+                <span>Plantillas Rápidas (WhatsApp, Instagram, TikTok, etc.):</span>
               </label>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {[
-                  { name: "WhatsApp", icon: "💬", color: "#25D366", type: "url" as const, url: "https://wa.me/573001234567" },
-                  { name: "Instagram", icon: "📷", color: "#E1306C", type: "url" as const, url: "https://instagram.com/" },
-                  { name: "TikTok", icon: "🎵", color: "#FE2C55", type: "url" as const, url: "https://tiktok.com/@" },
-                  { name: "YouTube", icon: "▶️", color: "#FF0000", type: "url" as const, url: "https://youtube.com/" },
-                  { name: "Tienda Web", icon: "🛍️", color: "#FF2E93", type: "url" as const, url: "https://mitienda.com" },
-                  { name: "Cupón 20%", icon: "🎟️", color: "#F59E0B", type: "alert" as const, payload: "¡Código PROMO20 activado!" },
-                  { name: "Neón Cyber", icon: "⚡", color: "#8B5CF6", type: "prompt" as const, payload: "Cyberpunk studio with vibrant neon magenta and cyan lighting" },
-                  { name: "Espejo", icon: "🪞", color: "#3B82F6", type: "control" as const, payload: "toggle_mirror" },
+                  {
+                    name: "WhatsApp",
+                    label: "Conversar no WhatsApp",
+                    subtitle: "+55 62981632286",
+                    icon: "💬",
+                    color: "#00A884",
+                    net: "whatsapp" as SocialButtonNetwork,
+                    url: "https://wa.me/5562981632286",
+                  },
+                  {
+                    name: "Instagram",
+                    label: "Síguenos en Instagram",
+                    subtitle: "@tu_cuenta",
+                    icon: "📷",
+                    color: "#E1306C",
+                    net: "instagram" as SocialButtonNetwork,
+                    url: "https://instagram.com/",
+                  },
+                  {
+                    name: "TikTok",
+                    label: "Síguenos en TikTok",
+                    subtitle: "@tu_tiktok",
+                    icon: "🎵",
+                    color: "#010101",
+                    net: "tiktok" as SocialButtonNetwork,
+                    url: "https://tiktok.com/@",
+                  },
+                  {
+                    name: "Telegram",
+                    label: "Canal de Telegram",
+                    subtitle: "t.me/canal",
+                    icon: "✈️",
+                    color: "#229ED9",
+                    net: "telegram" as SocialButtonNetwork,
+                    url: "https://t.me/",
+                  },
+                  {
+                    name: "YouTube",
+                    label: "Canal de YouTube",
+                    subtitle: "Suscríbete al Canal",
+                    icon: "▶️",
+                    color: "#FF0000",
+                    net: "youtube" as SocialButtonNetwork,
+                    url: "https://youtube.com/",
+                  },
+                  {
+                    name: "Facebook",
+                    label: "Página de Facebook",
+                    subtitle: "Comunidad Oficial",
+                    icon: "📘",
+                    color: "#1877F2",
+                    net: "facebook" as SocialButtonNetwork,
+                    url: "https://facebook.com/",
+                  },
+                  {
+                    name: "Tienda Web",
+                    label: "Visita Nuestra Tienda",
+                    subtitle: "Descuentos en Vivo",
+                    icon: "🛍️",
+                    color: "#FF2E93",
+                    net: "custom" as SocialButtonNetwork,
+                    url: "https://mitienda.com",
+                  },
                 ].map((preset) => (
                   <button
                     key={preset.name}
                     type="button"
                     className="pill-ctrl-button"
-                    style={{ padding: "4px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 4 }}
+                    style={{
+                      padding: "4px 8px",
+                      fontSize: "0.72rem",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      borderColor: newBtnSocialNetwork === preset.net && newBtnStyleVariant === "social_pill" ? preset.color : undefined,
+                      backgroundColor: newBtnSocialNetwork === preset.net && newBtnStyleVariant === "social_pill" ? `${preset.color}33` : undefined,
+                    }}
                     onClick={() => {
-                      if (!newBtnLabel || newBtnLabel === "Nuevo Botón") setNewBtnLabel(preset.name);
+                      setNewBtnStyleVariant("social_pill");
+                      setNewBtnSocialNetwork(preset.net);
+                      setNewBtnLabel(preset.label);
+                      setNewBtnSubtitle(preset.subtitle);
                       setNewBtnIcon(preset.icon);
                       setNewBtnColor(preset.color);
-                      setNewBtnType(preset.type);
-                      if (preset.url) setNewBtnUrl(preset.url);
-                      if (preset.payload) setNewBtnPayload(preset.payload);
+                      setNewBtnType("url");
+                      setNewBtnUrl(preset.url);
+                      if (newBtnPlacement === "deck") setNewBtnPlacement("screen-bottom-left");
                     }}
                   >
-                    <span>{preset.icon}</span>
+                    {preset.net !== "custom" ? (
+                      <SocialIcon network={preset.net === "twitter-x" ? "twitter-x" : (preset.net as SocialNetworkName)} size={13} />
+                    ) : (
+                      <span>{preset.icon}</span>
+                    )}
                     <span>{preset.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Nombre del Botón */}
+            {/* Vista Previa en Vivo */}
+            <div style={{ backgroundColor: "rgba(0,0,0,0.45)", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 12, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                👁️ Vista Previa en Pantalla (Así se verá en vivo)
+              </span>
+              {newBtnStyleVariant === "social_pill" ? (
+                <div
+                  className="screen-floating-social-pill"
+                  style={{
+                    backgroundColor: newBtnColor || "#00A884",
+                    boxShadow: `0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px ${newBtnColor ? `${newBtnColor}66` : "rgba(0,168,132,0.35)"}`,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <div className="social-pill-icon-circle">
+                    {newBtnSocialNetwork && newBtnSocialNetwork !== "custom" ? (
+                      <SocialIcon network={newBtnSocialNetwork === "twitter-x" ? "twitter-x" : (newBtnSocialNetwork as SocialNetworkName)} size={16} />
+                    ) : newBtnImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={newBtnImageUrl} alt="preview" style={{ width: 18, height: 18, objectFit: "contain" }} />
+                    ) : (
+                      <span style={{ fontSize: "1rem" }}>{newBtnIcon || "💬"}</span>
+                    )}
+                  </div>
+                  <div className="social-pill-text-col">
+                    <span className="social-pill-title">{newBtnLabel || "Conversar no WhatsApp"}</span>
+                    {newBtnSubtitle && <span className="social-pill-subtitle">{newBtnSubtitle}</span>}
+                  </div>
+                  <div className="social-pill-divider" />
+                  <div className="social-pill-edit-btn">
+                    <span>Editar</span>
+                  </div>
+                  {newBtnUrl && (
+                    <span style={{ fontSize: "0.75rem", opacity: 0.9, marginLeft: 2 }}>↗</span>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className="screen-floating-action-btn size-md"
+                  style={{ borderColor: newBtnColor, position: "static", pointerEvents: "none" }}
+                >
+                  {newBtnImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={newBtnImageUrl} alt="preview" />
+                  ) : (
+                    <span className="floating-icon">{newBtnIcon || "⚡"}</span>
+                  )}
+                  <span>{newBtnLabel || "Botón"}</span>
+                  {newBtnUrl && <span className="floating-url-badge">↗</span>}
+                </div>
+              )}
+            </div>
+
+            {/* Título / Llamado a la Acción */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                Nombre del Botón (Etiqueta):
+                Título Principal (Primera Línea):
               </label>
               <input
                 type="text"
                 className="input-prompt-hero"
-                placeholder="Ej. Mi Tienda / WhatsApp / Ciberpunk Neón / Mute"
+                placeholder="Ej. Conversar no WhatsApp / Síguenos en Instagram / Mi Tienda"
                 value={newBtnLabel}
                 onChange={(e) => setNewBtnLabel(e.target.value)}
-                maxLength={24}
+                maxLength={32}
               />
             </div>
 
-            {/* Enlace URL de Destino (Para URL o redirección externa) */}
+            {/* Subtítulo / Teléfono / Usuario (Segunda Línea) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
+                  Subtítulo / Teléfono / Usuario (Segunda Línea):
+                </label>
+                {newBtnSocialNetwork === "whatsapp" && newBtnSubtitle && (
+                  <button
+                    type="button"
+                    style={{ fontSize: "0.68rem", color: "#25D366", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => {
+                      const clean = newBtnSubtitle.replace(/[^0-9]/g, "");
+                      if (clean) setNewBtnUrl(`https://wa.me/${clean}`);
+                    }}
+                  >
+                    ⚡ Generar enlace wa.me/{newBtnSubtitle.replace(/[^0-9]/g, "")}
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                className="input-prompt-hero"
+                placeholder="Ej. +55 62981632286 o @mi_cuenta o Descuento 20%"
+                value={newBtnSubtitle}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewBtnSubtitle(val);
+                  if (newBtnSocialNetwork === "whatsapp" && (!newBtnUrl || newBtnUrl.includes("wa.me"))) {
+                    const clean = val.replace(/[^0-9]/g, "");
+                    if (clean) setNewBtnUrl(`https://wa.me/${clean}`);
+                  }
+                }}
+                maxLength={40}
+              />
+              <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                Aparece debajo del título principal. En WhatsApp es tu número telefónico; en Instagram o TikTok tu nombre de usuario (@).
+              </span>
+            </div>
+
+            {/* Enlace URL de Destino (Para redirección externa) */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)", display: "flex", alignItems: "center", gap: 6 }}>
                 <Dashicon name="admin-links" size={14} color="#60A5FA" />
-                <span>Enlace URL de Destino (Opcional o para tipo Enlace URL):</span>
+                <span>Enlace URL de Redirección (Al hacer clic redirige a esta dirección):</span>
               </label>
               <input
                 type="url"
                 className="input-prompt-hero"
-                placeholder="https://mitienda.com o https://wa.me/573001234567"
+                placeholder="https://wa.me/5562981632286 o https://instagram.com/tu_cuenta"
                 value={newBtnUrl}
                 onChange={(e) => {
                   setNewBtnUrl(e.target.value);
@@ -9421,7 +9744,7 @@ export default function StudioDeluluPage() {
                 }}
               />
               <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>
-                Al hacer clic, el botón abrirá este enlace web en una nueva pestaña (WhatsApp, Instagram, tienda, etc.).
+                Al hacer clic sobre el botón en vivo se abrirá esta URL en una nueva pestaña (WhatsApp, Instagram, tienda, etc.).
               </span>
             </div>
 
