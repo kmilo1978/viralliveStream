@@ -118,9 +118,9 @@ export function TikTokBrandedStudioPanel({
   });
   const [logoSizePx, setLogoSizePx] = useState<number>(28);
   const logoUploadRef = useRef<HTMLInputElement | null>(null);
-  const [showHeartsAnim, setShowHeartsAnim] = useState<boolean>(true);
-  const [showLiveBadge, setShowLiveBadge] = useState<boolean>(true);
-  const [showShopPill, setShowShopPill] = useState<boolean>(true);
+  const [showHeartsAnim, setShowHeartsAnim] = useState<boolean>(false);
+  const [showLiveBadge, setShowLiveBadge] = useState<boolean>(false);
+  const [showShopPill, setShowShopPill] = useState<boolean>(false);
   const [localViewerRange, setLocalViewerRange] = useState<ViewerRangeOption>(DEFAULT_VIEWER_RANGES[6]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const activeViewerRange = propViewerRange || localViewerRange;

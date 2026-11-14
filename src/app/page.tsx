@@ -506,7 +506,7 @@ export default function StudioDeluluPage() {
   // Previsualización de Fondos en el momento sin gastar créditos
   const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(false);
   const [bgPreviewMode, setBgPreviewMode] = useState<"backdrop" | "pip_camera">("pip_camera");
-  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(true);
+  const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
   const [hudLiveVisible, setHudLiveVisible] = useState<boolean>(false);
   const [showPhoneHudBar, setShowPhoneHudBar] = useState<boolean>(false);
   const [showPhoneAmbientFx, setShowPhoneAmbientFx] = useState<boolean>(false);
@@ -6523,7 +6523,7 @@ export default function StudioDeluluPage() {
                   <SocialIcon network="whatsapp" size={16} />
                   <span className="tool-label">WhatsApp</span>
                   <span className="tool-counter" style={{ color: whatsappConfig.showOnScreen ? "#25D366" : undefined }}>
-                    {whatsappConfig.showOnScreen ? "LIVE" : "ON"}
+                    {whatsappConfig.showOnScreen ? "LIVE" : "OFF"}
                   </span>
                 </button>
 
@@ -6571,7 +6571,7 @@ export default function StudioDeluluPage() {
                   <Dashicon name="controls-play" size={16} />
                   <span className="tool-label">Botones</span>
                   <span className="tool-counter" style={{ color: screenButtonsVisible ? "#25D366" : undefined }}>
-                    {screenButtonsVisible ? "LIVE" : actionButtons.length}
+                    {screenButtonsVisible ? "LIVE" : "OFF"}
                   </span>
                 </button>
 

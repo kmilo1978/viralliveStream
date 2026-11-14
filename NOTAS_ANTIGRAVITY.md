@@ -1765,3 +1765,26 @@
   3. Implementar fallback de un solo paso en `startCamera` para conmutar sin bucles si el dispositivo seleccionado está bloqueado.
 - Pendientes:
   - Ninguno. La cámara se inicializa automáticamente con OBS Virtual Camera por defecto.
+
+
+## Validación completada
+- Fecha: 2026-11-14T08:44:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Restablecimiento estricto de switches cerrados por defecto (0 / 4 máx capas activas) para un escenario de transmisión 100% limpio en el arranque.
+- Observaciones:
+  - Se configuró `screenButtonsVisible` en `false` por defecto en `src/app/page.tsx` para evitar que los botones o stickers sociales aparezcan encendidos en pantalla al cargar la cabina.
+  - Se corrigió el contador de WhatsApp en Herramientas de Escena para mostrar `OFF` en lugar de `ON` cuando la capa está inactiva.
+  - Se sincronizó el contador de Botones en Herramientas de Escena para mostrar `OFF` cuando el switch master de pantalla esté cerrado.
+  - Se verificaron los switches de `TikTokBrandedStudioPanel` (`showHeartsAnim`, `showLiveBadge`, `showShopPill`) en `false` por defecto.
+  - Verificación visual con subagente browser confirmó `Capas en Pantalla: 0 / 4 máx`, `WhatsApp OFF`, `Botones OFF`, `Guion OFF`, `Chat IA OFF` y pantalla 100% limpia.
+  - `npx tsc --noEmit` compilado con código de salida 0.
+
+## Nueva sesión
+- Fecha: 2026-11-14 08:44
+- Solicitud: Recuerda que todos los switches vienen cerrados por defecto.
+- Decisiones clave:
+  1. Mantener `screenButtonsVisible = false` al inicializar la cabina.
+  2. Asegurar que ningún sticker o banner público se proyecte en el monitor hasta que el streamer active expresamente su switch.
+  3. Reflejar claramente el estado `OFF` en los botones de Herramientas de Escena para evitar confusiones de interfaz.
+- Pendientes:
+  - Ninguno. Todos los switches inician 100% cerrados/apagados por defecto.
