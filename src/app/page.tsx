@@ -940,7 +940,9 @@ export default function StudioDeluluPage() {
       setActiveLocalStream(processedStream);
 
       if (localVideoRef.current) {
-        localVideoRef.current.srcObject = processedStream;
+        // Enlazar stream directo a la etiqueta <video> cuando no hay Chroma Key para latencia cero y evitar pantalla negra
+        const displayStream = (chromaKeyEnabled && bgPreviewEnabled) ? processedStream : stream;
+        localVideoRef.current.srcObject = displayStream;
         try {
           await localVideoRef.current.play();
         } catch {
@@ -983,7 +985,7 @@ export default function StudioDeluluPage() {
     }
   }, [chromaDespill, chromaKeyEnabled, chromaSimilarity, chromaSmoothness, currentBgMediaType, currentBgMediaUrl]);
 
-  // Iniciar cámara
+  // Iniciar cámara con detección inteligente para OBS Studio y fallback automático en cascada
   const startCamera = useCallback(
     async (overrideCameraId?: string) => {
       setSourceError(null);
@@ -994,82 +996,96 @@ export default function StudioDeluluPage() {
         const rawFps = resolveFpsNumber(spec.fps);
         const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
 
-        const effectiveCamId = overrideCameraId !== undefined ? overrideCameraId : selectedCameraId;
+        // 1. Obtener lista actual de dispositivos de video
+        const list = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+        const cams = list.filter((d) => d.kind === "videoinput");
+        if (cams.length > 0) setCameraDevices(cams);
 
-        const buildConstraints = (camId?: string): MediaStreamConstraints => ({
-          video: camId
-            ? {
-                deviceId: { ideal: camId },
-                width: { ideal: spec.width },
-                height: { ideal: spec.height },
-                frameRate: { ideal: targetFps, max: targetFps },
-              }
-            : {
-                width: { ideal: spec.width },
-                height: { ideal: spec.height },
-                frameRate: { ideal: targetFps, max: targetFps },
-              },
-          audio: includeAudio
-            ? selectedAudioId
-              ? {
-                  deviceId: { ideal: selectedAudioId },
-                  echoCancellation: true,
-                  noiseSuppression: true,
-                }
-              : { echoCancellation: true, noiseSuppression: true }
-            : false,
+        const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
+        const requestedId = overrideCameraId !== undefined ? overrideCameraId : (selectedCameraId || savedCam || "");
+
+        // 2. Orden de candidatos para probar en cascada sin trabar
+        const candidates: { id?: string; label?: string }[] = [];
+        if (requestedId) {
+          const m = cams.find((c) => c.deviceId === requestedId);
+          candidates.push({ id: requestedId, label: m?.label });
+        }
+        // Si hay OBS Virtual Camera y no es la primera, agregarla
+        const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
+        if (obsCam && obsCam.deviceId !== requestedId) {
+          candidates.push({ id: obsCam.deviceId, label: obsCam.label });
+        }
+        // Agregar el resto de cámaras disponibles
+        cams.forEach((c) => {
+          if (c.deviceId !== requestedId && (!obsCam || c.deviceId !== obsCam.deviceId)) {
+            candidates.push({ id: c.deviceId, label: c.label });
+          }
         });
+        if (candidates.length === 0) {
+          candidates.push({});
+        }
 
         let stream: MediaStream | null = null;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(buildConstraints(effectiveCamId));
-        } catch (firstErr) {
-          console.warn("Intento principal de cámara falló, probando con cámara alternativa u OBS...", firstErr);
-          const firstErrMsg = firstErr instanceof Error ? `${firstErr.name} ${firstErr.message}` : String(firstErr);
-          const isBusyOrInUse = /in use|notreadable|busy|track start|device in use/i.test(firstErrMsg);
+        let lastErr: Error | null = null;
 
-          // Si falló (por ejemplo, cámara física bloqueada por OBS Studio):
-          const list = await navigator.mediaDevices.enumerateDevices().catch(() => []);
-          const cams = list.filter((d) => d.kind === "videoinput");
-          const obsCam = cams.find((d) => /obs/i.test(d.label || ""));
-          const altCam =
-            obsCam && obsCam.deviceId !== effectiveCamId
-              ? obsCam
-              : cams.find((d) => d.deviceId !== effectiveCamId);
+        for (const cand of candidates) {
+          try {
+            const isObs = cand.label ? /obs/i.test(cand.label) : false;
+            const videoConstraints: MediaTrackConstraints = cand.id
+              ? isObs
+                ? { deviceId: { ideal: cand.id } }
+                : {
+                    deviceId: { ideal: cand.id },
+                    width: { ideal: spec.width },
+                    height: { ideal: spec.height },
+                    frameRate: { ideal: targetFps, max: targetFps },
+                  }
+              : {
+                  width: { ideal: spec.width },
+                  height: { ideal: spec.height },
+                  frameRate: { ideal: targetFps, max: targetFps },
+                };
 
-          if (altCam) {
-            try {
-              // Si es OBS Virtual Camera, usar constraints flexibles
-              const isObs = /obs/i.test(altCam.label || "");
-              const altConstraints: MediaStreamConstraints = isObs
-                ? { video: { deviceId: { ideal: altCam.deviceId } }, audio: false }
-                : buildConstraints(altCam.deviceId);
+            // Pedir video sin audio inicialmente para evitar bloqueos del controlador DirectShow de Windows
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: videoConstraints,
+              audio: false,
+            });
 
-              stream = await navigator.mediaDevices.getUserMedia(altConstraints);
-              setSelectedCameraId(altCam.deviceId);
+            if (cand.id && cand.id !== selectedCameraId) {
+              setSelectedCameraId(cand.id);
               if (typeof window !== "undefined") {
-                localStorage.setItem("virallive_preferred_camera", altCam.deviceId);
-              }
-              setStreamInfo(`Conectado a: ${altCam.label || "Cámara Alternativa"}`);
-            } catch (secErr) {
-              try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-              } catch (thirdErr) {
-                if (isBusyOrInUse) {
-                  throw new Error("Device in use. Tu cámara física está bloqueada por OBS Studio u otra aplicación. Inicia 'Cámara Virtual' en OBS o selecciona OBS Virtual Camera.");
-                }
-                throw thirdErr;
+                localStorage.setItem("virallive_preferred_camera", cand.id);
               }
             }
-          } else {
-            try {
-              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            } catch (fallbackErr) {
-              if (isBusyOrInUse) {
-                throw new Error("Device in use. Tu cámara física está bloqueada por OBS Studio u otra aplicación.");
-              }
-              throw fallbackErr;
+            if (cand.label) {
+              setStreamInfo(`Conectado a: ${cand.label}`);
             }
+            break;
+          } catch (cErr) {
+            console.warn(`Intento con cámara ${cand.label || cand.id || "default"} falló:`, cErr);
+            lastErr = cErr instanceof Error ? cErr : new Error(String(cErr));
+          }
+        }
+
+        // Intento genérico de emergencia
+        if (!stream) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          } catch (gErr) {
+            throw lastErr || gErr;
+          }
+        }
+
+        // Si hay stream de video y se requiere audio, vincular pista de micrófono de forma independiente
+        if (stream && includeAudio) {
+          try {
+            const audioStream = await navigator.mediaDevices.getUserMedia({
+              audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true,
+            });
+            audioStream.getAudioTracks().forEach((track) => stream?.addTrack(track));
+          } catch (aErr) {
+            console.warn("Micrófono no disponible, continuando en vivo solo con video:", aErr);
           }
         }
 
@@ -1080,11 +1096,11 @@ export default function StudioDeluluPage() {
       } catch (err) {
         setCameraStreamActive(false);
         const errStr = err instanceof Error ? `${err.name} ${err.message}` : String(err);
-        const isDeviceInUse = /in use|notreadable|busy|track start/i.test(errStr);
+        const isDeviceInUse = /in use|notreadable|busy|track start|could not start/i.test(errStr);
 
         setSourceError(
           isDeviceInUse
-            ? "Tu cámara física está en uso por OBS Studio u otra app. Selecciona 'OBS Virtual Camera' o pulsa 'Iniciar cámara virtual' en OBS Studio."
+            ? "Tus cámaras están ocupadas por OBS Studio o la Cámara Virtual de OBS aún no está emitiendo. Abre OBS Studio y pulsa 'Iniciar cámara virtual' (o cierra OBS para usar tu cámara directa)."
             : err instanceof Error
             ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
             : "Error abriendo cámara.",
@@ -1093,6 +1109,21 @@ export default function StudioDeluluPage() {
     },
     [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
   );
+
+  // Auto-detección en segundo plano cuando las cámaras están bloqueadas por OBS Studio (detecta en cuanto el usuario inicie la cámara virtual)
+  useEffect(() => {
+    if (!cameraStreamActive && sourceMode === "camera" && sourceError && /obs/i.test(sourceError)) {
+      const timer = setInterval(() => {
+        const obsCam = cameraDevices.find((c) => /obs/i.test(c.label || ""));
+        if (obsCam) {
+          void startCamera(obsCam.deviceId);
+        } else {
+          void startCamera();
+        }
+      }, 3000);
+      return () => clearInterval(timer);
+    }
+  }, [cameraDevices, cameraStreamActive, sourceError, sourceMode, startCamera]);
 
   // Iniciar video pregrabado
   const handleVideoFileSelected = useCallback(
@@ -5728,8 +5759,8 @@ export default function StudioDeluluPage() {
                         />
                       )}
 
-                      {/* Standby visual si no hay stream activo todavía */}
-                      {!isConnectedLive && !(sourceMode === "video_file" && localVideoFileUrl) && !cameraStreamActive && (!selectedBgId || selectedBgId === "bg-none" || !bgPreviewEnabled) && (
+                      {/* Standby visual si no hay stream activo todavía (siempre visible si la cámara no ha iniciado) */}
+                      {!isConnectedLive && !(sourceMode === "video_file" && localVideoFileUrl) && !cameraStreamActive && (
                         <div
                           style={{
                             position: "absolute",
@@ -5741,7 +5772,7 @@ export default function StudioDeluluPage() {
                             background: "radial-gradient(circle at center, rgba(236,72,153,0.12) 0%, rgba(10,10,18,0.92) 80%)",
                             color: "#FFFFFF",
                             padding: 16,
-                            zIndex: 1,
+                            zIndex: 15,
                           }}
                         >
                           <div
@@ -5771,23 +5802,33 @@ export default function StudioDeluluPage() {
                           {sourceError && (
                             <div
                               style={{
-                                marginTop: 8,
-                                padding: "8px 12px",
-                                background: "rgba(239, 68, 68, 0.15)",
-                                border: "1px solid rgba(239, 68, 68, 0.35)",
-                                borderRadius: 10,
-                                fontSize: "0.68rem",
+                                marginTop: 10,
+                                padding: "10px 14px",
+                                background: "rgba(239, 68, 68, 0.16)",
+                                border: "1.5px solid rgba(239, 68, 68, 0.45)",
+                                borderRadius: 12,
+                                fontSize: "0.72rem",
                                 color: "#FECACA",
-                                maxWidth: 280,
+                                maxWidth: 320,
                                 textAlign: "center",
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
                                 gap: 6,
-                                lineHeight: 1.35,
+                                lineHeight: 1.4,
+                                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
                               }}
                             >
-                              <Dashicon name="warning" size={13} color="#EF4444" />
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 800, color: "#F87171" }}>
+                                <Dashicon name="warning" size={16} color="#EF4444" />
+                                <span>{/obs/i.test(sourceError) ? "OBS STUDIO EN USO" : "AVISO DE CÁMARA"}</span>
+                              </div>
                               <span>{sourceError}</span>
+                              {/obs/i.test(sourceError) && (
+                                <span style={{ fontSize: "0.64rem", color: "#94A3B8", marginTop: 2 }}>
+                                  💡 Detectando señal automáticamente... en cuanto pulses &quot;Iniciar cámara virtual&quot; en OBS, la imagen aparecerá sola.
+                                </span>
+                              )}
                             </div>
                           )}
 
@@ -5800,17 +5841,19 @@ export default function StudioDeluluPage() {
                                 if (typeof window !== "undefined") {
                                   localStorage.setItem("virallive_preferred_camera", nextId);
                                 }
+                                void startCamera(nextId);
                               }}
                               style={{
-                                marginTop: 8,
-                                padding: "4px 10px",
+                                marginTop: 10,
+                                padding: "5px 12px",
                                 borderRadius: 12,
-                                background: "rgba(0,0,0,0.65)",
+                                background: "rgba(0,0,0,0.75)",
                                 border: "1px solid rgba(255,255,255,0.25)",
                                 color: "#FFFFFF",
-                                fontSize: "0.7rem",
-                                maxWidth: 250,
+                                fontSize: "0.72rem",
+                                maxWidth: 260,
                                 outline: "none",
+                                cursor: "pointer",
                               }}
                               title="Seleccionar cámara de entrada (Física u OBS Virtual Camera)"
                             >
@@ -5822,28 +5865,50 @@ export default function StudioDeluluPage() {
                             </select>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => void startCamera()}
-                            style={{
-                              marginTop: 8,
-                              padding: "5px 14px",
-                              borderRadius: 14,
-                              background: "rgba(236, 72, 153, 0.22)",
-                              border: "1.5px solid #EC4899",
-                              color: "#FFFFFF",
-                              fontSize: "0.74rem",
-                              fontWeight: 800,
-                              cursor: "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              boxShadow: "0 0 12px rgba(236, 72, 153, 0.35)",
-                            }}
-                          >
-                            <Dashicon name="video-alt2" size={12} color="#EC4899" />
-                            <span>Activar Cámara</span>
-                          </button>
+                          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                            <button
+                              type="button"
+                              onClick={() => void startCamera()}
+                              style={{
+                                padding: "6px 16px",
+                                borderRadius: 14,
+                                background: "linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(139, 92, 246, 0.35))",
+                                border: "1.5px solid #EC4899",
+                                color: "#FFFFFF",
+                                fontSize: "0.76rem",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                boxShadow: "0 0 16px rgba(236, 72, 153, 0.35)",
+                              }}
+                            >
+                              <Dashicon name="video-alt2" size={13} color="#EC4899" />
+                              <span>Activar / Reintentar Cámara</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const fi = document.querySelector<HTMLInputElement>(".pill-ctrl-button input[type=file]");
+                                fi?.click();
+                              }}
+                              style={{
+                                padding: "6px 12px",
+                                borderRadius: 14,
+                                background: "rgba(255, 255, 255, 0.08)",
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                color: "#CBD5E1",
+                                fontSize: "0.72rem",
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
+                              title="Cargar archivo MP4 desde tu PC si tus cámaras están ocupadas"
+                            >
+                              📁 Cargar Video MP4
+                            </button>
+                          </div>
                         </div>
                       )}
                     </>
@@ -5866,6 +5931,8 @@ export default function StudioDeluluPage() {
                           : sourceMode === "video_file" && localVideoFileUrl
                           ? "none"
                           : bgPreviewEnabled && selectedBgId !== "bg-none" && bgPreviewMode === "backdrop"
+                          ? "none"
+                          : !cameraStreamActive
                           ? "none"
                           : "block",
                       transform: mirrorInput ? "scaleX(-1)" : "none",

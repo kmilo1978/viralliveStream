@@ -72,7 +72,12 @@ export class BrowserVideoPreprocessor {
     this.videoEl.muted = true;
     this.videoEl.playsInline = true;
     this.videoEl.autoplay = true;
+    // Anclar elemento en el DOM de forma invisible para que Chromium nunca pause la decodificación por optimización
+    this.videoEl.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-9999;";
     this.videoEl.srcObject = sourceStream;
+    if (typeof document !== "undefined" && document.body) {
+      document.body.appendChild(this.videoEl);
+    }
     void this.videoEl.play().catch(() => {});
 
     this.outputStream = this.canvas.captureStream(this.options.fps);
@@ -151,6 +156,9 @@ export class BrowserVideoPreprocessor {
     }
     this.outputStream.getVideoTracks().forEach((t) => t.stop());
     this.videoEl.srcObject = null;
+    if (this.videoEl.parentNode) {
+      this.videoEl.parentNode.removeChild(this.videoEl);
+    }
 
     if (this.bgVideo) {
       this.bgVideo.pause();

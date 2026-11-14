@@ -1,6 +1,20 @@
 # NOTAS DE PROYECTO: MiPlataformaStream
 
 ## Validación completada
+- Fecha: 2026-11-14 13:18
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Solución definitiva a la pantalla negra y bloqueo de cámara por OBS Studio:
+  1. **Eliminación de Pantalla Negra Ciega**: Cuando la cámara no ha iniciado o está bloqueada por hardware, la etiqueta `<video>` se oculta (`display: none`) evitando el rectángulo negro opaco que tapaba los controles, y la tarjeta de Standby se mantiene 100% visible con `zIndex: 15`.
+  2. **Detección Inteligente de OBS Studio y Fallback en Cascada**: `startCamera` ahora solicita el video de forma independiente sin mezclar restricciones de audio (evitando colisiones DirectShow en Windows), prueba la cámara solicitada y si está ocupada realiza fallback secuencial a OBS Virtual Camera y demás cámaras conectadas.
+  3. **Auto-Detección y Reconexión Automática (Polling Suave)**: Si las cámaras físicas están ocupadas por OBS Studio y la cámara virtual aún no emite, el sistema sondea automáticamente cada 3 segundos. En el instante en que el usuario presiona "Iniciar cámara virtual" en OBS Studio, la imagen se conecta sola al monitor sin recargar la página.
+  4. **Enlace Directo sin Pérdida de Cuadros**: El stream nativo se conecta de inmediato al elemento de video cuando no hay Chroma Key activo, eliminando retardos de canvas y suspensiones de decodificación por ahorro de energía de Chromium.
+  5. **Botón Alternativo de Prueba Inmediata**: Se agregó el botón `📁 Cargar Video MP4` en la tarjeta de espera para probar todas las funciones visuales y stickers incluso si el streamer tiene la cámara física ocupada en otra aplicación.
+- Observaciones:
+  - 0 errores en compilación TypeScript (`tsc --noEmit`).
+  - Verificación visual automatizada con subagente browser en `http://localhost:3000`.
+  - Captura de evidencia guardada en `solucion_pantalla_negra_obs.png`.
+
+## Validación completada
 - Fecha: 2026-11-14 12:35
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Solución integral al selector de fondos virtuales, miniaturas con fotos y proyección en vivo en CAM, TRY ON, CLIPS y TIKTOK:
