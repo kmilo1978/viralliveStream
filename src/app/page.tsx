@@ -786,17 +786,7 @@ export default function StudioDeluluPage() {
       const mics = list.filter((d) => d.kind === "audioinput");
       setCameraDevices(cams);
       setAudioDevices(mics);
-      if (!selectedCameraId && cams.length > 0) {
-        // Respetar cámara guardada o priorizar OBS Virtual Camera (ya que OBS captura la webcam física)
-        const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
-        const matched = savedCam ? cams.find((c) => c.deviceId === savedCam) : null;
-        if (matched) {
-          setSelectedCameraId(matched.deviceId);
-        } else {
-          const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
-          setSelectedCameraId(obsCam ? obsCam.deviceId : cams[0].deviceId);
-        }
-      }
+      if (!selectedCameraId && cams[0]) setSelectedCameraId(cams[0].deviceId);
       if (!selectedAudioId && mics[0]) setSelectedAudioId(mics[0].deviceId);
     } catch {
       // Ignorar permisos
@@ -913,24 +903,19 @@ export default function StudioDeluluPage() {
     [mirrorInput, preprocOpts, selectedModelId, setupVuMeter, stopLocalSource],
   );
 
-  // Iniciar cámara web con fallback automático
-  const startCamera = useCallback(
-    async (overrideCameraId?: string, overrideAudioId?: string) => {
-      setSourceError(null);
-      setSourceMode("camera");
-      setLocalVideoFileUrl(null); // Asegurar que ningún video pregrabado oculte el feed en vivo
-
-      const camId = overrideCameraId !== undefined ? overrideCameraId : selectedCameraId;
-      const micId = overrideAudioId !== undefined ? overrideAudioId : selectedAudioId;
-
-      try {
-        const spec = models.realtime(selectedModelId);
-        const rawFps = resolveFpsNumber(spec.fps);
-        const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
-
-        const videoConstraint: MediaTrackConstraints = camId
+  // Iniciar cámara
+  const startCamera = useCallback(async () => {
+    setSourceError(null);
+    setSourceMode("camera");
+    setLocalVideoFileUrl(null);
+    try {
+      const spec = models.realtime(selectedModelId);
+      const rawFps = resolveFpsNumber(spec.fps);
+      const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
+      const constraints: MediaStreamConstraints = {
+        video: selectedCameraId
           ? {
-              deviceId: { ideal: camId },
+              deviceId: { ideal: selectedCameraId },
               width: { ideal: spec.width },
               height: { ideal: spec.height },
               frameRate: { ideal: targetFps, max: targetFps },
@@ -939,71 +924,30 @@ export default function StudioDeluluPage() {
               width: { ideal: spec.width },
               height: { ideal: spec.height },
               frameRate: { ideal: targetFps, max: targetFps },
-            };
-
-        const audioConstraint: boolean | MediaTrackConstraints = includeAudio
-          ? micId
+            },
+        audio: includeAudio
+          ? selectedAudioId
             ? {
-                deviceId: { ideal: micId },
+                deviceId: { ideal: selectedAudioId },
                 echoCancellation: true,
                 noiseSuppression: true,
               }
             : { echoCancellation: true, noiseSuppression: true }
-          : false;
+          : false,
+      };
 
-        let stream: MediaStream;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: videoConstraint,
-            audio: audioConstraint,
-          });
-        } catch (firstErr) {
-          console.warn("Intento principal de getUserMedia falló, reintentando solo con video...", firstErr);
-          // Fallback 1: Reintentar sin audio si el micrófono causó el error
-          try {
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: videoConstraint,
-              audio: false,
-            });
-          } catch (secondErr) {
-            console.warn("Fallback de video ideal falló, intentando con video genérico...", secondErr);
-            // Fallback 2: Video genérico sin restricciones
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-          }
-        }
-
-        await attachNewLocalStream(stream);
-        void enumerateDevices();
-      } catch (err) {
-        setCameraStreamActive(false);
-        const errMsg = err instanceof Error ? err.message : "";
-        const isDeviceInUse = /in use|notreadable|busy|track start/i.test(errMsg);
-        const obsCam = cameraDevices.find((c) => /obs/i.test(c.label || ""));
-
-        // Si la cámara física está bloqueada porque OBS Studio la está usando, cambiar automáticamente a OBS Virtual Camera
-        if (isDeviceInUse && obsCam && camId !== obsCam.deviceId) {
-          setSourceError("Tu cámara física está en uso por OBS Studio. Conectando automáticamente a OBS Virtual Camera...");
-          setTimeout(() => {
-            setSelectedCameraId(obsCam.deviceId);
-            if (typeof window !== "undefined") {
-              localStorage.setItem("virallive_preferred_camera", obsCam.deviceId);
-            }
-            void startCamera(obsCam.deviceId);
-          }, 350);
-          return;
-        }
-
-        setSourceError(
-          err instanceof Error
-            ? isDeviceInUse
-              ? `Tu cámara física está en uso por OBS Studio u otra app. Selecciona "OBS Virtual Camera" en el menú de abajo.`
-              : `No se pudo abrir la cámara: ${err.message}. Verifica los permisos de tu navegador.`
-            : "Error abriendo cámara. Verifica permisos en el navegador.",
-        );
-      }
-    },
-    [attachNewLocalStream, cameraDevices, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
-  );
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      await attachNewLocalStream(stream);
+      void enumerateDevices();
+    } catch (err) {
+      setCameraStreamActive(false);
+      setSourceError(
+        err instanceof Error
+          ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
+          : "Error abriendo cámara.",
+      );
+    }
+  }, [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId]);
 
   // Iniciar video pregrabado
   const handleVideoFileSelected = useCallback(
@@ -5181,120 +5125,25 @@ export default function StudioDeluluPage() {
                             Cámara en espera · Pulsa Iniciar o Cargar MP4
                           </span>
 
-                          {/* Mensaje de error si la cámara falla */}
-                          {sourceError && (
-                            <div
-                              style={{
-                                marginTop: 10,
-                                maxWidth: 380,
-                                padding: "8px 14px",
-                                background: "rgba(239, 68, 68, 0.18)",
-                                border: "1px solid rgba(239, 68, 68, 0.5)",
-                                borderRadius: 10,
-                                color: "#FCA5A5",
-                                fontSize: "0.72rem",
-                                textAlign: "center",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <Dashicon name="warning" size={14} color="#EF4444" />
-                                <span>{sourceError}</span>
-                              </div>
-                              {/* Botón de cambio directo a OBS Virtual Camera */}
-                              {cameraDevices.some((c) => /obs/i.test(c.label || "")) &&
-                                selectedCameraId !== cameraDevices.find((c) => /obs/i.test(c.label || ""))?.deviceId && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const obs = cameraDevices.find((c) => /obs/i.test(c.label || ""));
-                                    if (obs) {
-                                      setSelectedCameraId(obs.deviceId);
-                                      if (typeof window !== "undefined") {
-                                        localStorage.setItem("virallive_preferred_camera", obs.deviceId);
-                                      }
-                                      void startCamera(obs.deviceId);
-                                    }
-                                  }}
-                                  style={{
-                                    marginTop: 4,
-                                    padding: "5px 12px",
-                                    borderRadius: 10,
-                                    background: "#2563EB",
-                                    border: "1px solid #60A5FA",
-                                    color: "#FFFFFF",
-                                    fontSize: "0.72rem",
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 5,
-                                  }}
-                                >
-                                  <Dashicon name="video-alt2" size={12} color="#FFFFFF" />
-                                  <span>Cambiar a OBS Virtual Camera</span>
-                                </button>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Selector rápido de cámara si hay más de un dispositivo */}
-                          {cameraDevices.length > 1 && (
-                            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                              <select
-                                value={selectedCameraId}
-                                onChange={(e) => {
-                                  const id = e.target.value;
-                                  setSelectedCameraId(id);
-                                  if (typeof window !== "undefined") {
-                                    localStorage.setItem("virallive_preferred_camera", id);
-                                  }
-                                  void startCamera(id);
-                                }}
-                                style={{
-                                  background: "rgba(0,0,0,0.6)",
-                                  border: "1px solid rgba(236, 72, 153, 0.4)",
-                                  borderRadius: 12,
-                                  color: "#FFFFFF",
-                                  fontSize: "0.68rem",
-                                  padding: "3px 8px",
-                                  outline: "none",
-                                  cursor: "pointer",
-                                  maxWidth: 240,
-                                }}
-                              >
-                                {cameraDevices.map((d) => (
-                                  <option key={d.deviceId} value={d.deviceId}>
-                                    {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
-
                           <button
                             type="button"
                             onClick={() => void startCamera()}
                             style={{
                               marginTop: 10,
-                              padding: "6px 14px",
+                              padding: "5px 12px",
                               borderRadius: 14,
-                              background: "rgba(236, 72, 153, 0.25)",
-                              border: "1px solid rgba(236, 72, 153, 0.6)",
+                              background: "rgba(255, 255, 255, 0.12)",
+                              border: "1px solid rgba(255, 255, 255, 0.25)",
                               color: "#FFFFFF",
-                              fontSize: "0.75rem",
+                              fontSize: "0.72rem",
                               fontWeight: 700,
                               cursor: "pointer",
                               display: "inline-flex",
                               alignItems: "center",
-                              gap: 6,
-                              boxShadow: "0 0 15px rgba(236, 72, 153, 0.35)",
+                              gap: 5,
                             }}
                           >
-                            <Dashicon name="video-alt2" size={13} color="#EC4899" />
+                            <Dashicon name="video-alt2" size={12} color="#EC4899" />
                             <span>Activar Cámara</span>
                           </button>
                         </div>
@@ -6118,12 +5967,8 @@ export default function StudioDeluluPage() {
                   aria-label="Seleccionar cámara"
                   value={selectedCameraId}
                   onChange={(e) => {
-                    const newCamId = e.target.value;
-                    setSelectedCameraId(newCamId);
-                    if (typeof window !== "undefined") {
-                      localStorage.setItem("virallive_preferred_camera", newCamId);
-                    }
-                    void startCamera(newCamId);
+                    setSelectedCameraId(e.target.value);
+                    setTimeout(() => void startCamera(), 50);
                   }}
                 >
                   {cameraDevices.map((d) => (
@@ -6161,7 +6006,7 @@ export default function StudioDeluluPage() {
                   const newId = e.target.value;
                   setSelectedAudioId(newId);
                   if (sourceMode === "camera") {
-                    void startCamera(undefined, newId);
+                    setTimeout(() => void startCamera(), 50);
                   } else if (sourceMode === "video_file") {
                     setTimeout(() => void captureFromVideoElement(), 50);
                   }

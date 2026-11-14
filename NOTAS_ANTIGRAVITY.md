@@ -1701,3 +1701,24 @@
   - Inspeccionar mediante subagente de navegación la pestaña CAM, la tarjeta de standby y las opciones de cámara disponibles.
 - Pendientes:
   - Ninguno. Entorno local 100% operativo y listo para transmitir con OBS.
+
+## Validación completada
+- Fecha: 2026-11-14T07:35:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Restauración limpia y sin fricción de la activación de cámara web y OBS Virtual Camera. Eliminación total de avisos rojos invasivos ("Device in use"), menús desplegables duplicados en el centro y bucles de reintento. Desaparición automática de la tarjeta de espera una vez que el video está activo.
+- Observaciones:
+  - Se eliminaron las cajas de error y el selector duplicado del monitor central; la selección de cámara y micrófono permanece organizada en la barra inferior.
+  - Se restauró la llamada estándar y limpia a `getUserMedia` sin bucles recursivos de fallback que saturaban el controlador de Windows.
+  - La tarjeta de standby (avatar "M", "Maddy", "Cámara en espera · Pulsa Iniciar o Cargar MP4") desaparece inmediatamente al emitir el stream de cámara (`!cameraStreamActive`).
+  - Verificado en http://localhost:3000 con subagente de navegación; cero errores de consola y video activo.
+  - TypeScript verificado con código de salida 0 (`npx tsc --noEmit`).
+
+## Nueva sesión
+- Fecha: 2026-11-14 07:35
+- Solicitud: Eliminar el aviso invasivo de error de cámara, restablecer el funcionamiento limpio que nunca debió fallar y asegurar que el mensaje de cámara en espera desaparezca al activar la cámara.
+- Decisiones clave:
+  1. Suprimir la visualización de la caja roja de error y el menú desplegable redundante dentro de la tarjeta de espera del monitor central.
+  2. Simplificar la función `startCamera` a su forma robusta original con `ideal` constraints y sin llamadas recursivas ni reintentos que retenían el hardware.
+  3. Vincular la visibilidad del overlay de espera a `!cameraStreamActive` para que el feed de video quede completamente libre una vez activado.
+- Pendientes:
+  - Ninguno. Cámara web y OBS Virtual Camera funcionando de manera transparente y limpia.
