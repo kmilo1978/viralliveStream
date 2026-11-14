@@ -1745,3 +1745,23 @@
   4. Incluir generador dinámico de enlaces para WhatsApp (`wa.me/<numero>`) y vista previa en tiempo real.
 - Pendientes:
   - Ninguno. Sistema de stickers y botones sociales 100% operativo.
+
+## Validación completada
+- Fecha: 2026-11-14T08:25:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección del inicio por defecto de la cámara web para entornos con OBS Studio: preselección inteligente de OBS Virtual Camera por defecto, resolución de carrera asíncrona en montaje y fallback automático sin bloqueos.
+- Observaciones:
+  - Se identificó que al montar la página, `selectedCameraId` iniciaba vacío, solicitando la cámara física predeterminada que Windows bloquea cuando OBS Studio está abierto.
+  - Se corrigió `enumerateDevices` para preseleccionar directamente `OBS Virtual Camera` (o la cámara guardada en `localStorage`), evitando bloqueos.
+  - `startCamera` ahora cuenta con fallback automático que commuta a la cámara virtual si la cámara física está ocupada.
+  - TypeScript compilado con código de salida 0 (`npx tsc --noEmit`).
+
+## Nueva sesión
+- Fecha: 2026-11-14 08:25
+- Solicitud: La cámara aún no está activa, antes funcionaba por defecto, ahora no funciona.
+- Decisiones clave:
+  1. Priorizar `OBS Virtual Camera` en `enumerateDevices` para que sea el dispositivo predeterminado al cargar la cabina.
+  2. Conectar el arranque por defecto en `useEffect` con la resolución de `selectedCameraId`.
+  3. Implementar fallback de un solo paso en `startCamera` para conmutar sin bucles si el dispositivo seleccionado está bloqueado.
+- Pendientes:
+  - Ninguno. La cámara se inicializa automáticamente con OBS Virtual Camera por defecto.

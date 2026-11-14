@@ -790,7 +790,15 @@ export default function StudioDeluluPage() {
       const mics = list.filter((d) => d.kind === "audioinput");
       setCameraDevices(cams);
       setAudioDevices(mics);
-      if (!selectedCameraId && cams[0]) setSelectedCameraId(cams[0].deviceId);
+      if (cams.length > 0) {
+        const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
+        const matchedSaved = savedCam ? cams.find((c) => c.deviceId === savedCam) : null;
+        const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
+        const preferred = matchedSaved || obsCam || cams[0];
+        if (!selectedCameraId || (matchedSaved && selectedCameraId !== matchedSaved.deviceId)) {
+          setSelectedCameraId(preferred.deviceId);
+        }
+      }
       if (!selectedAudioId && mics[0]) setSelectedAudioId(mics[0].deviceId);
     } catch {
       // Ignorar permisos
@@ -908,50 +916,86 @@ export default function StudioDeluluPage() {
   );
 
   // Iniciar cámara
-  const startCamera = useCallback(async () => {
-    setSourceError(null);
-    setSourceMode("camera");
-    setLocalVideoFileUrl(null);
-    try {
-      const spec = models.realtime(selectedModelId);
-      const rawFps = resolveFpsNumber(spec.fps);
-      const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
-      const constraints: MediaStreamConstraints = {
-        video: selectedCameraId
-          ? {
-              deviceId: { ideal: selectedCameraId },
-              width: { ideal: spec.width },
-              height: { ideal: spec.height },
-              frameRate: { ideal: targetFps, max: targetFps },
-            }
-          : {
-              width: { ideal: spec.width },
-              height: { ideal: spec.height },
-              frameRate: { ideal: targetFps, max: targetFps },
-            },
-        audio: includeAudio
-          ? selectedAudioId
-            ? {
-                deviceId: { ideal: selectedAudioId },
-                echoCancellation: true,
-                noiseSuppression: true,
-              }
-            : { echoCancellation: true, noiseSuppression: true }
-          : false,
-      };
+  const startCamera = useCallback(
+    async (overrideCameraId?: string) => {
+      setSourceError(null);
+      setSourceMode("camera");
+      setLocalVideoFileUrl(null);
+      try {
+        const spec = models.realtime(selectedModelId);
+        const rawFps = resolveFpsNumber(spec.fps);
+        const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      await attachNewLocalStream(stream);
-      void enumerateDevices();
-    } catch (err) {
-      setCameraStreamActive(false);
-      setSourceError(
-        err instanceof Error
-          ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
-          : "Error abriendo cámara.",
-      );
-    }
-  }, [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId]);
+        const effectiveCamId = overrideCameraId !== undefined ? overrideCameraId : selectedCameraId;
+
+        const buildConstraints = (camId?: string): MediaStreamConstraints => ({
+          video: camId
+            ? {
+                deviceId: { ideal: camId },
+                width: { ideal: spec.width },
+                height: { ideal: spec.height },
+                frameRate: { ideal: targetFps, max: targetFps },
+              }
+            : {
+                width: { ideal: spec.width },
+                height: { ideal: spec.height },
+                frameRate: { ideal: targetFps, max: targetFps },
+              },
+          audio: includeAudio
+            ? selectedAudioId
+              ? {
+                  deviceId: { ideal: selectedAudioId },
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                }
+              : { echoCancellation: true, noiseSuppression: true }
+            : false,
+        });
+
+        let stream: MediaStream | null = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(buildConstraints(effectiveCamId));
+        } catch (firstErr) {
+          console.warn("Intento principal de cámara falló, probando con cámara alternativa u OBS...", firstErr);
+          // Si falló (por ejemplo, cámara física bloqueada por OBS Studio):
+          const list = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+          const cams = list.filter((d) => d.kind === "videoinput");
+          const obsCam = cams.find((d) => /obs/i.test(d.label || ""));
+          const altCam =
+            obsCam && obsCam.deviceId !== effectiveCamId
+              ? obsCam
+              : cams.find((d) => d.deviceId !== effectiveCamId);
+
+          if (altCam) {
+            try {
+              stream = await navigator.mediaDevices.getUserMedia(buildConstraints(altCam.deviceId));
+              setSelectedCameraId(altCam.deviceId);
+              if (typeof window !== "undefined") {
+                localStorage.setItem("virallive_preferred_camera", altCam.deviceId);
+              }
+            } catch {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            }
+          } else {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          }
+        }
+
+        if (stream) {
+          await attachNewLocalStream(stream);
+          void enumerateDevices();
+        }
+      } catch (err) {
+        setCameraStreamActive(false);
+        setSourceError(
+          err instanceof Error
+            ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
+            : "Error abriendo cámara.",
+        );
+      }
+    },
+    [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
+  );
 
   // Iniciar video pregrabado
   const handleVideoFileSelected = useCallback(
@@ -3046,12 +3090,12 @@ export default function StudioDeluluPage() {
 
 
 
-  // Iniciar cámara por defecto al montar si no hay fuente
+  // Iniciar cámara por defecto al montar o al resolver dispositivo si no hay fuente
   useEffect(() => {
     if (!localStreamRef.current && sourceMode === "camera") {
       void startCamera();
     }
-  }, [sourceMode, startCamera]);
+  }, [selectedCameraId, sourceMode, startCamera]);
 
   return (
     <div className="viralive-app-shell" style={{ minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--text-white)", display: "flex", flexDirection: "column" }}>
@@ -6063,8 +6107,12 @@ export default function StudioDeluluPage() {
                   aria-label="Seleccionar cámara"
                   value={selectedCameraId}
                   onChange={(e) => {
-                    setSelectedCameraId(e.target.value);
-                    setTimeout(() => void startCamera(), 50);
+                    const newCamId = e.target.value;
+                    setSelectedCameraId(newCamId);
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("virallive_preferred_camera", newCamId);
+                    }
+                    void startCamera(newCamId);
                   }}
                 >
                   {cameraDevices.map((d) => (
