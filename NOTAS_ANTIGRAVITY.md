@@ -1682,13 +1682,22 @@
   - Compatible tanto con la entrada de video desde OBS Virtual Camera como con la salida limpia hacia OBS Studio vía `/obs-stage`.
   - TypeScript `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
 
+## Validación completada
+- Fecha: 2026-11-14T07:23:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Verificación visual en local (http://localhost:3000) completada con éxito tras reinicio del servidor. Se confirmó estado 200 OK, cero errores de consola, monitor CAM en standby con selector operativo y preselección de OBS Virtual Camera.
+- Observaciones:
+  - Servidor Next.js 15 dev activo en el puerto 3000 sin advertencias ni bloqueos.
+  - La tarjeta de standby en CAM presenta todos los controles intactos: avatar Maddy, selector desplegable de dispositivo y botón de activación.
+  - Confirmada la disponibilidad y preselección de `OBS Virtual Camera`.
+  - Verificación visual documentada en artifact `verificacion_visualizacion_local.md`.
+  - TypeScript `tsc --noEmit` exit code 0 y sincronizado en GitHub rama `main`.
+
 ## Nueva sesión
-- Fecha: 2026-11-13 13:00
-- Solicitud: Pero esta funcionaba correctamente hasta el día de ayer algo pasó, recuerda que funciona con OBS (Error: Device in use).
+- Fecha: 2026-11-14 07:23
+- Solicitud: Visualiza en local.
 - Decisiones clave:
-  - Diagnóstico de error `Device in use`: OBS Studio mantiene abierta y capturada la cámara web física en Windows, bloqueando el acceso directo a otras aplicaciones.
-  - Priorizar `OBS Virtual Camera` por defecto en la detección de hardware.
-  - Detección inteligente de error `Device in use`: si ocurre, conmuta automáticamente a `OBS Virtual Camera` y muestra un botón directo en pantalla.
-  - Guardar y respetar la cámara elegida por el usuario en `localStorage` (`virallive_preferred_camera`).
+  - Reiniciar servidor Next.js en segundo plano tras el reinicio del entorno.
+  - Inspeccionar mediante subagente de navegación la pestaña CAM, la tarjeta de standby y las opciones de cámara disponibles.
 - Pendientes:
-  - Ninguno. OBS y cámara web totalmente integrados con auto-conmutación.
+  - Ninguno. Entorno local 100% operativo y listo para transmitir con OBS.
