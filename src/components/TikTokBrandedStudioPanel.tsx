@@ -26,6 +26,11 @@ interface TikTokBrandedStudioPanelProps {
   hideViewerRangeCard?: boolean;
   dockMode?: boolean;
   activeThemeId?: string;
+  chromaKeyEnabled?: boolean;
+  onToggleChromaKey?: (enabled: boolean) => void;
+  chromaSimilarity?: number;
+  onChromaSimilarityChange?: (val: number) => void;
+  localStream?: MediaStream | null;
 }
 
 const TIKTOK_STYLE_COLOR_PRESETS: Array<{ label: string; hex: string }> = [
@@ -99,6 +104,11 @@ export function TikTokBrandedStudioPanel({
   hideViewerRangeCard = false,
   dockMode = false,
   activeThemeId: propActiveThemeId,
+  chromaKeyEnabled = false,
+  onToggleChromaKey,
+  chromaSimilarity = 0.35,
+  onChromaSimilarityChange,
+  localStream,
 }: TikTokBrandedStudioPanelProps) {
   const [themes] = useState<TikTokBrandTheme[]>(DEFAULT_TIKTOK_BRAND_THEMES);
   const [activeThemeId, setActiveThemeId] = useState<string>("tt-beauty");
@@ -436,6 +446,29 @@ export function TikTokBrandedStudioPanel({
                 />
               )}
 
+              {/* FEED DE LA CÁMARA DEL STREAMER EN EL SMARTPHONE */}
+              {localStream && (
+                <video
+                  ref={(el) => {
+                    if (el && el.srcObject !== localStream) {
+                      el.srcObject = localStream;
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    zIndex: chromaKeyEnabled ? 2 : 1,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+
               {/* CAPA DE PROTECCIÓN DRM & MARCA DE AGUA FORENSE ANTICOPIA */}
               {drmProtection && (
                 <div
@@ -725,6 +758,67 @@ export function TikTokBrandedStudioPanel({
                   />
                 </label>
               </div>
+            </div>
+
+            {/* Control Switch Chroma Key en TikTok */}
+            <div
+              style={{
+                background: chromaKeyEnabled ? "rgba(16, 185, 129, 0.12)" : "rgba(255, 255, 255, 0.04)",
+                border: `1px solid ${chromaKeyEnabled ? "rgba(16, 185, 129, 0.45)" : "rgba(255, 255, 255, 0.08)"}`,
+                borderRadius: 10,
+                padding: "8px 12px",
+                marginBottom: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: "1.1rem" }}>🟩</span>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                        Chroma Key / Pantalla Verde
+                      </span>
+                      {chromaKeyEnabled && (
+                        <span style={{ fontSize: "0.6rem", fontWeight: 800, color: "#10B981", background: "rgba(16, 185, 129, 0.2)", padding: "1px 6px", borderRadius: 6 }}>
+                          ACTIVO DETRÁS
+                        </span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: "0.68rem", color: "rgba(255, 255, 255, 0.65)" }}>
+                      Proyecta el fondo seleccionado detrás de ti en el live vertical sin desaparecer
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className={`switchy-toggle ${chromaKeyEnabled ? "active-green" : ""}`}
+                  onClick={() => onToggleChromaKey?.(!chromaKeyEnabled)}
+                  title="Alternar Chroma Key para TikTok Live"
+                >
+                  <div className="switchy-thumb" />
+                </div>
+              </div>
+
+              {chromaKeyEnabled && (
+                <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#E2E8F0" }}>
+                    <span>Sensibilidad Verde (Tolerancia)</span>
+                    <span style={{ fontWeight: 800, color: "#10B981" }}>{Math.round((chromaSimilarity ?? 0.35) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.15"
+                    max="0.60"
+                    step="0.01"
+                    value={chromaSimilarity ?? 0.35}
+                    onChange={(e) => onChromaSimilarityChange?.(Number.parseFloat(e.target.value))}
+                    style={{ width: "100%", accentColor: "#10B981", height: 4, cursor: "pointer", marginTop: 2 }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Grid de fondos */}

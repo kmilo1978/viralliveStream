@@ -5,6 +5,12 @@ export type VideoPreprocessorOptions = {
   mirror: boolean;
   freeze: boolean;
   cropMode: CropAspectMode;
+  chromaKey?: boolean;
+  chromaSimilarity?: number; // 0.15 a 0.85 (default: 0.35)
+  chromaSmoothness?: number; // 0.05 a 0.30 (default: 0.12)
+  spillReduction?: boolean; // default: true
+  bgMediaUrl?: string | null;
+  bgMediaType?: "image" | "video" | "none";
 };
 
 function dimensionsForCrop(cropMode: CropAspectMode): { width: number; height: number } {
@@ -21,8 +27,11 @@ function dimensionsForCrop(cropMode: CropAspectMode): { width: number; height: n
 }
 
 /**
- * Preprocesador limpio en navegador (clean-room) que aplica espejo, congelado de cuadro,
- * recorte vertical 9:16 / zoom 1.3x y limite de FPS antes de enviar a WebRTC.
+ * Preprocesador en navegador que aplica:
+ * - Espejo, congelado de cuadro, recorte de relación de aspecto (16:9, 9:16, 1:1, 4:3, zoom)
+ * - Chroma Key / Pantalla Verde en tiempo real con supresión de halo verde (despill)
+ * - Composición de Fondos Virtuales (fotos o videos en bucle) detrás del streamer
+ * - Control de FPS para salida WebRTC, monitor local y OBS Virtual Camera
  */
 export class BrowserVideoPreprocessor {
   private sourceStream: MediaStream;
@@ -33,6 +42,16 @@ export class BrowserVideoPreprocessor {
   private timerId: number | null = null;
   private options: VideoPreprocessorOptions;
   private disposed = false;
+
+  // Canvas auxiliar offscreen para recortar la silueta en Chroma Key
+  private offscreenCanvas: HTMLCanvasElement | null = null;
+  private offscreenCtx: CanvasRenderingContext2D | null = null;
+
+  // Elementos de medios de fondo (foto o video en bucle)
+  private bgImage: HTMLImageElement | null = null;
+  private bgVideo: HTMLVideoElement | null = null;
+  private currentBgUrl: string | null = null;
+  private currentBgType: "image" | "video" | "none" = "none";
 
   constructor(sourceStream: MediaStream, initialOptions: VideoPreprocessorOptions) {
     this.sourceStream = sourceStream;
@@ -61,6 +80,10 @@ export class BrowserVideoPreprocessor {
       this.outputStream.addTrack(audioTrack);
     }
 
+    if (this.options.chromaKey) {
+      this.syncBackgroundMedia();
+    }
+
     this.startLoop();
   }
 
@@ -83,6 +106,14 @@ export class BrowserVideoPreprocessor {
     if (dimsChanged) {
       this.canvas.width = nextDims.width;
       this.canvas.height = nextDims.height;
+      if (this.offscreenCanvas) {
+        this.offscreenCanvas.width = nextDims.width;
+        this.offscreenCanvas.height = nextDims.height;
+      }
+    }
+
+    if (this.options.chromaKey) {
+      this.syncBackgroundMedia();
     }
 
     let needsTrackReplace = false;
@@ -120,6 +151,51 @@ export class BrowserVideoPreprocessor {
     }
     this.outputStream.getVideoTracks().forEach((t) => t.stop());
     this.videoEl.srcObject = null;
+
+    if (this.bgVideo) {
+      this.bgVideo.pause();
+      this.bgVideo.src = "";
+      this.bgVideo = null;
+    }
+    this.bgImage = null;
+    this.offscreenCanvas = null;
+    this.offscreenCtx = null;
+  }
+
+  private syncBackgroundMedia(): void {
+    const url = this.options.bgMediaUrl || null;
+    const type = this.options.bgMediaType || "none";
+
+    if (url === this.currentBgUrl && type === this.currentBgType) return;
+
+    this.currentBgUrl = url;
+    this.currentBgType = type;
+
+    if (this.bgVideo) {
+      this.bgVideo.pause();
+      this.bgVideo.src = "";
+      this.bgVideo = null;
+    }
+    this.bgImage = null;
+
+    if (!url || type === "none") return;
+
+    if (type === "video") {
+      const vid = document.createElement("video");
+      vid.crossOrigin = "anonymous";
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.autoplay = true;
+      vid.src = url;
+      void vid.play().catch(() => {});
+      this.bgVideo = vid;
+    } else if (type === "image") {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = url;
+      this.bgImage = img;
+    }
   }
 
   private startLoop(): void {
@@ -129,6 +205,34 @@ export class BrowserVideoPreprocessor {
     const intervalMs = Math.max(16, Math.round(1000 / this.options.fps));
     this.timerId = window.setInterval(() => this.drawFrame(), intervalMs);
     this.drawFrame();
+  }
+
+  private drawCover(
+    ctx: CanvasRenderingContext2D,
+    media: HTMLImageElement | HTMLVideoElement,
+    cw: number,
+    ch: number,
+  ): void {
+    const mw = "naturalWidth" in media ? media.naturalWidth : media.videoWidth;
+    const mh = "naturalHeight" in media ? media.naturalHeight : media.videoHeight;
+    if (!mw || !mh) return;
+
+    const mediaAspect = mw / mh;
+    const canvasAspect = cw / ch;
+
+    let sx = 0;
+    let sy = 0;
+    let sw = mw;
+    let sh = mh;
+
+    if (mediaAspect > canvasAspect) {
+      sw = Math.round(mh * canvasAspect);
+      sx = Math.round((mw - sw) / 2);
+    } else {
+      sh = Math.round(mw / canvasAspect);
+      sy = Math.round((mh - sh) / 2);
+    }
+    ctx.drawImage(media, sx, sy, sw, sh, 0, 0, cw, ch);
   }
 
   private drawFrame(): void {
@@ -165,6 +269,90 @@ export class BrowserVideoPreprocessor {
       sh = zH;
     }
 
+    // Modo Chroma Key activo: Recorta el verde y proyecta el fondo detrás de la persona
+    if (this.options.chromaKey) {
+      this.syncBackgroundMedia();
+
+      if (!this.offscreenCanvas) {
+        this.offscreenCanvas = document.createElement("canvas");
+        this.offscreenCtx = this.offscreenCanvas.getContext("2d", { willReadFrequently: true });
+      }
+      if (this.offscreenCanvas.width !== cw || this.offscreenCanvas.height !== ch) {
+        this.offscreenCanvas.width = cw;
+        this.offscreenCanvas.height = ch;
+      }
+
+      if (this.offscreenCtx) {
+        // 1. Dibujar cámara en canvas auxiliar
+        this.offscreenCtx.save();
+        this.offscreenCtx.clearRect(0, 0, cw, ch);
+        if (this.options.mirror) {
+          this.offscreenCtx.translate(cw, 0);
+          this.offscreenCtx.scale(-1, 1);
+        }
+        this.offscreenCtx.drawImage(this.videoEl, sx, sy, sw, sh, 0, 0, cw, ch);
+        this.offscreenCtx.restore();
+
+        // 2. Extraer pixels y aplicar filtro Chroma Key
+        const imgData = this.offscreenCtx.getImageData(0, 0, cw, ch);
+        const data = imgData.data;
+        const total = data.length;
+        const sim = this.options.chromaSimilarity ?? 0.35;
+        const smooth = this.options.chromaSmoothness ?? 0.12;
+        const despill = this.options.spillReduction !== false;
+
+        for (let i = 0; i < total; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          const maxRB = r > b ? r : b;
+          const diff = (g - maxRB) / 255;
+
+          if (diff > sim) {
+            // Fondo verde detectado: hacer transparente
+            data[i + 3] = 0;
+          } else if (diff > sim - smooth) {
+            // Transición suave antialias
+            const alphaFactor = (sim - diff) / smooth;
+            data[i + 3] = Math.round(255 * alphaFactor);
+            if (despill && g > maxRB) {
+              data[i + 1] = maxRB;
+            }
+          } else if (despill && g > maxRB) {
+            // Despill en bordes de cabello y hombros
+            data[i + 1] = maxRB;
+          }
+        }
+        this.offscreenCtx.putImageData(imgData, 0, 0);
+
+        // 3. Componer lienzo final: FONDO DETRÁS, PERSONA DELANTE
+        this.ctx.save();
+        this.ctx.clearRect(0, 0, cw, ch);
+
+        let bgDrawn = false;
+        if (this.bgVideo && !this.bgVideo.paused && this.bgVideo.videoWidth > 0) {
+          this.drawCover(this.ctx, this.bgVideo, cw, ch);
+          bgDrawn = true;
+        } else if (this.bgImage && this.bgImage.complete && this.bgImage.naturalWidth > 0) {
+          this.drawCover(this.ctx, this.bgImage, cw, ch);
+          bgDrawn = true;
+        }
+
+        if (!bgDrawn) {
+          // Fondo verde de estudio por defecto (#00FF00) si no hay imagen
+          this.ctx.fillStyle = "#00FF00";
+          this.ctx.fillRect(0, 0, cw, ch);
+        }
+
+        // Superponer persona recortada
+        this.ctx.drawImage(this.offscreenCanvas, 0, 0);
+        this.ctx.restore();
+        return;
+      }
+    }
+
+    // Modo normal sin Chroma Key
     this.ctx.save();
     this.ctx.clearRect(0, 0, cw, ch);
     if (this.options.mirror) {
