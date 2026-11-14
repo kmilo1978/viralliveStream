@@ -1,6 +1,23 @@
 # NOTAS DE PROYECTO: MiPlataformaStream
 
 ## Validación completada
+- Fecha: 2026-11-14 12:35
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Solución integral al selector de fondos virtuales, miniaturas con fotos y proyección en vivo en CAM, TRY ON, CLIPS y TIKTOK:
+  1. **Disponibilidad Total en Cabinas**: La sección "Fondo & Pantalla Verde" ahora se renderiza de forma unificada en el dock izquierdo de las 4 pestañas operativas (`CAM`, `TRY_ON`, `CLIPS` y `TIKTOK`).
+  2. **Carrusel de Fotos Reales**: Sustitución de los botones de texto por un carrusel visual horizontal con miniaturas fotográficas reales de todos los fondos virtuales, indicador de video bucle (`▶ LOOP`), checkmark activo (`✓`) y botones directos `+ Foto` y `+ Video`.
+  3. **Solución a la Pantalla Verde Forzada**: Se eliminó la sobreescritura automática que forzaba `bg-chroma-green` (#00FF00) al activar el switch o los modos de proyección. Ahora siempre se preserva el fondo fotográfico o video elegido por el usuario (por ejemplo "Estudio Neón Cyberpunk", "Penthouse" o fondos personalizados).
+  4. **Modos de Proyección Flexibles (Para que NUNCA desaparezca de pantalla)**:
+     - `🖼️ Fondo + PiP (Sin tela)`: Proyecta el fondo seleccionado a pantalla completa y sitúa la cámara del streamer en una ventana flotante con marco neón rosa (ideal para habitaciones normales sin tela verde física).
+     - `👤 Fondo Detrás (Chroma)`: Recorta el fondo verde si se dispone de una tela verde física detrás del streamer, con control deslizante de tolerancia/sensibilidad verde.
+     - `🟩 Verde para OBS`: Proyecta fondo verde puro (#00FF00) para recortar con el filtro Chroma Key en OBS Studio.
+     - `🏞️ Solo Fondo`: Muestra el fondo o video en bucle en pantalla completa.
+- Observaciones:
+  - 0 errores en compilación TypeScript (`tsc --noEmit`).
+  - Verificación visual automatizada con subagente browser en `http://localhost:3000`.
+  - Capturas de evidencia: `fondo_pip_cyberpunk_verificado.png`, `fondo_cam_dock_verificado.png` y `fondo_clips_dock_verificado.png`.
+
+## Validación completada
 - Fecha: 2026-11-14 11:15
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Solución integral a los 4 puntos de botones, banners y compatibilidad de cámara:

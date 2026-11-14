@@ -2052,6 +2052,7 @@ export default function StudioDeluluPage() {
   const handleSelectBackground = useCallback(
     async (bg: VirtualBackgroundItem) => {
       setSelectedBgId(bg.id);
+      setBgPreviewEnabled(true);
       let nextPrompt = promptText;
       virtualBackgrounds.forEach((b) => {
         if (b.promptSuffix && nextPrompt.includes(b.promptSuffix)) {
@@ -2650,7 +2651,7 @@ export default function StudioDeluluPage() {
     } else {
       if (!requestEnableOnScreen()) return;
       if (!selectedBgId || selectedBgId === "bg-none") {
-        setSelectedBgId("bg-chroma-green");
+        setSelectedBgId("bg-cyber-streamer");
       }
       setBgPreviewEnabled(true);
       setStreamInfo("Capa de fondo activada (0 créditos consumidos)");
@@ -3261,6 +3262,280 @@ export default function StudioDeluluPage() {
     }
   }, [selectedCameraId, sourceMode, startCamera]);
 
+  // Renderizador unificado del módulo de Fondos Virtuales & Chroma Key (disponible en CAM, TRY ON, CLIPS y TIKTOK)
+  const renderVirtualBackgroundSection = (tabContext: "CAM" | "TRY_ON" | "CLIPS" | "TIKTOK") => {
+    return (
+      <div
+        className="studio-bg-dock-box"
+        style={{
+          background: bgPreviewEnabled ? "rgba(16, 185, 129, 0.09)" : "rgba(255, 255, 255, 0.03)",
+          border: `1.5px solid ${bgPreviewEnabled ? "rgba(16, 185, 129, 0.5)" : "rgba(255, 255, 255, 0.09)"}`,
+          borderRadius: 14,
+          padding: "10px 12px",
+          marginBottom: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          boxShadow: bgPreviewEnabled ? "0 4px 18px rgba(16, 185, 129, 0.12)" : "none",
+          transition: "all 0.2s ease",
+        }}
+      >
+        {/* Encabezado con Icono, Título y Switch Maestro */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: "1.2rem" }}>🏞️</span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                  Fondo &amp; Pantalla Verde
+                </span>
+                {bgPreviewEnabled && (
+                  <span style={{ fontSize: "0.58rem", fontWeight: 800, color: "#10B981", background: "rgba(16, 185, 129, 0.22)", border: "1px solid rgba(16, 185, 129, 0.4)", padding: "1px 6px", borderRadius: 6 }}>
+                    {chromaKeyEnabled ? "CHROMA ON" : bgPreviewMode === "pip_camera" ? "PiP ON" : "EN PANTALLA"}
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: "0.66rem", color: "rgba(255, 255, 255, 0.65)" }}>
+                {bgPreviewEnabled
+                  ? `Fondo: ${activeBgItem?.name || "Personalizado"}`
+                  : `Proyecta escenario detrás de ti en ${tabContext}`}
+              </span>
+            </div>
+          </div>
+
+          {/* Switch Maestro de Fondo */}
+          <div
+            className={`switchy-toggle ${bgPreviewEnabled ? "active-green" : ""}`}
+            onClick={() => {
+              const next = !bgPreviewEnabled;
+              setBgPreviewEnabled(next);
+              if (next) {
+                if (!selectedBgId || selectedBgId === "bg-none" || selectedBgId === "bg-chroma-green") {
+                  const defaultBg = virtualBackgrounds.find((b) => b.id === "bg-cyber-streamer") || virtualBackgrounds[0];
+                  if (defaultBg) void handleSelectBackground(defaultBg);
+                }
+                setStreamInfo(`Fondo virtual activado en ${tabContext}.`);
+              } else {
+                setChromaKeyEnabled(false);
+                setStreamInfo("Fondo virtual desactivado (Cámara limpia).");
+              }
+            }}
+            title={bgPreviewEnabled ? "Desactivar fondo virtual" : "Activar fondo virtual"}
+          >
+            <div className="switchy-thumb" />
+          </div>
+        </div>
+
+        {/* Selector de Modo de Proyección (4 opciones directas para que NUNCA desaparezca de pantalla) */}
+        {bgPreviewEnabled && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontSize: "0.64rem", color: "#94A3B8", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Modo de Proyección de Cámara:
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              <button
+                type="button"
+                className={`pill-ctrl-button ${bgPreviewMode === "chroma_key" && chromaKeyEnabled ? "active-green" : ""}`}
+                style={{ padding: "5px 6px", fontSize: "0.68rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
+                onClick={() => {
+                  setBgPreviewMode("chroma_key");
+                  setChromaKeyEnabled(true);
+                  setBgPreviewEnabled(true);
+                  if (!selectedBgId || selectedBgId === "bg-none" || selectedBgId === "bg-chroma-green") {
+                    const defaultBg = virtualBackgrounds.find((b) => b.id === "bg-cyber-streamer") || virtualBackgrounds[0];
+                    if (defaultBg) void handleSelectBackground(defaultBg);
+                  }
+                  setStreamInfo("Modo Chroma Key activo: recorta el verde y proyecta el fondo escogido detrás de ti.");
+                }}
+                title="Recorta la tela verde física detrás de ti y muestra el fondo escogido"
+              >
+                <span>👤 Fondo Detrás (Chroma)</span>
+              </button>
+
+              <button
+                type="button"
+                className={`pill-ctrl-button ${bgPreviewMode === "pip_camera" && !chromaKeyEnabled ? "active-pink" : ""}`}
+                style={{ padding: "5px 6px", fontSize: "0.68rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
+                onClick={() => {
+                  setBgPreviewMode("pip_camera");
+                  setChromaKeyEnabled(false);
+                  setBgPreviewEnabled(true);
+                  if (!selectedBgId || selectedBgId === "bg-none" || selectedBgId === "bg-chroma-green") {
+                    const defaultBg = virtualBackgrounds.find((b) => b.id === "bg-cyber-streamer") || virtualBackgrounds[0];
+                    if (defaultBg) void handleSelectBackground(defaultBg);
+                  }
+                  setStreamInfo("Modo Fondo + PiP activo (ideal si estás en tu habitación normal sin tela verde).");
+                }}
+                title="Tu cámara en ventana flotante sobre el fondo completo (sin necesidad de tela verde)"
+              >
+                <span>🖼️ Fondo + PiP (Sin tela)</span>
+              </button>
+
+              <button
+                type="button"
+                className={`pill-ctrl-button ${selectedBgId === "bg-chroma-green" ? "active-green" : ""}`}
+                style={{ padding: "5px 6px", fontSize: "0.68rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
+                onClick={() => {
+                  const greenBg = virtualBackgrounds.find((b) => b.id === "bg-chroma-green");
+                  if (greenBg) void handleSelectBackground(greenBg);
+                  setBgPreviewMode("backdrop");
+                  setChromaKeyEnabled(false);
+                  setBgPreviewEnabled(true);
+                  setStreamInfo("Pantalla Verde Estudio (#00FF00) activa para OBS Studio.");
+                }}
+                title="Fondo verde sólido puro (#00FF00) para recortar directamente en OBS Studio"
+              >
+                <span>🟩 Verde para OBS</span>
+              </button>
+
+              <button
+                type="button"
+                className={`pill-ctrl-button ${bgPreviewMode === "backdrop" && selectedBgId !== "bg-chroma-green" ? "active-pink" : ""}`}
+                style={{ padding: "5px 6px", fontSize: "0.68rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
+                onClick={() => {
+                  setBgPreviewMode("backdrop");
+                  setChromaKeyEnabled(false);
+                  setBgPreviewEnabled(true);
+                  setStreamInfo("Fondo a pantalla completa.");
+                }}
+                title="Muestra el fondo a pantalla completa"
+              >
+                <span>🏞️ Solo Fondo</span>
+              </button>
+            </div>
+
+            {/* Guía rápida de modo */}
+            <div style={{ fontSize: "0.62rem", color: "#94A3B8", fontStyle: "italic", marginTop: 2 }}>
+              {bgPreviewMode === "pip_camera"
+                ? "✨ Cámara en recuadro flotante neón sobre el fondo. ¡No necesitas tela verde!"
+                : chromaKeyEnabled
+                ? "👤 Recorta tela verde física detrás de ti. (Ajusta tolerancia abajo si hay sombras)."
+                : selectedBgId === "bg-chroma-green"
+                ? "🟩 Fondo verde puro (#00FF00) listo para OBS Studio."
+                : "🏞️ Fondo virtual a pantalla completa."}
+            </div>
+
+            {/* Sensibilidad de Verde (Chroma Key) solo si el modo Chroma está activo */}
+            {chromaKeyEnabled && (
+              <div style={{ backgroundColor: "rgba(16, 185, 129, 0.08)", padding: "6px 8px", borderRadius: 8, border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.64rem", color: "#E2E8F0" }}>
+                  <span>Sensibilidad / Tolerancia Verde:</span>
+                  <span style={{ fontWeight: 800, color: "#10B981" }}>{Math.round(chromaSimilarity * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.15"
+                  max="0.65"
+                  step="0.01"
+                  value={chromaSimilarity}
+                  onChange={(e) => setChromaSimilarity(Number.parseFloat(e.target.value))}
+                  style={{ width: "100%", accentColor: "#10B981", height: 4, cursor: "pointer", marginTop: 2 }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Carrusel Visual Completo de Fondos con Miniaturas Fotográficas (Fotos Reales) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "0.66rem", color: "#CBD5E1", fontWeight: 800 }}>
+              Escoge tu Escenario Virtual ({virtualBackgrounds.length}):
+            </span>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                type="button"
+                className="pill-ctrl-button"
+                style={{ padding: "2px 6px", fontSize: "0.62rem" }}
+                onClick={() => bgUploadInputRef.current?.click()}
+                title="Subir foto JPG o PNG desde tu PC"
+              >
+                + Foto
+              </button>
+              <button
+                type="button"
+                className="pill-ctrl-button"
+                style={{ padding: "2px 6px", fontSize: "0.62rem" }}
+                onClick={() => bgVideoUploadInputRef.current?.click()}
+                title="Subir video MP4 en bucle desde tu PC"
+              >
+                + Video
+              </button>
+            </div>
+          </div>
+
+          {/* Rejilla desplazable horizontal de fondos con miniaturas */}
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              paddingBottom: 6,
+              paddingTop: 2,
+              scrollbarWidth: "thin",
+            }}
+          >
+            {virtualBackgrounds.map((bg) => {
+              const isSelected = selectedBgId === bg.id && bgPreviewEnabled;
+              const thumbSrc = bg.customImageUrl || bg.thumbnailSvg;
+              return (
+                <div
+                  key={bg.id}
+                  onClick={() => {
+                    void handleSelectBackground(bg);
+                    setBgPreviewEnabled(true);
+                    if (bg.id === "bg-chroma-green") {
+                      setBgPreviewMode("backdrop");
+                      setChromaKeyEnabled(false);
+                    }
+                  }}
+                  style={{
+                    flexShrink: 0,
+                    width: 78,
+                    cursor: "pointer",
+                    borderRadius: 8,
+                    border: isSelected ? "2px solid #10B981" : "1px solid rgba(255,255,255,0.14)",
+                    background: isSelected ? "rgba(16, 185, 129, 0.22)" : "rgba(15, 15, 22, 0.7)",
+                    boxShadow: isSelected ? "0 0 10px rgba(16, 185, 129, 0.45)" : "none",
+                    overflow: "hidden",
+                    transition: "all 0.15s ease",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                  title={bg.name}
+                >
+                  <div style={{ width: "100%", height: 46, position: "relative", backgroundColor: "#000" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={thumbSrc}
+                      alt={bg.name}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    {bg.mediaType === "video" && (
+                      <span style={{ position: "absolute", bottom: 2, right: 2, background: "rgba(0,0,0,0.75)", color: "#38BDF8", fontSize: "0.55rem", fontWeight: 800, padding: "1px 3px", borderRadius: 3 }}>
+                        ▶ LOOP
+                      </span>
+                    )}
+                    {isSelected && (
+                      <span style={{ position: "absolute", top: 2, left: 2, background: "#10B981", color: "#FFF", fontSize: "0.55rem", fontWeight: 900, padding: "1px 4px", borderRadius: 3 }}>
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ padding: "3px 4px", textAlign: "center", background: "rgba(0,0,0,0.5)" }}>
+                    <span style={{ fontSize: "0.62rem", color: isSelected ? "#10B981" : "#E2E8F0", fontWeight: isSelected ? 800 : 600, display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {bg.name}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="viralive-app-shell" style={{ minHeight: "100vh", backgroundColor: "var(--bg)", color: "var(--text-white)", display: "flex", flexDirection: "column" }}>
       {/* -------------------------------------------------------------
@@ -3652,24 +3927,29 @@ export default function StudioDeluluPage() {
                 )}
               </>
             ) : activeTab === "CLIPS" ? (
-              <QueueClipsPanel
-                dockMode={true}
-                onLoadCompletedIntoMonitor={(videoUrl, fileName) => {
-                  setLocalVideoFileUrl(videoUrl);
-                  if (fileName) setLocalVideoFileName(fileName);
-                  setSourceMode("video_file");
-                  setClipsDualState((prev) => ({ ...prev, processedUrl: videoUrl, fileName: fileName || prev.fileName }));
-                  setStreamInfo(`🎬 Clip "${fileName || "video"}" listo en el monitor central.`);
-                }}
-                onClipsDualUpdate={setClipsDualState}
-                onRefreshAccount={refreshAccountStatus}
-              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {renderVirtualBackgroundSection("CLIPS")}
+                <QueueClipsPanel
+                  dockMode={true}
+                  onLoadCompletedIntoMonitor={(videoUrl, fileName) => {
+                    setLocalVideoFileUrl(videoUrl);
+                    if (fileName) setLocalVideoFileName(fileName);
+                    setSourceMode("video_file");
+                    setClipsDualState((prev) => ({ ...prev, processedUrl: videoUrl, fileName: fileName || prev.fileName }));
+                    setStreamInfo(`🎬 Clip "${fileName || "video"}" listo en el monitor central.`);
+                  }}
+                  onClipsDualUpdate={setClipsDualState}
+                  onRefreshAccount={refreshAccountStatus}
+                />
+              </div>
             ) : activeTab === "TIKTOK_LIVE" ? (
-              <TikTokBrandedStudioPanel
-                dockMode={true}
-                activeThemeId={activeTikTokTheme?.id}
-                viewerRange={guestSplitConfig.viewerRange}
-                onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {renderVirtualBackgroundSection("TIKTOK")}
+                <TikTokBrandedStudioPanel
+                  dockMode={true}
+                  activeThemeId={activeTikTokTheme?.id}
+                  viewerRange={guestSplitConfig.viewerRange}
+                  onSelectViewerRange={(viewerRange) => setGuestSplitConfig((prev) => ({ ...prev, viewerRange }))}
                 onApplyThemeToCam={(theme, bgId) => {
                   setActiveTikTokTheme(theme);
                   setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
@@ -3701,7 +3981,8 @@ export default function StudioDeluluPage() {
                 onChromaSimilarityChange={setChromaSimilarity}
                 localStream={activeLocalStream}
               />
-            ) : (
+            </div>
+          ) : (
               <>
                 {/* Prompt input card (CAM / TRY ON) */}
                 <div className="dock-prompt-card">
@@ -3804,127 +4085,7 @@ export default function StudioDeluluPage() {
 
             {activeTab === "TRY_ON" && (
               <>
-                {/* 🎨 SECCIÓN DE FONDO Y PANTALLA VERDE / CHROMA KEY PARA TRY-ON */}
-                <div
-                  style={{
-                    background: chromaKeyEnabled ? "rgba(16, 185, 129, 0.10)" : "rgba(255, 255, 255, 0.04)",
-                    border: `1px solid ${chromaKeyEnabled ? "rgba(16, 185, 129, 0.45)" : "rgba(255, 255, 255, 0.10)"}`,
-                    borderRadius: 12,
-                    padding: "10px 12px",
-                    marginBottom: 12,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: "1.1rem" }}>🟩</span>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
-                            Fondo &amp; Chroma Key
-                          </span>
-                          {chromaKeyEnabled && (
-                            <span style={{ fontSize: "0.58rem", fontWeight: 800, color: "#10B981", background: "rgba(16, 185, 129, 0.2)", padding: "1px 5px", borderRadius: 6 }}>
-                              EN VIVO
-                            </span>
-                          )}
-                        </div>
-                        <span style={{ fontSize: "0.66rem", color: "rgba(255, 255, 255, 0.65)" }}>
-                          Proyecta el escenario detrás de ti sin desaparecer
-                        </span>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`switchy-toggle ${chromaKeyEnabled ? "active-green" : ""}`}
-                      onClick={() => {
-                        const next = !chromaKeyEnabled;
-                        setChromaKeyEnabled(next);
-                        if (next) {
-                          setBgPreviewEnabled(true);
-                          setBgPreviewMode("chroma_key");
-                          if (!selectedBgId || selectedBgId === "bg-none") {
-                            setSelectedBgId("bg-chroma-green");
-                          }
-                          setStreamInfo("Chroma Key activado en Try-On.");
-                        } else {
-                          setStreamInfo("Chroma Key desactivado en Try-On.");
-                        }
-                      }}
-                      title="Alternar Pantalla Verde / Chroma Key en Try-On"
-                    >
-                      <div className="switchy-thumb" />
-                    </div>
-                  </div>
-
-                  {/* Escenarios rápidos para Try-On */}
-                  <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2 }}>
-                    {virtualBackgrounds.slice(0, 5).map((bg) => {
-                      const isSelected = selectedBgId === bg.id && bgPreviewEnabled;
-                      return (
-                        <button
-                          key={bg.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedBgId(bg.id);
-                            setBgPreviewEnabled(true);
-                            setStreamInfo(`Fondo "${bg.name}" seleccionado para Try-On.`);
-                          }}
-                          style={{
-                            flexShrink: 0,
-                            padding: "3px 7px",
-                            borderRadius: 6,
-                            fontSize: "0.64rem",
-                            fontWeight: 700,
-                            border: isSelected ? "1px solid #10B981" : "1px solid rgba(255,255,255,0.12)",
-                            background: isSelected ? "rgba(16, 185, 129, 0.25)" : "rgba(255,255,255,0.05)",
-                            color: isSelected ? "#10B981" : "#E2E8F0",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {bg.name.slice(0, 12)}
-                        </button>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      onClick={() => bgUploadInputRef.current?.click()}
-                      style={{
-                        flexShrink: 0,
-                        padding: "3px 7px",
-                        borderRadius: 6,
-                        fontSize: "0.64rem",
-                        fontWeight: 700,
-                        border: "1px dashed rgba(255,255,255,0.3)",
-                        background: "transparent",
-                        color: "#A78BFA",
-                        cursor: "pointer",
-                      }}
-                    >
-                      + Subir
-                    </button>
-                  </div>
-
-                  {chromaKeyEnabled && (
-                    <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: 5 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.64rem", color: "#E2E8F0" }}>
-                        <span>Sensibilidad Verde (Chroma)</span>
-                        <span style={{ fontWeight: 800, color: "#10B981" }}>{Math.round(chromaSimilarity * 100)}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.15"
-                        max="0.60"
-                        step="0.01"
-                        value={chromaSimilarity}
-                        onChange={(e) => setChromaSimilarity(Number.parseFloat(e.target.value))}
-                        style={{ width: "100%", accentColor: "#10B981", height: 4, cursor: "pointer", marginTop: 2 }}
-                      />
-                    </div>
-                  )}
-                </div>
+                {renderVirtualBackgroundSection("TRY_ON")}
 
                 <div className="dock-category-icons-row">
                   {(
@@ -4010,6 +4171,8 @@ export default function StudioDeluluPage() {
 
             {activeTab === "CAM" && (
               <>
+                {renderVirtualBackgroundSection("CAM")}
+
                 {/* Fila de subcategorías con iconos Dashicons */}
                 <div className="dock-category-icons-row">
                   <button
@@ -5312,7 +5475,7 @@ export default function StudioDeluluPage() {
               })() : (
                 <div style={{ width: "100%", height: "100%", position: "relative" }}>
                   {/* PREVISUALIZACIÓN DE FONDO VIRTUAL O VIDEO EN BUCLE A PANTALLA COMPLETA */}
-                  {selectedBgId && selectedBgId !== "bg-none" && bgPreviewEnabled && !isConnectedLive && !chromaKeyEnabled && (
+                  {selectedBgId && selectedBgId !== "bg-none" && bgPreviewEnabled && !isConnectedLive && (
                     <div
                       className="monitor-full-bg-layer"
                       style={{
@@ -5692,7 +5855,7 @@ export default function StudioDeluluPage() {
                     playsInline
                     muted
                     className={
-                      bgPreviewEnabled && !isConnectedLive && selectedBgId !== "bg-none" && bgPreviewMode === "pip_camera" && !chromaKeyEnabled
+                      bgPreviewEnabled && !isConnectedLive && selectedBgId !== "bg-none" && bgPreviewMode === "pip_camera"
                         ? "monitor-pip-camera"
                         : "monitor-video-feed"
                     }
@@ -5702,7 +5865,7 @@ export default function StudioDeluluPage() {
                           ? "none"
                           : sourceMode === "video_file" && localVideoFileUrl
                           ? "none"
-                          : bgPreviewEnabled && selectedBgId !== "bg-none" && bgPreviewMode === "backdrop" && !chromaKeyEnabled
+                          : bgPreviewEnabled && selectedBgId !== "bg-none" && bgPreviewMode === "backdrop"
                           ? "none"
                           : "block",
                       transform: mirrorInput ? "scaleX(-1)" : "none",
@@ -7078,8 +7241,8 @@ export default function StudioDeluluPage() {
                         if (next) {
                           setBgPreviewEnabled(true);
                           setBgPreviewMode("chroma_key");
-                          if (!selectedBgId || selectedBgId === "bg-none") {
-                            setSelectedBgId("bg-chroma-green");
+                          if (!selectedBgId || selectedBgId === "bg-none" || selectedBgId === "bg-chroma-green") {
+                            setSelectedBgId("bg-cyber-streamer");
                           }
                           setStreamInfo("Chroma Key activado: fondo proyectado detrás de ti.");
                         } else {
@@ -7172,7 +7335,7 @@ export default function StudioDeluluPage() {
                         setChromaKeyEnabled(true);
                         setBgPreviewEnabled(true);
                         if (!selectedBgId || selectedBgId === "bg-none") {
-                          setSelectedBgId("bg-chroma-green");
+                          setSelectedBgId("bg-cyber-streamer");
                         }
                         setStreamInfo("Fondo proyectado detrás de ti con Chroma Key.");
                       }}
