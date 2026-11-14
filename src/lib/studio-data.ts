@@ -850,6 +850,9 @@ export type CustomActionButton = {
   description?: string;
   size?: ButtonSize;
   placement?: ButtonPlacement;
+  enabled?: boolean; // Interruptor individual para activar/desactivar en pantalla por switch
+  fullWidthMobile?: boolean; // Banner que cubre el ancho de la pantalla móvil (100%)
+  logoSize?: "sm" | "md" | "lg"; // 3 diferentes tamaños para el logo o icono
 };
 
 export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
@@ -867,6 +870,9 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Sticker banner interactivo de WhatsApp con redirección y edición rápida",
     size: "md",
     placement: "screen-bottom-left",
+    enabled: false,
+    fullWidthMobile: true,
+    logoSize: "md",
   },
   {
     id: "act-instagram-pill",
@@ -882,6 +888,9 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Sticker banner interactivo de Instagram con redirección directa",
     size: "md",
     placement: "deck",
+    enabled: false,
+    fullWidthMobile: true,
+    logoSize: "md",
   },
   {
     id: "act-cyber-neon",
@@ -894,6 +903,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Ambiente futurista con luces neón en la habitación",
     size: "md",
     placement: "deck",
+    enabled: false,
+    logoSize: "md",
   },
   {
     id: "act-turbo-boost",
@@ -906,6 +917,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Botón con imagen PNG de fuego y efecto furia",
     size: "md",
     placement: "screen-top-right",
+    enabled: false,
+    logoSize: "md",
   },
   {
     id: "act-screen-magic",
@@ -918,6 +931,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Efecto de destello mágico y partículas brillantes",
     size: "md",
     placement: "screen-top-right",
+    enabled: false,
+    logoSize: "md",
   },
   {
     id: "act-anime-style",
@@ -930,6 +945,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Estilo anime japonés con sombreado de animación",
     size: "md",
     placement: "deck",
+    enabled: false,
+    logoSize: "md",
   },
   {
     id: "act-sunglasses",
@@ -941,6 +958,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Coloca gafas oscuras de sol sobre la persona",
     size: "sm",
     placement: "deck",
+    enabled: false,
+    logoSize: "sm",
   },
   {
     id: "act-golden-crown",
@@ -953,6 +972,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Añade una corona dorada sobre la cabeza",
     size: "md",
     placement: "deck",
+    enabled: false,
+    logoSize: "md",
   },
   {
     id: "act-mirror",
@@ -964,6 +985,8 @@ export const DEFAULT_ACTION_BUTTONS: CustomActionButton[] = [
     description: "Alterna el modo espejo horizontal de la cámara",
     size: "sm",
     placement: "deck",
+    enabled: false,
+    logoSize: "sm",
   },
   {
     id: "act-mute",

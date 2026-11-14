@@ -10524,14 +10524,95 @@ body {
 }
 
 /* Ajustes de botones flotantes para formato 9:16 vertical móvil */
-.delulu-monitor-container.aspect-9-16 .screen-floating-actions-group.pos-screen-bottom-center {
-  bottom: 120px;
-}
-.delulu-monitor-container.aspect-9-16 .screen-floating-actions-group.pos-screen-bottom-left {
-  bottom: 220px;
-}
+.delulu-monitor-container.aspect-9-16 .screen-floating-actions-group.pos-screen-bottom-center,
+.delulu-monitor-container.aspect-9-16 .screen-floating-actions-group.pos-screen-bottom-left,
 .delulu-monitor-container.aspect-9-16 .screen-floating-actions-group.pos-screen-bottom-right {
-  bottom: 120px;
+  left: 12px !important;
+  right: 12px !important;
+  width: calc(100% - 24px) !important;
+  transform: none !important;
+  bottom: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  box-sizing: border-box !important;
+}
+
+.delulu-monitor-container.aspect-9-16 .screen-floating-actions-group.has-full-width-banner,
+.delulu-monitor-container.aspect-9-16 .screen-floating-actions-group:has(.screen-floating-social-pill) {
+  left: 12px !important;
+  right: 12px !important;
+  width: calc(100% - 24px) !important;
+  transform: none !important;
+  bottom: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  box-sizing: border-box !important;
+}
+
+.delulu-monitor-container.aspect-9-16 .screen-floating-social-pill {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 10px 14px 10px 12px !important;
+  border-radius: 14px !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(135deg, #00A884 0%, #008f6f 100%) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 168, 132, 0.45) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Edit badge on screen floating buttons */
+.screen-btn-edit-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #EC4899;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  transition: all 0.15s ease;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.screen-btn-edit-badge:hover {
+  transform: scale(1.18);
+  background: #F472B6;
+}
+
+/* Tarjeta interactiva en la botonera de herramientas */
+.deck-action-card-box {
+  background: rgba(26, 26, 38, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.deck-action-card-box:hover {
+  border-color: rgba(236, 72, 153, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.deck-action-card-box.is-on-screen {
+  border-color: #10B981;
+  background: rgba(16, 185, 129, 0.08);
 }
 
 

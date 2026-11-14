@@ -1,5 +1,20 @@
 # NOTAS DE PROYECTO: MiPlataformaStream
 
+## Validación completada
+- Fecha: 2026-11-14 11:15
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Solución integral a los 4 puntos de botones, banners y compatibilidad de cámara:
+  1. **Subida de Logo y Visibilidad Garantizada**: Se resolvió la condición que ocultaba imágenes personalizadas en botones sociales. Ahora la imagen/logo subido tiene prioridad absoluta y se renderiza tanto en la vista previa del modal como en pantalla en vivo.
+  2. **3 Opciones de Tamaño**: Se implementaron 3 botones visuales de selección para tamaño del botón (Pequeño S 36px, Mediano M 48px, Grande L 64px) y 3 botones para el tamaño del logo (Pequeño 24px, Mediano 34px, Grande 46px). También en el modal de Banners se ofrecen 3 tamaños (Pequeño 18%, Mediano 35%, Grande 65%).
+  3. **Switches Individuales para Botones Interactivos**: Cada botón en el Deck cuenta con su propio interruptor `switchy-toggle` independiente (iniciando en 'OCULTO' / OFF por defecto).
+  4. **Banner WhatsApp de Ancho Completo en Móvil**: En el formato vertical 9:16 de smartphone, el sticker/botón de WhatsApp ahora es un banner que cubre el 100% del ancho de la pantalla de borde a borde con márgenes limpios (`calc(100% - 24px)`), título, número y botón "Editar".
+  5. **Personalización Directa**: Se integró un botón destacado "Personalizar" (o "Editar") en las tarjetas del deck y sobre la pantalla del video que abre el modal completo para editar texto, URL, red social, logo, tamaños y posición.
+  6. **Cámara y Detección OBS Studio (Device in use)**: Detección inteligente de error de cámara en uso exclusivo por OBS Studio u otra app, selector visible de cámaras (incluyendo OBS Virtual Camera) y relajación de constraints para conectar sin trabas.
+- Observaciones:
+  - 0 errores en TypeScript (`tsc --noEmit`).
+  - Verificación visual completa con subagente browser en `http://localhost:3000`.
+  - Capturas de evidencia generadas en artefactos: `whatsapp_banner_ancho_completo.png`, `modal_personalizar_3_tamanos.png` y `verificacion_banner_y_switches.png`.
+
 ## ValidaciÃ³n completada
 - Fecha: 2026-11-10
 - Resultado: Aprobado (score: 10/10)

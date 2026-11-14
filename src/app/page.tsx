@@ -389,6 +389,9 @@ export default function StudioDeluluPage() {
   const [newBtnImageUrl, setNewBtnImageUrl] = useState<string>("");
   const [newBtnStyleVariant, setNewBtnStyleVariant] = useState<"standard" | "social_pill">("standard");
   const [newBtnSocialNetwork, setNewBtnSocialNetwork] = useState<SocialButtonNetwork>("whatsapp");
+  const [newBtnEnabled, setNewBtnEnabled] = useState<boolean>(false);
+  const [newBtnFullWidthMobile, setNewBtnFullWidthMobile] = useState<boolean>(true);
+  const [newBtnLogoSize, setNewBtnLogoSize] = useState<"sm" | "md" | "lg">("md");
   const [deckFilterPlacement, setDeckFilterPlacement] = useState<"all" | "deck" | "screen">("all");
   const btnImageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -1022,6 +1025,9 @@ export default function StudioDeluluPage() {
           stream = await navigator.mediaDevices.getUserMedia(buildConstraints(effectiveCamId));
         } catch (firstErr) {
           console.warn("Intento principal de cámara falló, probando con cámara alternativa u OBS...", firstErr);
+          const firstErrMsg = firstErr instanceof Error ? `${firstErr.name} ${firstErr.message}` : String(firstErr);
+          const isBusyOrInUse = /in use|notreadable|busy|track start|device in use/i.test(firstErrMsg);
+
           // Si falló (por ejemplo, cámara física bloqueada por OBS Studio):
           const list = await navigator.mediaDevices.enumerateDevices().catch(() => []);
           const cams = list.filter((d) => d.kind === "videoinput");
@@ -1033,16 +1039,37 @@ export default function StudioDeluluPage() {
 
           if (altCam) {
             try {
-              stream = await navigator.mediaDevices.getUserMedia(buildConstraints(altCam.deviceId));
+              // Si es OBS Virtual Camera, usar constraints flexibles
+              const isObs = /obs/i.test(altCam.label || "");
+              const altConstraints: MediaStreamConstraints = isObs
+                ? { video: { deviceId: { ideal: altCam.deviceId } }, audio: false }
+                : buildConstraints(altCam.deviceId);
+
+              stream = await navigator.mediaDevices.getUserMedia(altConstraints);
               setSelectedCameraId(altCam.deviceId);
               if (typeof window !== "undefined") {
                 localStorage.setItem("virallive_preferred_camera", altCam.deviceId);
               }
-            } catch {
-              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+              setStreamInfo(`Conectado a: ${altCam.label || "Cámara Alternativa"}`);
+            } catch (secErr) {
+              try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+              } catch (thirdErr) {
+                if (isBusyOrInUse) {
+                  throw new Error("Device in use. Tu cámara física está bloqueada por OBS Studio u otra aplicación. Inicia 'Cámara Virtual' en OBS o selecciona OBS Virtual Camera.");
+                }
+                throw thirdErr;
+              }
             }
           } else {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            } catch (fallbackErr) {
+              if (isBusyOrInUse) {
+                throw new Error("Device in use. Tu cámara física está bloqueada por OBS Studio u otra aplicación.");
+              }
+              throw fallbackErr;
+            }
           }
         }
 
@@ -1052,8 +1079,13 @@ export default function StudioDeluluPage() {
         }
       } catch (err) {
         setCameraStreamActive(false);
+        const errStr = err instanceof Error ? `${err.name} ${err.message}` : String(err);
+        const isDeviceInUse = /in use|notreadable|busy|track start/i.test(errStr);
+
         setSourceError(
-          err instanceof Error
+          isDeviceInUse
+            ? "Tu cámara física está en uso por OBS Studio u otra app. Selecciona 'OBS Virtual Camera' o pulsa 'Iniciar cámara virtual' en OBS Studio."
+            : err instanceof Error
             ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
             : "Error abriendo cámara.",
         );
@@ -1974,7 +2006,7 @@ export default function StudioDeluluPage() {
     if (whatsappConfig.showOnScreen) count++;
     if (scheduledOverlays.some((o) => o.enabled)) count++;
     if (selectedBgId && selectedBgId !== "bg-none" && bgPreviewEnabled) count++;
-    if (screenButtonsVisible && actionButtons.some((b) => b.placement && b.placement !== "deck")) count++;
+    if (screenButtonsVisible && actionButtons.some((b) => b.placement && b.placement !== "deck" && b.enabled)) count++;
     return count;
   }, [
     actionButtons,
@@ -2132,7 +2164,7 @@ export default function StudioDeluluPage() {
     [persistVirtualBackgrounds, selectedBgId, virtualBackgrounds],
   );
 
-  // Cargar botones personalizados guardados (migrando cualquier botón con placement en pantalla a "deck")
+  // Cargar botones personalizados guardados (asegurando switches cerrados por defecto)
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(BUTTONS_STORAGE_KEY);
@@ -2145,9 +2177,15 @@ export default function StudioDeluluPage() {
             const defaultPill = DEFAULT_ACTION_BUTTONS.find((b) => b.id === "act-whatsapp-pill");
             if (defaultPill) merged = [defaultPill, ...parsed];
           }
-          setActionButtons(merged);
+          const normalized = merged.map((b) => ({
+            ...b,
+            enabled: b.enabled === true,
+            fullWidthMobile: b.fullWidthMobile !== false,
+            logoSize: b.logoSize || "md",
+          }));
+          setActionButtons(normalized);
           try {
-            window.localStorage.setItem(BUTTONS_STORAGE_KEY, JSON.stringify(merged));
+            window.localStorage.setItem(BUTTONS_STORAGE_KEY, JSON.stringify(normalized));
           } catch {}
           return;
         }
@@ -2282,6 +2320,9 @@ export default function StudioDeluluPage() {
     setNewBtnPlacement(btn.placement || "deck");
     setNewBtnStyleVariant(btn.styleVariant || (btn.subtitle || btn.socialNetwork ? "social_pill" : "standard"));
     setNewBtnSocialNetwork(btn.socialNetwork || "custom");
+    setNewBtnEnabled(btn.enabled === true);
+    setNewBtnFullWidthMobile(btn.fullWidthMobile !== false);
+    setNewBtnLogoSize(btn.logoSize || "md");
     setShowAddButtonModal(true);
   }, []);
 
@@ -2300,6 +2341,9 @@ export default function StudioDeluluPage() {
       setNewBtnPlacement("screen-bottom-left");
       setNewBtnStyleVariant("social_pill");
       setNewBtnSocialNetwork("whatsapp");
+      setNewBtnEnabled(false);
+      setNewBtnFullWidthMobile(true);
+      setNewBtnLogoSize("md");
     } else if (presetNetwork === "instagram") {
       setNewBtnLabel("Síguenos en Instagram");
       setNewBtnSubtitle("@tu_cuenta");
@@ -2313,6 +2357,9 @@ export default function StudioDeluluPage() {
       setNewBtnPlacement("screen-bottom-left");
       setNewBtnStyleVariant("social_pill");
       setNewBtnSocialNetwork("instagram");
+      setNewBtnEnabled(false);
+      setNewBtnFullWidthMobile(true);
+      setNewBtnLogoSize("md");
     } else {
       setNewBtnLabel("");
       setNewBtnSubtitle("");
@@ -2326,9 +2373,46 @@ export default function StudioDeluluPage() {
       setNewBtnPlacement("deck");
       setNewBtnStyleVariant("standard");
       setNewBtnSocialNetwork("custom");
+      setNewBtnEnabled(false);
+      setNewBtnFullWidthMobile(true);
+      setNewBtnLogoSize("md");
     }
     setShowAddButtonModal(true);
   }, []);
+
+  const handleToggleActionButtonEnabled = useCallback(
+    (id: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      setActionButtons((prev) => {
+        const target = prev.find((b) => b.id === id);
+        const nextState = !target?.enabled;
+        if (nextState) {
+          if (!requestEnableOnScreen()) return prev;
+        }
+        const updated = prev.map((btn) => {
+          if (btn.id === id) {
+            const effectivePlacement =
+              !btn.placement || btn.placement === "deck"
+                ? btn.styleVariant === "social_pill"
+                  ? "screen-bottom-left"
+                  : "screen-top-right"
+                : btn.placement;
+            return { ...btn, enabled: nextState, placement: effectivePlacement };
+          }
+          return btn;
+        });
+        persistActionButtons(updated);
+        if (nextState && target) {
+          setScreenButtonsVisible(true);
+          setStreamInfo(`Botón activado en pantalla: "${target.label}"`);
+        } else if (target) {
+          setStreamInfo(`Botón desactivado de pantalla: "${target.label}"`);
+        }
+        return updated;
+      });
+    },
+    [persistActionButtons, requestEnableOnScreen],
+  );
 
   const handleSaveCustomButton = useCallback(() => {
     if (!newBtnLabel.trim()) return;
@@ -2356,11 +2440,15 @@ export default function StudioDeluluPage() {
             placement: newBtnPlacement,
             styleVariant: newBtnStyleVariant,
             socialNetwork: newBtnSocialNetwork,
+            enabled: newBtnEnabled,
+            fullWidthMobile: newBtnFullWidthMobile,
+            logoSize: newBtnLogoSize,
           };
         }
         return btn;
       });
       persistActionButtons(updated);
+      if (newBtnEnabled) setScreenButtonsVisible(true);
       setStreamInfo(`Botón actualizado: ${newBtnLabel.trim()}`);
     } else {
       const newBtn: CustomActionButton = {
@@ -2377,13 +2465,17 @@ export default function StudioDeluluPage() {
         placement: newBtnPlacement,
         styleVariant: newBtnStyleVariant,
         socialNetwork: newBtnSocialNetwork,
+        enabled: newBtnEnabled,
+        fullWidthMobile: newBtnFullWidthMobile,
+        logoSize: newBtnLogoSize,
       };
       const updated = [...actionButtons, newBtn];
       persistActionButtons(updated);
+      if (newBtnEnabled) setScreenButtonsVisible(true);
       setStreamInfo(`Botón creado: ${newBtnLabel.trim()}`);
     }
 
-    if (newBtnPlacement !== "deck") {
+    if (newBtnPlacement !== "deck" && newBtnEnabled) {
       setScreenButtonsVisible(true);
     }
 
@@ -2398,13 +2490,19 @@ export default function StudioDeluluPage() {
     setNewBtnPlacement("deck");
     setNewBtnStyleVariant("standard");
     setNewBtnSocialNetwork("custom");
+    setNewBtnEnabled(false);
+    setNewBtnFullWidthMobile(true);
+    setNewBtnLogoSize("md");
   }, [
     actionButtons,
     editingButtonId,
     newBtnColor,
+    newBtnEnabled,
+    newBtnFullWidthMobile,
     newBtnIcon,
     newBtnImageUrl,
     newBtnLabel,
+    newBtnLogoSize,
     newBtnPayload,
     newBtnPlacement,
     newBtnSize,
@@ -4673,15 +4771,19 @@ export default function StudioDeluluPage() {
                       "screen-bottom-right",
                     ] as const
                   ).map((placementKey) => {
-                    const placedButtons = actionButtons.filter((btn) => btn.placement === placementKey);
+                    const placedButtons = actionButtons.filter((btn) => btn.placement === placementKey && btn.enabled);
                     if (placedButtons.length === 0) return null;
+                    const hasFullWidth = placedButtons.some((b) => b.fullWidthMobile || b.styleVariant === "social_pill");
                     return (
-                      <div key={placementKey} className={`screen-floating-actions-group pos-${placementKey}`}>
+                      <div key={placementKey} className={`screen-floating-actions-group pos-${placementKey} ${hasFullWidth ? "has-full-width-banner" : ""}`}>
                         {placedButtons.map((btn) => {
-                          if (btn.styleVariant === "social_pill") {
-                            const isTwitter = btn.socialNetwork === "twitter-x";
-                            const isCustomNet = !btn.socialNetwork || btn.socialNetwork === "custom";
-                            const fallbackIcon = btn.icon || "💬";
+                          const isSocial = btn.styleVariant === "social_pill";
+                          const isTwitter = btn.socialNetwork === "twitter-x";
+                          const isCustomNet = !btn.socialNetwork || btn.socialNetwork === "custom";
+                          const fallbackIcon = btn.icon || "💬";
+                          const logoDim = btn.logoSize === "lg" ? 40 : btn.logoSize === "sm" ? 22 : 30;
+
+                          if (isSocial) {
                             return (
                               <div
                                 key={btn.id}
@@ -4691,62 +4793,107 @@ export default function StudioDeluluPage() {
                                   boxShadow: `0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px ${btn.color ? `${btn.color}66` : "rgba(0,168,132,0.35)"}`,
                                 }}
                                 onClick={() => void handleExecuteActionButton(btn)}
-                                title={`Clic para redirigir a: ${btn.url || btn.payload || btn.label} (Clic en 'Editar' para personalizar)`}
+                                title={`Clic para abrir: ${btn.url || btn.payload || btn.label} (Clic en 'Editar' para personalizar)`}
                               >
-                                <div className="social-pill-icon-circle">
-                                  {!isCustomNet && btn.socialNetwork ? (
-                                    <SocialIcon network={isTwitter ? "twitter-x" : (btn.socialNetwork as SocialNetworkName)} size={16} />
-                                  ) : btn.customImageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={btn.customImageUrl} alt={btn.label} style={{ width: 18, height: 18, objectFit: "contain" }} />
-                                  ) : (
-                                    <span style={{ fontSize: "1rem" }}>{fallbackIcon}</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                                  <div
+                                    className="social-pill-icon-circle"
+                                    style={{
+                                      width: logoDim,
+                                      height: logoDim,
+                                    }}
+                                  >
+                                    {btn.customImageUrl ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img
+                                        src={btn.customImageUrl}
+                                        alt={btn.label}
+                                        style={{ width: "85%", height: "85%", objectFit: "contain", borderRadius: 4 }}
+                                      />
+                                    ) : !isCustomNet && btn.socialNetwork ? (
+                                      <SocialIcon
+                                        network={isTwitter ? "twitter-x" : (btn.socialNetwork as SocialNetworkName)}
+                                        size={Math.round(logoDim * 0.55)}
+                                      />
+                                    ) : (
+                                      <span style={{ fontSize: Math.round(logoDim * 0.5) }}>{fallbackIcon}</span>
+                                    )}
+                                  </div>
+                                  <div className="social-pill-text-col" style={{ minWidth: 0 }}>
+                                    <span className="social-pill-title" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                      {btn.label}
+                                    </span>
+                                    {btn.subtitle && (
+                                      <span className="social-pill-subtitle" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        {btn.subtitle}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                                  <div className="social-pill-divider" />
+                                  <button
+                                    type="button"
+                                    className="social-pill-edit-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenEditButton(btn, e);
+                                    }}
+                                    title="Personalizar texto, teléfono/usuario, red social o enlace"
+                                  >
+                                    <Dashicon name="edit" size={11} />
+                                    <span>Editar</span>
+                                  </button>
+                                  {btn.url && (
+                                    <span style={{ fontSize: "0.85rem", opacity: 0.95, marginLeft: 2 }} title="Redirige a URL externa">
+                                      ↗
+                                    </span>
                                   )}
                                 </div>
-                                <div className="social-pill-text-col">
-                                  <span className="social-pill-title">{btn.label}</span>
-                                  {btn.subtitle && <span className="social-pill-subtitle">{btn.subtitle}</span>}
-                                </div>
-                                <div className="social-pill-divider" />
-                                <button
-                                  type="button"
-                                  className="social-pill-edit-btn"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenEditButton(btn, e);
-                                  }}
-                                  title="Personalizar texto, teléfono/usuario, red social o enlace"
-                                >
-                                  <span>Editar</span>
-                                </button>
-                                {btn.url && (
-                                  <span style={{ fontSize: "0.75rem", opacity: 0.9, marginLeft: 2 }} title="Redirige a URL externa">
-                                    ↗
-                                  </span>
-                                )}
                               </div>
                             );
                           }
 
                           const btnSize = btn.size || "md";
                           return (
-                            <button
-                              key={btn.id}
-                              type="button"
-                              className={`screen-floating-action-btn size-${btnSize}`}
-                              style={{ borderColor: btn.color }}
-                              onClick={() => void handleExecuteActionButton(btn)}
-                              title={`Botón en pantalla: ${btn.label}${btn.url ? ` | Enlace: ${btn.url}` : ""}`}
-                            >
-                              {btn.customImageUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={btn.customImageUrl} alt={btn.label} />
-                              ) : (
-                                <span className="floating-icon">{btn.icon}</span>
-                              )}
-                              <span>{btn.label}</span>
-                              {btn.url && <span className="floating-url-badge">↗</span>}
-                            </button>
+                            <div key={btn.id} style={{ position: "relative", display: "inline-flex" }}>
+                              <button
+                                type="button"
+                                className={`screen-floating-action-btn size-${btnSize}`}
+                                style={{ borderColor: btn.color }}
+                                onClick={() => void handleExecuteActionButton(btn)}
+                                title={`Botón en pantalla: ${btn.label}${btn.url ? ` | Enlace: ${btn.url}` : ""}`}
+                              >
+                                {btn.customImageUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={btn.customImageUrl}
+                                    alt={btn.label}
+                                    style={{
+                                      width: btn.logoSize === "lg" ? 34 : btn.logoSize === "sm" ? 18 : 26,
+                                      height: btn.logoSize === "lg" ? 34 : btn.logoSize === "sm" ? 18 : 26,
+                                      objectFit: "contain",
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="floating-icon">{btn.icon}</span>
+                                )}
+                                <span>{btn.label}</span>
+                                {btn.url && <span className="floating-url-badge">↗</span>}
+                              </button>
+                              <button
+                                type="button"
+                                className="screen-btn-edit-badge"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditButton(btn, e);
+                                }}
+                                title="Personalizar este botón (nombre, enlace, logo, tamaños)"
+                              >
+                                ✎
+                              </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -5458,22 +5605,77 @@ export default function StudioDeluluPage() {
                             Cámara en espera · Pulsa Iniciar o Cargar MP4
                           </span>
 
+                          {sourceError && (
+                            <div
+                              style={{
+                                marginTop: 8,
+                                padding: "8px 12px",
+                                background: "rgba(239, 68, 68, 0.15)",
+                                border: "1px solid rgba(239, 68, 68, 0.35)",
+                                borderRadius: 10,
+                                fontSize: "0.68rem",
+                                color: "#FECACA",
+                                maxWidth: 280,
+                                textAlign: "center",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                lineHeight: 1.35,
+                              }}
+                            >
+                              <Dashicon name="warning" size={13} color="#EF4444" />
+                              <span>{sourceError}</span>
+                            </div>
+                          )}
+
+                          {cameraDevices.length > 0 && (
+                            <select
+                              value={selectedCameraId}
+                              onChange={(e) => {
+                                const nextId = e.target.value;
+                                setSelectedCameraId(nextId);
+                                if (typeof window !== "undefined") {
+                                  localStorage.setItem("virallive_preferred_camera", nextId);
+                                }
+                              }}
+                              style={{
+                                marginTop: 8,
+                                padding: "4px 10px",
+                                borderRadius: 12,
+                                background: "rgba(0,0,0,0.65)",
+                                border: "1px solid rgba(255,255,255,0.25)",
+                                color: "#FFFFFF",
+                                fontSize: "0.7rem",
+                                maxWidth: 250,
+                                outline: "none",
+                              }}
+                              title="Seleccionar cámara de entrada (Física u OBS Virtual Camera)"
+                            >
+                              {cameraDevices.map((d) => (
+                                <option key={d.deviceId} value={d.deviceId}>
+                                  {d.label || `Cámara (${d.deviceId.slice(0, 6)})`}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => void startCamera()}
                             style={{
-                              marginTop: 10,
-                              padding: "5px 12px",
+                              marginTop: 8,
+                              padding: "5px 14px",
                               borderRadius: 14,
-                              background: "rgba(255, 255, 255, 0.12)",
-                              border: "1px solid rgba(255, 255, 255, 0.25)",
+                              background: "rgba(236, 72, 153, 0.22)",
+                              border: "1.5px solid #EC4899",
                               color: "#FFFFFF",
-                              fontSize: "0.72rem",
-                              fontWeight: 700,
+                              fontSize: "0.74rem",
+                              fontWeight: 800,
                               cursor: "pointer",
                               display: "inline-flex",
                               alignItems: "center",
-                              gap: 5,
+                              gap: 6,
+                              boxShadow: "0 0 12px rgba(236, 72, 153, 0.35)",
                             }}
                           >
                             <Dashicon name="video-alt2" size={12} color="#EC4899" />
@@ -8028,7 +8230,7 @@ export default function StudioDeluluPage() {
                   </button>
                 </div>
 
-                <div className="action-deck-grid">
+                <div className="action-deck-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
                   {actionButtons
                     .filter((btn) => {
                       if (deckFilterPlacement === "deck") return !btn.placement || btn.placement === "deck";
@@ -8036,7 +8238,8 @@ export default function StudioDeluluPage() {
                       return true;
                     })
                     .map((btn) => {
-                      const btnSize = btn.size || "md";
+                      const isSocial = btn.styleVariant === "social_pill";
+                      const isOnScreen = btn.enabled === true;
                       const placementLabel =
                         !btn.placement || btn.placement === "deck"
                           ? "Deck"
@@ -8057,51 +8260,110 @@ export default function StudioDeluluPage() {
                           : "Abajo Der";
 
                       return (
-                        <button
+                        <div
                           key={btn.id}
-                          className={`custom-deck-btn size-${btnSize} ${btn.styleVariant === "social_pill" ? "deck-btn-social-pill" : ""}`}
-                          onClick={() => void handleExecuteActionButton(btn)}
-                          style={{
-                            borderColor: btn.color,
-                            background: btn.styleVariant === "social_pill" ? `linear-gradient(135deg, rgba(20,20,30,0.9), ${btn.color}25)` : undefined,
-                          }}
-                          title={`Acción: ${btn.actionType} | Ubicación: ${placementLabel} | Clic para redirigir | ✎ Editar`}
+                          className={`deck-action-card-box ${isOnScreen ? "is-on-screen" : ""}`}
+                          style={{ borderLeft: `4px solid ${btn.color || "#8B5CF6"}` }}
                         >
-                          <span
-                            className="deck-btn-edit"
-                            onClick={(e) => handleOpenEditButton(btn, e)}
-                            title="Editar botón (nombre, subtítulo, color, enlace, imagen, ubicación)"
-                          >
-                            ✎
-                          </span>
-                          {btn.styleVariant === "social_pill" && btn.socialNetwork && btn.socialNetwork !== "custom" ? (
-                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: btn.color || "#00A884", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                              <SocialIcon network={btn.socialNetwork === "twitter-x" ? "twitter-x" : (btn.socialNetwork as SocialNetworkName)} size={15} />
+                          {/* Cabecera con título, subtítulo e interruptor individual switch */}
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                              <div
+                                style={{
+                                  width: 38,
+                                  height: 38,
+                                  borderRadius: isSocial ? "50%" : 8,
+                                  backgroundColor: btn.color || "#8B5CF6",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                  boxShadow: `0 2px 8px ${btn.color ? `${btn.color}44` : "transparent"}`,
+                                }}
+                              >
+                                {btn.customImageUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={btn.customImageUrl} alt={btn.label} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
+                                ) : isSocial && btn.socialNetwork && btn.socialNetwork !== "custom" ? (
+                                  <SocialIcon network={btn.socialNetwork === "twitter-x" ? "twitter-x" : (btn.socialNetwork as SocialNetworkName)} size={18} />
+                                ) : (
+                                  <span style={{ fontSize: "1.2rem" }}>{btn.icon || "⚡"}</span>
+                                )}
+                              </div>
+
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ fontSize: "0.86rem", fontWeight: 800, color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {btn.label}
+                                </div>
+                                {btn.subtitle && (
+                                  <div style={{ fontSize: "0.7rem", color: "#A7F3D0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {btn.subtitle}
+                                  </div>
+                                )}
+                                <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+                                  <span style={{ fontSize: "0.62rem", padding: "1px 6px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "#CBD5E1" }}>
+                                    {placementLabel}
+                                  </span>
+                                  <span style={{ fontSize: "0.62rem", padding: "1px 6px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "#CBD5E1" }}>
+                                    {btn.size === "sm" ? "S (Pequeño)" : btn.size === "lg" ? "L (Grande)" : "M (Mediano)"}
+                                  </span>
+                                  {btn.url && (
+                                    <span style={{ fontSize: "0.62rem", padding: "1px 6px", borderRadius: 4, background: "rgba(59, 130, 246, 0.2)", color: "#60A5FA" }}>
+                                      🔗 URL
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          ) : btn.customImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={btn.customImageUrl} alt={btn.label} className="deck-btn-img" />
-                          ) : (
-                            <span className="deck-btn-icon">{btn.icon}</span>
-                          )}
-                          <span style={{ fontWeight: 800 }}>{btn.label}</span>
-                          {btn.subtitle && (
-                            <span style={{ fontSize: "0.64rem", color: "#A7F3D0", opacity: 0.95, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
-                              {btn.subtitle}
-                            </span>
-                          )}
-                          <span className="deck-btn-badges-row">
-                            <span className="deck-btn-placement-pill">{placementLabel}</span>
-                            {btn.url && <span className="deck-btn-url-pill">🔗 URL</span>}
-                          </span>
-                          <span
-                            className="deck-btn-del"
-                            onClick={(e) => handleDeleteActionButton(btn.id, e)}
-                            title="Eliminar botón"
-                          >
-                            ×
-                          </span>
-                        </button>
+
+                            {/* Switch Individual ON / OFF en Pantalla */}
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                              <div
+                                className={`switchy-toggle ${isOnScreen ? "active-green" : ""}`}
+                                onClick={(e) => handleToggleActionButtonEnabled(btn.id, e)}
+                                title={isOnScreen ? "Desactivar de la pantalla" : "Activar y mostrar en pantalla"}
+                              >
+                                <div className="switchy-thumb" />
+                              </div>
+                              <span style={{ fontSize: "0.6rem", fontWeight: 800, color: isOnScreen ? "#10B981" : "rgba(255,255,255,0.4)" }}>
+                                {isOnScreen ? "EN PANTALLA" : "OCULTO"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Fila de Acciones: Personalizar, Probar y Eliminar */}
+                          <div style={{ display: "flex", gap: 6, marginTop: 4, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
+                            <button
+                              type="button"
+                              className="pill-ctrl-button active-pink"
+                              style={{ flex: 1, padding: "5px 8px", fontSize: "0.72rem", fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                              onClick={(e) => handleOpenEditButton(btn, e)}
+                              title="Personalizar texto, enlace, logo, tamaños y posición"
+                            >
+                              <Dashicon name="edit" size={12} />
+                              <span>Personalizar</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="pill-ctrl-button"
+                              style={{ padding: "5px 10px", fontSize: "0.72rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}
+                              onClick={() => void handleExecuteActionButton(btn)}
+                              title="Probar ejecución de la acción o abrir URL"
+                            >
+                              <Dashicon name="controls-play" size={12} />
+                              <span>Probar</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="pill-ctrl-button"
+                              style={{ padding: "5px 8px", fontSize: "0.72rem", color: "var(--danger-red)" }}
+                              onClick={(e) => handleDeleteActionButton(btn.id, e)}
+                              title="Eliminar botón"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
                       );
                     })}
                 </div>
@@ -10038,14 +10300,20 @@ export default function StudioDeluluPage() {
                     pointerEvents: "none",
                   }}
                 >
-                  <div className="social-pill-icon-circle">
-                    {newBtnSocialNetwork && newBtnSocialNetwork !== "custom" ? (
-                      <SocialIcon network={newBtnSocialNetwork === "twitter-x" ? "twitter-x" : (newBtnSocialNetwork as SocialNetworkName)} size={16} />
-                    ) : newBtnImageUrl ? (
+                  <div
+                    className="social-pill-icon-circle"
+                    style={{
+                      width: newBtnLogoSize === "lg" ? 34 : newBtnLogoSize === "sm" ? 22 : 28,
+                      height: newBtnLogoSize === "lg" ? 34 : newBtnLogoSize === "sm" ? 22 : 28,
+                    }}
+                  >
+                    {newBtnImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={newBtnImageUrl} alt="preview" style={{ width: 18, height: 18, objectFit: "contain" }} />
+                      <img src={newBtnImageUrl} alt="preview" style={{ width: "90%", height: "90%", objectFit: "contain", borderRadius: 4 }} />
+                    ) : newBtnSocialNetwork && newBtnSocialNetwork !== "custom" ? (
+                      <SocialIcon network={newBtnSocialNetwork === "twitter-x" ? "twitter-x" : (newBtnSocialNetwork as SocialNetworkName)} size={newBtnLogoSize === "lg" ? 18 : newBtnLogoSize === "sm" ? 12 : 15} />
                     ) : (
-                      <span style={{ fontSize: "1rem" }}>{newBtnIcon || "💬"}</span>
+                      <span style={{ fontSize: newBtnLogoSize === "lg" ? "1.2rem" : newBtnLogoSize === "sm" ? "0.85rem" : "1rem" }}>{newBtnIcon || "💬"}</span>
                     )}
                   </div>
                   <div className="social-pill-text-col">
@@ -10062,12 +10330,21 @@ export default function StudioDeluluPage() {
                 </div>
               ) : (
                 <div
-                  className="screen-floating-action-btn size-md"
+                  className={`screen-floating-action-btn size-${newBtnSize || "md"}`}
                   style={{ borderColor: newBtnColor, position: "static", pointerEvents: "none" }}
                 >
                   {newBtnImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={newBtnImageUrl} alt="preview" />
+                    <img
+                      src={newBtnImageUrl}
+                      alt="preview"
+                      style={{
+                        width: newBtnLogoSize === "lg" ? 42 : newBtnLogoSize === "sm" ? 22 : 30,
+                        height: newBtnLogoSize === "lg" ? 42 : newBtnLogoSize === "sm" ? 22 : 30,
+                        objectFit: "contain",
+                        borderRadius: 4,
+                      }}
+                    />
                   ) : (
                     <span className="floating-icon">{newBtnIcon || "⚡"}</span>
                   )}
@@ -10200,7 +10477,7 @@ export default function StudioDeluluPage() {
             </div>
 
             {/* Imagen PNG / Logo personalizada */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
                   Imagen / Logo Personalizado (Opcional):
@@ -10224,16 +10501,17 @@ export default function StudioDeluluPage() {
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) handleBtnImageFileSelected(f);
+                    e.target.value = "";
                   }}
                 />
                 <button
                   type="button"
-                  className="pill-ctrl-button"
+                  className="pill-ctrl-button active-pink"
                   onClick={() => btnImageUploadInputRef.current?.click()}
                   style={{ display: "flex", alignItems: "center", gap: 6 }}
                 >
                   <span>🖼️</span>
-                  <span>{newBtnImageUrl ? "Cambiar Imagen" : "Subir Archivo (PNG/SVG)"}</span>
+                  <span>{newBtnImageUrl ? "Cambiar Imagen / Logo" : "Subir Archivo (PNG/SVG)"}</span>
                 </button>
                 <input
                   type="text"
@@ -10244,35 +10522,74 @@ export default function StudioDeluluPage() {
                   style={{ flex: 1, minWidth: 200, fontSize: "0.74rem", padding: "6px 10px" }}
                 />
               </div>
+
+              {/* Selector de 3 Tamaños para el Logo / Ícono */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.04)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-white)", whiteSpace: "nowrap" }}>
+                  Tamaño del Logo:
+                </span>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {[
+                    { id: "sm", label: "Logo Pequeño (24px)", px: 22 },
+                    { id: "md", label: "Logo Mediano (34px)", px: 32 },
+                    { id: "lg", label: "Logo Grande (46px)", px: 44 },
+                  ].map((sz) => (
+                    <button
+                      key={sz.id}
+                      type="button"
+                      className={`pill-ctrl-button ${newBtnLogoSize === sz.id ? "active-pink" : ""}`}
+                      style={{ padding: "4px 8px", fontSize: "0.7rem", fontWeight: newBtnLogoSize === sz.id ? 800 : 500 }}
+                      onClick={() => setNewBtnLogoSize(sz.id as "sm" | "md" | "lg")}
+                    >
+                      {sz.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {newBtnImageUrl && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(255,255,255,0.06)", padding: "4px 8px", borderRadius: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "rgba(16, 185, 129, 0.1)", padding: "6px 10px", borderRadius: 8, border: "1px solid rgba(16, 185, 129, 0.3)" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={newBtnImageUrl}
                     alt="Preview botón"
-                    style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4 }}
+                    style={{
+                      width: newBtnLogoSize === "lg" ? 36 : newBtnLogoSize === "sm" ? 22 : 28,
+                      height: newBtnLogoSize === "lg" ? 36 : newBtnLogoSize === "sm" ? 22 : 28,
+                      objectFit: "contain",
+                      borderRadius: 4,
+                    }}
                   />
-                  <span style={{ fontSize: "0.72rem", color: "var(--accent-pink)" }}>Imagen asignada ✓</span>
+                  <span style={{ fontSize: "0.72rem", color: "#10B981", fontWeight: 700 }}>
+                    ✓ Logo/Imagen asignada correctamente y visible en pantalla
+                  </span>
                 </div>
               )}
             </div>
 
-            {/* Configuración de Tamaño y Ubicación (9 Ubicaciones completas) */}
+            {/* Configuración de Tamaño del Botón (3 Tamaños Clave) y Ubicación */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                  Tamaño del Botón:
+                  Tamaño del Botón (3 Opciones):
                 </label>
-                <select
-                  className="select-model-dropdown"
-                  value={newBtnSize}
-                  onChange={(e) => setNewBtnSize(e.target.value as ButtonSize)}
-                >
-                  <option value="sm">Pequeño (36px)</option>
-                  <option value="md">Mediano (48px - Estándar)</option>
-                  <option value="lg">Grande (64px)</option>
-                  <option value="xl">Extra Grande (84px)</option>
-                </select>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[
+                    { id: "sm", label: "Pequeño (S)", desc: "36px" },
+                    { id: "md", label: "Mediano (M)", desc: "48px" },
+                    { id: "lg", label: "Grande (L)", desc: "64px" },
+                  ].map((sz) => (
+                    <button
+                      key={sz.id}
+                      type="button"
+                      className={`pill-ctrl-button ${newBtnSize === sz.id ? "active-pink" : ""}`}
+                      style={{ flex: 1, padding: "6px 4px", fontSize: "0.72rem", fontWeight: newBtnSize === sz.id ? 800 : 500 }}
+                      onClick={() => setNewBtnSize(sz.id as ButtonSize)}
+                    >
+                      {sz.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -10288,16 +10605,57 @@ export default function StudioDeluluPage() {
                     <option value="deck">📋 En la Botonera Inferior (Stream Deck)</option>
                   </optgroup>
                   <optgroup label="📺 Sobre la Pantalla / Video">
+                    <option value="screen-bottom-left">↙ Flotante: Abajo Izquierda (Recomendado WhatsApp)</option>
+                    <option value="screen-bottom-center">⬇ Flotante: Abajo Centro (Banner Inferior)</option>
+                    <option value="screen-bottom-right">↘ Flotante: Abajo Derecha</option>
                     <option value="screen-top-left">↖ Flotante: Arriba Izquierda</option>
                     <option value="screen-top-center">⬆ Flotante: Arriba Centro (Banner Superior)</option>
                     <option value="screen-top-right">↗ Flotante: Arriba Derecha</option>
                     <option value="screen-center-left">⬅ Flotante: Centro Izquierda</option>
                     <option value="screen-center-right">➡ Flotante: Centro Derecha</option>
-                    <option value="screen-bottom-left">↙ Flotante: Abajo Izquierda</option>
-                    <option value="screen-bottom-center">⬇ Flotante: Abajo Centro (Lower-Third)</option>
-                    <option value="screen-bottom-right">↘ Flotante: Abajo Derecha</option>
                   </optgroup>
                 </select>
+              </div>
+            </div>
+
+            {/* SWITCHES INDIVIDUALES PARA ESTE BOTÓN: MOSTRAR EN PANTALLA Y ANCHO COMPLETO MÓVIL */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, backgroundColor: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
+              {/* Switch Individual: Mostrar en Pantalla */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
+                    Mostrar en Pantalla
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)" }}>
+                    {newBtnEnabled ? "Activo (Visible en transmisión)" : "Oculto (Cerrado por defecto)"}
+                  </span>
+                </div>
+                <div
+                  className={`switchy-toggle ${newBtnEnabled ? "active-green" : ""}`}
+                  onClick={() => setNewBtnEnabled(!newBtnEnabled)}
+                  title="Activar o desactivar este botón en pantalla"
+                >
+                  <div className="switchy-thumb" />
+                </div>
+              </div>
+
+              {/* Switch: Banner Ancho Completo en Móvil */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
+                    Banner Ancho Móvil (100%)
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)" }}>
+                    {newBtnFullWidthMobile ? "Cubre ancho pantalla móvil" : "Píldora compacta"}
+                  </span>
+                </div>
+                <div
+                  className={`switchy-toggle ${newBtnFullWidthMobile ? "active-green" : ""}`}
+                  onClick={() => setNewBtnFullWidthMobile(!newBtnFullWidthMobile)}
+                  title="Cubre todo el ancho de la pantalla móvil (estilo banner)"
+                >
+                  <div className="switchy-thumb" />
+                </div>
               </div>
             </div>
 
@@ -10656,18 +11014,34 @@ export default function StudioDeluluPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-white)" }}>
-                  Tamaño (% del ancho):
+                  Tamaño del Banner / Logo (3 Opciones):
                 </label>
+                <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>
+                  {[
+                    { val: 18, label: "Pequeño (18%)", desc: "Logo" },
+                    { val: 35, label: "Mediano (35%)", desc: "Sponsor" },
+                    { val: 65, label: "Grande (65%)", desc: "Ancho" },
+                  ].map((sz) => (
+                    <button
+                      key={sz.val}
+                      type="button"
+                      className={`pill-ctrl-button ${newBannerSize === sz.val ? "active-pink" : ""}`}
+                      style={{ flex: 1, padding: "5px 4px", fontSize: "0.7rem", fontWeight: newBannerSize === sz.val ? 800 : 500 }}
+                      onClick={() => setNewBannerSize(sz.val)}
+                    >
+                      {sz.label}
+                    </button>
+                  ))}
+                </div>
                 <select
                   className="select-model-dropdown"
                   value={newBannerSize}
                   onChange={(e) => setNewBannerSize(Number(e.target.value))}
                 >
-                  <option value={15}>Pequeño (15% - Logo marca)</option>
-                  <option value={22}>Mediano (22% - Estándar)</option>
-                  <option value={40}>Grande (40% - Sponsor destacado)</option>
-                  <option value={62}>Banner Ancho (62% - Ticker inferior)</option>
-                  <option value={85}>Completo (85% - Anuncio pantalla)</option>
+                  <option value={18}>Pequeño (18% - Logo o marca)</option>
+                  <option value={35}>Mediano (35% - Sponsor estándar)</option>
+                  <option value={65}>Grande (65% - Banner ancho)</option>
+                  <option value={85}>Completo (85% - Pantalla completa)</option>
                 </select>
               </div>
 
