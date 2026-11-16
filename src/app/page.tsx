@@ -7978,7 +7978,7 @@ ${summary}
                     style={{ cursor: "pointer" }}
                     title="Clic para abrir y configurar Carrusel Horizontal"
                   >
-                    <Dashicon name="slides" size={14} color="#10B981" />
+                    <Dashicon name="format-gallery" size={14} color="#10B981" />
                     <span>Carrusel Horizontal Auto</span>
                   </div>
                   <div
@@ -8902,7 +8902,7 @@ ${summary}
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Dashicon name="admin-customizer" size={18} color="#F472B6" />
+                      <Dashicon name="art" size={18} color="#F472B6" />
                       <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
                         Personalizar Live Shopping &amp; Carrusel
                       </span>
@@ -10056,7 +10056,7 @@ ${summary}
                   >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "#FFFFFF", display: "flex", alignItems: "center", gap: 6 }}>
-                        <Dashicon name="editor-textcolor" size={14} color="#38BDF8" />
+                        <Dashicon name="media-text" size={14} color="#38BDF8" />
                         <span>Tipografía &amp; Estilo de Chat Elegante</span>
                       </span>
                     </div>
