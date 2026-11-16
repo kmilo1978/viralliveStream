@@ -1995,3 +1995,24 @@ px tsc --noEmit completado con código 0.
   2. Proteger la hoja de estilos global con un reset transparente para evitar botones nativos claros.
 - Pendientes:
   - Ninguno. La información es 100% legible y con contraste óptimo.
+
+## Validación completada
+- Fecha: 2026-11-16T16:05:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección y reubicación del banner de marca en TikTok Live, eliminación del carrito duplicado e implementación de visibilidad condicional para el carrito de compras (sólo visible si hay productos agregados).
+- Observaciones:
+  - Se eliminó el auto-encendido forzado de `activeTikTokTheme` al cambiar a la pestaña `TIKTOK_LIVE` (los switches y temas inician apagados por defecto).
+  - Se reubicó el banner de TikTok cuando se activa: en lugar de flotar a `marginTop: 114` tapando el rostro del streamer, ahora se muestra como una pastilla compacta de tienda (*TikTok Shop Showcase*) en la esquina inferior izquierda (`marginBottom: 68, marginLeft: 12, maxWidth: 240px`), dejando el encuadre de cámara 100% despejado.
+  - Se eliminó el botón duplicado de carrito inferior derecho (`.monitor-shopping-bag-fab`).
+  - Se condicionó el botón de carrito superior (`.stage-cart-top-fab`): si el carrito está vacío (`0` productos), no se muestra en pantalla. Aparece única y automáticamente cuando el usuario escoge un producto o lo agrega al carrito (`cartItems.length > 0`), mostrando la cantidad en tiempo real.
+  - Compilación con TypeScript sin errores y cambios subidos a GitHub en la rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-16 16:05
+- Solicitud: Este banner en TikTok se ve mal, está mal ubicado, al igual que el carrito está duplicado; además el carrito solo se debería ver después que se ha escogido un producto para comprar.
+- Decisiones clave:
+  1. No sobreponer banners gruesos en el tercio superior de la cara; reubicar al pie como pastilla nativa de tienda.
+  2. Eliminar el carrito flotante duplicado.
+  3. Ocultar el icono del carrito cuando el total de productos sea 0.
+- Pendientes:
+  - Todo funcionando con visualización limpia, contrastada y reactiva.
