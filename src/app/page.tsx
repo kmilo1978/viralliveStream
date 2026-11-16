@@ -77,6 +77,10 @@ import {
   ALL_45_MULTISTREAM_PLATFORMS,
   DEFAULT_SHOPPABLE_PRODUCTS,
   type ShoppableProductItem,
+  DEFAULT_CENTER_LOGO_CONFIG,
+  type CenterLogoConfig,
+  type CenterLogoPosition,
+  type CenterLogoSize,
   type ShoppableProductPosition,
   type ShoppableScheduleMode,
   type CurrencyOption,
@@ -448,6 +452,19 @@ export default function StudioDeluluPage() {
   const [showMultistreamModal, setShowMultistreamModal] = useState<boolean>(false);
   const [showAll45PlatformsList, setShowAll45PlatformsList] = useState<boolean>(false);
   const [editingStreamKeyDestId, setEditingStreamKeyDestId] = useState<string | null>(null);
+
+  // Logo Central PNG de Marca / Evento (Live Shopping estilo Natura GoJiraf)
+  const CENTER_LOGO_STORAGE_KEY = "miplataformastream.centerLogoConfig.v1";
+  const [centerLogoConfig, setCenterLogoConfig] = useState<CenterLogoConfig>(DEFAULT_CENTER_LOGO_CONFIG);
+  const centerLogoUploadRef = useRef<HTMLInputElement | null>(null);
+
+  // Expansión interactiva del banner de producto (Modal detalle de producto)
+  const [isProductExpanded, setIsProductExpanded] = useState<boolean>(false);
+  const [showExpandedQrCode, setShowExpandedQrCode] = useState<boolean>(false);
+
+  // Carrusel / Drawer Vertical con Catálogo de Productos ("Lista de Productos")
+  const [isProductCatalogDrawerOpen, setIsProductCatalogDrawerOpen] = useState<boolean>(false);
+  const [productCatalogSearch, setProductCatalogSearch] = useState<string>("");
 
   // Shoppable Product Cards (Tarjetas de Productos Comprables en Vivo)
   const PRODUCTS_STORAGE_KEY = "miplataformastream.shoppableProducts.v1";
@@ -2011,6 +2028,41 @@ export default function StudioDeluluPage() {
     } catch {}
   }, []);
 
+  // Cargar configuración de Logo Central guardada (con enabled: false por defecto al iniciar)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(CENTER_LOGO_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Partial<CenterLogoConfig>;
+        setCenterLogoConfig({ ...DEFAULT_CENTER_LOGO_CONFIG, ...parsed, enabled: false });
+      }
+    } catch {}
+  }, []);
+
+  const persistCenterLogoConfig = useCallback((cfg: CenterLogoConfig) => {
+    setCenterLogoConfig(cfg);
+    try {
+      window.localStorage.setItem(CENTER_LOGO_STORAGE_KEY, JSON.stringify(cfg));
+    } catch {}
+  }, []);
+
+  const handleUploadCenterLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        persistCenterLogoConfig({
+          ...centerLogoConfig,
+          imageUrl: reader.result,
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   // Cargar preferencia de idioma de chat guardada (Español por defecto)
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2034,6 +2086,7 @@ export default function StudioDeluluPage() {
   const countActiveOnScreen = useCallback(() => {
     let count = 0;
     if (activeProductId && shoppableProducts.some((p) => p.id === activeProductId && p.enabled)) count++;
+    if (centerLogoConfig.enabled) count++;
     if (whatsappConfig.showOnScreen) count++;
     if (scheduledOverlays.some((o) => o.enabled)) count++;
     if (selectedBgId && selectedBgId !== "bg-none" && bgPreviewEnabled) count++;
@@ -2042,6 +2095,7 @@ export default function StudioDeluluPage() {
   }, [
     actionButtons,
     activeProductId,
+    centerLogoConfig.enabled,
     bgPreviewEnabled,
     scheduledOverlays,
     screenButtonsVisible,
@@ -6156,12 +6210,40 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
-              {/* TARJETA DE PRODUCTO COMPRABLE EN VIVO (SHOPPABLE PRODUCT CARD - ESTILO ONESTREAM LIVE) */}
+              {/* 1. LOGO CENTRAL PNG DE MARCA / LIVE SHOPPING (ESTILO NATURA GOJIRAF) */}
+              {centerLogoConfig.enabled && (
+                <div
+                  className={`monitor-center-logo-overlay pos-${centerLogoConfig.position} size-${centerLogoConfig.size}`}
+                  style={{ opacity: centerLogoConfig.opacity }}
+                >
+                  <div className="center-logo-img-wrap">
+                    {centerLogoConfig.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={centerLogoConfig.imageUrl} alt="Logo de Marca en Vivo" />
+                    ) : (
+                      <ViraliveLogo variant="full" height={centerLogoConfig.size === "lg" ? 48 : centerLogoConfig.size === "sm" ? 28 : 36} />
+                    )}
+                  </div>
+                  <div className="center-logo-text-box">
+                    {centerLogoConfig.title && (
+                      <span className="center-logo-title">{centerLogoConfig.title}</span>
+                    )}
+                    {centerLogoConfig.subtitle && (
+                      <span className="center-logo-subtitle">{centerLogoConfig.subtitle}</span>
+                    )}
+                    {centerLogoConfig.subtext && (
+                      <span className="center-logo-subtext">{centerLogoConfig.subtext}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. TARJETA DE PRODUCTO COMPRABLE EN VIVO (BANNER PROMINENTE CON EXPANSIÓN AL TOCAR) */}
               {activeProduct && (
                 <div
-                  className={`shoppable-product-card-stage pos-${liveShopGlobalPosition || activeProduct.position || "bottom-center"}`}
-                  onClick={() => window.open(activeProduct.linkUrl, "_blank")}
-                  title={`Clic para ver o comprar ${activeProduct.title} (${activeProduct.linkUrl})`}
+                  className={`shoppable-product-card-stage pos-${liveShopGlobalPosition || activeProduct.position || "bottom-center"} ${showPhoneMockupFrame ? "in-mockup" : ""}`}
+                  onClick={() => setIsProductExpanded(true)}
+                  title={`Toca para ver o comprar ${activeProduct.title} en tamaño grande`}
                 >
                   <button
                     type="button"
@@ -6176,6 +6258,11 @@ export default function StudioDeluluPage() {
                   </button>
 
                   <div className="shoppable-card-thumb-wrap">
+                    {activeProduct.compareAtPrice && activeProduct.compareAtPrice > activeProduct.price && (
+                      <span className="shoppable-discount-badge">
+                        -{Math.round(((activeProduct.compareAtPrice - activeProduct.price) / activeProduct.compareAtPrice) * 100)}%
+                      </span>
+                    )}
                     <div className="shoppable-card-thumb-inner">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={activeProduct.imageUrl} alt={activeProduct.title} />
@@ -6186,7 +6273,7 @@ export default function StudioDeluluPage() {
                     <div className="shoppable-live-badge-row">
                       <span className="shoppable-live-tag">
                         <Dashicon name="cart" size={10} />
-                        <span>SHOP QR EN VIVO</span>
+                        <span>LIVE SHOPPING</span>
                       </span>
                     </div>
                     <div className="shoppable-card-title">{activeProduct.title}</div>
@@ -6202,6 +6289,9 @@ export default function StudioDeluluPage() {
                           {activeProduct.currencySymbol}{activeProduct.compareAtPrice.toFixed(2)}
                         </span>
                       )}
+                    </div>
+                    <div className="shoppable-card-tap-indicator">
+                      <span>🔍 Toca para ampliar</span>
                     </div>
                   </div>
 
@@ -6220,6 +6310,245 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
               )}
+
+              {/* 3. MODAL DETALLE DE PRODUCTO EXPANDIDO (ESTILO GOJIRAF / MERCADO LIBRE) */}
+              {isProductExpanded && activeProduct && (
+                <div
+                  className="shoppable-expanded-overlay"
+                  onClick={() => {
+                    setIsProductExpanded(false);
+                    setShowExpandedQrCode(false);
+                  }}
+                >
+                  <div
+                    className="shoppable-expanded-modal"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="shoppable-expanded-header">
+                      <button
+                        type="button"
+                        className="shoppable-expanded-back-btn"
+                        onClick={() => {
+                          setIsProductExpanded(false);
+                          setShowExpandedQrCode(false);
+                        }}
+                      >
+                        <span>← Volver</span>
+                      </button>
+                      <span className="shoppable-expanded-badge">Producto en Vivo</span>
+                      <button
+                        type="button"
+                        className="shoppable-drawer-close-btn"
+                        onClick={() => {
+                          setIsProductExpanded(false);
+                          setShowExpandedQrCode(false);
+                        }}
+                        title="Cerrar vista expandida"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <div className="shoppable-expanded-image-wrap">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={activeProduct.imageUrl} alt={activeProduct.title} />
+                      {activeProduct.compareAtPrice && activeProduct.compareAtPrice > activeProduct.price && (
+                        <span className="shoppable-discount-badge" style={{ top: 12, left: 12, fontSize: "0.82rem", padding: "4px 10px" }}>
+                          -{Math.round(((activeProduct.compareAtPrice - activeProduct.price) / activeProduct.compareAtPrice) * 100)}%
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="shoppable-expanded-info">
+                      <h3 className="shoppable-expanded-title">{activeProduct.title}</h3>
+                      {activeProduct.subtitle && (
+                        <span className="shoppable-expanded-sub">{activeProduct.subtitle}</span>
+                      )}
+                      <div className="shoppable-expanded-price-row">
+                        <span className="shoppable-expanded-price-current">
+                          {activeProduct.currencySymbol}{activeProduct.price.toFixed(2)}
+                        </span>
+                        {activeProduct.compareAtPrice && (
+                          <span className="shoppable-expanded-price-compare">
+                            {activeProduct.currencySymbol}{activeProduct.compareAtPrice.toFixed(2)}
+                          </span>
+                        )}
+                        {activeProduct.compareAtPrice && activeProduct.compareAtPrice > activeProduct.price && (
+                          <span className="shoppable-expanded-discount-tag">
+                            OFERTA EN VIVO
+                          </span>
+                        )}
+                      </div>
+                      {activeProduct.description && (
+                        <p className="shoppable-expanded-desc">{activeProduct.description}</p>
+                      )}
+                    </div>
+
+                    <div className="shoppable-expanded-actions">
+                      <button
+                        type="button"
+                        className="shoppable-cta-buy-btn"
+                        onClick={() => window.open(activeProduct.linkUrl, "_blank")}
+                      >
+                        <Dashicon name="cart" size={18} />
+                        <span>VER MÁS / COMPRAR AHORA</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="shoppable-qr-toggle-btn"
+                        onClick={() => setShowExpandedQrCode((prev) => !prev)}
+                      >
+                        <Dashicon name="desktop" size={14} />
+                        <span>{showExpandedQrCode ? "Ocultar Código QR" : "📱 Comprar desde el Celular (Código QR)"}</span>
+                      </button>
+
+                      {showExpandedQrCode && (
+                        <div className="shoppable-expanded-qr-view">
+                          {activeProduct.qrCodeDataUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={activeProduct.qrCodeDataUrl} alt="QR Escaneable de Compra" />
+                          ) : (
+                            <span style={{ fontSize: "0.75rem", color: "#6B7280" }}>Generando QR...</span>
+                          )}
+                          <span style={{ fontSize: "0.72rem", color: "#4B5563", fontWeight: 600 }}>
+                            Apunta con la cámara de tu móvil para ir al enlace
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. DRAWER VERTICAL CON LISTA DE PRODUCTOS (BOTTOM SHEET) */}
+              {isProductCatalogDrawerOpen && (
+                <div
+                  className="shoppable-vertical-drawer-overlay"
+                  onClick={() => setIsProductCatalogDrawerOpen(false)}
+                >
+                  <div
+                    className="shoppable-vertical-drawer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="shoppable-drawer-handle" />
+                    <div className="shoppable-drawer-header">
+                      <div className="shoppable-drawer-title-group">
+                        <Dashicon name="portfolio" size={18} color="#F472B6" />
+                        <span className="shoppable-drawer-title">Lista de productos</span>
+                        <span className="shoppable-drawer-counter">{shoppableProducts.length}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="shoppable-drawer-close-btn"
+                        onClick={() => setIsProductCatalogDrawerOpen(false)}
+                        title="Cerrar catálogo"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <div className="shoppable-drawer-search-wrap">
+                      <span className="shoppable-drawer-search-icon">
+                        <Dashicon name="search" size={15} />
+                      </span>
+                      <input
+                        type="text"
+                        className="shoppable-drawer-search-input"
+                        placeholder="Buscar por nombre de producto..."
+                        value={productCatalogSearch}
+                        onChange={(e) => setProductCatalogSearch(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="shoppable-drawer-items-list">
+                      {shoppableProducts
+                        .filter((p) =>
+                          p.title.toLowerCase().includes(productCatalogSearch.toLowerCase()) ||
+                          (p.subtitle && p.subtitle.toLowerCase().includes(productCatalogSearch.toLowerCase()))
+                        )
+                        .map((prod) => {
+                          const isCurrentActive = activeProductId === prod.id;
+                          const discountCalc =
+                            prod.compareAtPrice && prod.compareAtPrice > prod.price
+                              ? Math.round(((prod.compareAtPrice - prod.price) / prod.compareAtPrice) * 100)
+                              : prod.discountPercent || null;
+                          return (
+                            <div
+                              key={prod.id}
+                              className={`shoppable-drawer-item ${isCurrentActive ? "active" : ""}`}
+                            >
+                              <div className="shoppable-drawer-item-thumb">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={prod.imageUrl} alt={prod.title} />
+                                {discountCalc && (
+                                  <span className="shoppable-discount-badge" style={{ top: -4, left: -4, fontSize: "0.6rem", padding: "1px 5px" }}>
+                                    -{discountCalc}%
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="shoppable-drawer-item-details">
+                                <span className="shoppable-drawer-item-title">{prod.title}</span>
+                                {prod.subtitle && (
+                                  <span className="shoppable-drawer-item-sub">{prod.subtitle}</span>
+                                )}
+                                <div className="shoppable-drawer-item-price-row">
+                                  <span className="shoppable-drawer-item-price">
+                                    {prod.currencySymbol}{prod.price.toFixed(2)}
+                                  </span>
+                                  {prod.compareAtPrice && (
+                                    <span className="shoppable-drawer-item-compare">
+                                      {prod.currencySymbol}{prod.compareAtPrice.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="shoppable-drawer-item-actions">
+                                <button
+                                  type="button"
+                                  className="shoppable-drawer-buy-btn"
+                                  onClick={() => window.open(prod.linkUrl, "_blank")}
+                                  title="Abrir enlace de compra"
+                                >
+                                  VER MÁS
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`shoppable-drawer-pin-btn ${isCurrentActive ? "active" : ""}`}
+                                  onClick={() => {
+                                    if (isCurrentActive) {
+                                      setActiveProductId(null);
+                                    } else {
+                                      if (!requestEnableOnScreen()) return;
+                                      setActiveProductId(prod.id);
+                                    }
+                                  }}
+                                  title={isCurrentActive ? "Quitar de pantalla" : "Mostrar en pantalla en vivo"}
+                                >
+                                  <span>{isCurrentActive ? "✓ EN PANTALLA" : "DESTACAR 🔴"}</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 5. BOTÓN FLOTANTE BOLSA DE CATÁLOGO (ESTILO TIKTOK / SHORTS) */}
+              <div
+                className="monitor-shopping-bag-fab"
+                onClick={() => setIsProductCatalogDrawerOpen((prev) => !prev)}
+                title="Abrir Lista Vertical de Productos"
+              >
+                <Dashicon name="cart" size={20} color="#FFFFFF" />
+                {shoppableProducts.length > 0 && (
+                  <span className="monitor-shopping-bag-badge">{shoppableProducts.length}</span>
+                )}
+              </div>
 
               {/* BURBUJA FLOTANTE DE WHATSAPP EN PANTALLA (SI ESTÁ ACTIVA EN CAPAS) */}
               {whatsappConfig.showOnScreen && (
@@ -6993,6 +7322,33 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
 
+                {/* Switch Logo Central Live */}
+                <div className="studio-layers-row-item" title="Alternar Logo PNG central de marca / evento en vivo">
+                  <div
+                    className="studio-layers-row-label"
+                    onClick={() => setActiveStudioTab("banners")}
+                    style={{ cursor: "pointer" }}
+                    title="Clic para personalizar el Logo Central de Marca"
+                  >
+                    <Dashicon name="format-image" size={14} color="#F472B6" />
+                    <span>Logo Central Live</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${centerLogoConfig.enabled ? "active-green" : ""}`}
+                    onClick={() => {
+                      if (centerLogoConfig.enabled) {
+                        persistCenterLogoConfig({ ...centerLogoConfig, enabled: false });
+                      } else {
+                        if (!requestEnableOnScreen()) return;
+                        persistCenterLogoConfig({ ...centerLogoConfig, enabled: true });
+                      }
+                    }}
+                    title="Activar u ocultar Logo Central PNG en la transmisión"
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
                 {/* Switch Banners */}
                 <div className="studio-layers-row-item" title="Alternar logos y banners programados">
                   <div className="studio-layers-row-label">
@@ -7573,6 +7929,16 @@ export default function StudioDeluluPage() {
                     <Dashicon name="portfolio" size={14} />
                     <span>Catálogo ({shoppableProducts.length})</span>
                   </button>
+                  <button
+                    type="button"
+                    className="studio-action-button"
+                    style={{ background: "rgba(236, 72, 153, 0.16)", borderColor: "rgba(236, 72, 153, 0.45)", color: "#F472B6" }}
+                    onClick={() => setIsProductCatalogDrawerOpen(true)}
+                    title="Abrir Lista Vertical Deslizable de Productos"
+                  >
+                    <Dashicon name="portfolio" size={14} />
+                    <span>📋 Ver Lista Vertical</span>
+                  </button>
                   {activeProduct && (
                     <button
                       type="button"
@@ -7955,6 +8321,183 @@ export default function StudioDeluluPage() {
                   >
                     <span>+ Nuevo Banner</span>
                   </button>
+                </div>
+
+                {/* TARJETA DE CONTROL: LOGO CENTRAL PNG DE MARCA (ESTILO NATURA GOJIRAF) */}
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 16,
+                    background: "linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(139, 92, 246, 0.08) 100%)",
+                    border: "1.5px solid rgba(236, 72, 153, 0.35)",
+                    marginBottom: 14,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Dashicon name="format-image" size={18} color="#F472B6" />
+                      <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                        Logo Central PNG en Pantalla
+                      </span>
+                    </div>
+                    <div
+                      className={`switchy-toggle ${centerLogoConfig.enabled ? "active-green" : ""}`}
+                      onClick={() => {
+                        if (centerLogoConfig.enabled) {
+                          persistCenterLogoConfig({ ...centerLogoConfig, enabled: false });
+                        } else {
+                          if (!requestEnableOnScreen()) return;
+                          persistCenterLogoConfig({ ...centerLogoConfig, enabled: true });
+                        }
+                      }}
+                      title="Activar u ocultar logo central"
+                    >
+                      <div className="switchy-thumb" />
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: "0.72rem", color: "#CBD5E1", margin: 0 }}>
+                    Muestra el logo transparente de tu marca o evento en el centro o tercio superior de la pantalla.
+                  </p>
+
+                  {/* Subir archivo de logo */}
+                  <input
+                    ref={centerLogoUploadRef}
+                    type="file"
+                    accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                    style={{ display: "none" }}
+                    onChange={handleUploadCenterLogo}
+                  />
+
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className="studio-action-button"
+                      style={{ padding: "6px 12px", fontSize: "0.74rem", flex: 1, justifyContent: "center" }}
+                      onClick={() => centerLogoUploadRef.current?.click()}
+                    >
+                      <Dashicon name="upload" size={13} />
+                      <span>{centerLogoConfig.imageUrl ? "Cambiar Logo PNG" : "Subir Logo PNG"}</span>
+                    </button>
+                    {centerLogoConfig.imageUrl && (
+                      <button
+                        type="button"
+                        className="studio-action-button"
+                        style={{ padding: "6px 10px", fontSize: "0.72rem", color: "#EF4444" }}
+                        onClick={() => persistCenterLogoConfig({ ...centerLogoConfig, imageUrl: "" })}
+                        title="Restablecer logo predeterminado"
+                      >
+                        Quitar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Selectores de Ubicación (Centro vs Superior) */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94A3B8" }}>Ubicación en Pantalla:</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                      <button
+                        type="button"
+                        className={`pill-ctrl-button ${centerLogoConfig.position === "center" ? "active-pink" : ""}`}
+                        style={{ padding: "5px 8px", fontSize: "0.72rem", fontWeight: centerLogoConfig.position === "center" ? 800 : 500 }}
+                        onClick={() => persistCenterLogoConfig({ ...centerLogoConfig, position: "center" })}
+                      >
+                        ⏺️ En la Mitad
+                      </button>
+                      <button
+                        type="button"
+                        className={`pill-ctrl-button ${centerLogoConfig.position === "top" ? "active-pink" : ""}`}
+                        style={{ padding: "5px 8px", fontSize: "0.72rem", fontWeight: centerLogoConfig.position === "top" ? 800 : 500 }}
+                        onClick={() => persistCenterLogoConfig({ ...centerLogoConfig, position: "top" })}
+                      >
+                        ⬆️ Tercio Superior
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Selectores de 3 Tamaños */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94A3B8" }}>Tamaño del Logo:</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                      {[
+                        { id: "sm", label: "Pequeño (140px)" },
+                        { id: "md", label: "Mediano (220px)" },
+                        { id: "lg", label: "Grande (320px)" },
+                      ].map((sz) => (
+                        <button
+                          key={sz.id}
+                          type="button"
+                          className={`pill-ctrl-button ${centerLogoConfig.size === sz.id ? "active-pink" : ""}`}
+                          style={{ padding: "5px 4px", fontSize: "0.7rem", fontWeight: centerLogoConfig.size === sz.id ? 800 : 500 }}
+                          onClick={() => persistCenterLogoConfig({ ...centerLogoConfig, size: sz.id as CenterLogoSize })}
+                        >
+                          {sz.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Selectores de Opacidad */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94A3B8" }}>Opacidad / Transparencia:</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                      {[
+                        { val: 0.6, label: "60% Sutil" },
+                        { val: 0.85, label: "85% Elegante" },
+                        { val: 1.0, label: "100% Sólido" },
+                      ].map((op) => (
+                        <button
+                          key={op.val}
+                          type="button"
+                          className={`pill-ctrl-button ${centerLogoConfig.opacity === op.val ? "active-pink" : ""}`}
+                          style={{ padding: "5px 4px", fontSize: "0.7rem", fontWeight: centerLogoConfig.opacity === op.val ? 800 : 500 }}
+                          onClick={() => persistCenterLogoConfig({ ...centerLogoConfig, opacity: op.val })}
+                        >
+                          {op.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Textos del Logo Central */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <label style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Título Principal:</label>
+                      <input
+                        type="text"
+                        className="studio-input"
+                        style={{ padding: "5px 8px", fontSize: "0.75rem" }}
+                        value={centerLogoConfig.title}
+                        onChange={(e) => persistCenterLogoConfig({ ...centerLogoConfig, title: e.target.value })}
+                        placeholder="Ej: LIVE SHOPPING"
+                      />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <label style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Subtítulo:</label>
+                      <input
+                        type="text"
+                        className="studio-input"
+                        style={{ padding: "5px 8px", fontSize: "0.75rem" }}
+                        value={centerLogoConfig.subtitle}
+                        onChange={(e) => persistCenterLogoConfig({ ...centerLogoConfig, subtitle: e.target.value })}
+                        placeholder="Ej: TRANSMISIÓN EN VIVO"
+                      />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <label style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Pie / Patrocinador:</label>
+                      <input
+                        type="text"
+                        className="studio-input"
+                        style={{ padding: "5px 8px", fontSize: "0.75rem" }}
+                        value={centerLogoConfig.subtext}
+                        onChange={(e) => persistCenterLogoConfig({ ...centerLogoConfig, subtext: e.target.value })}
+                        placeholder="Ej: Powered by ViralLive"
+                      />
+                    </div>
+                  </div>
                 </div>
 
               <div className="banner-cards-grid">

@@ -1366,6 +1366,8 @@ export type ShoppableProductItem = {
   id: string;
   title: string;
   subtitle?: string;
+  description?: string;
+  discountPercent?: number;
   linkUrl: string;
   currency: CurrencyOption;
   currencySymbol: string;
@@ -1430,6 +1432,8 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     id: "prod-hoodie",
     title: "Hoodie Urbano Oversize",
     subtitle: "Algodón Premium 400 GSM",
+    description: "Hoodie oversize confeccionado en algodón pesado de 400 gramos, con tacto ultrasuave y capucha envolvente.",
+    discountPercent: 23,
     linkUrl: "https://onestream.live/shop/hoodie",
     currency: "USD",
     currencySymbol: "$",
@@ -1446,7 +1450,126 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     repeatCount: 3,
     currentDisplayCount: 0,
   },
+  {
+    id: "prod-bandolera-troya",
+    title: "Bandolera Troya Urbana",
+    subtitle: "Cuero vegano y correa ajustable",
+    description: "Bandolera ergonómica de diseño moderno con acabados de alta resistencia, múltiples compartimentos y cierre reforzado.",
+    discountPercent: 30,
+    linkUrl: "https://onestream.live/shop/bandolera-troya",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 111.99,
+    compareAtPrice: 159.99,
+    imageUrl: "/products/headphones.jpg",
+    position: "bottom-center",
+    enabled: false,
+    scansCount: 62,
+    clicksCount: 34,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-tote-tero",
+    title: "Tote Tero Urban Garzon",
+    subtitle: "Lona reforzada y detalles en cuero",
+    description: "Bolso estilo tote bag espacioso y versátil para el día a día. Estructura rígida, asas confortables y bolsillo interno con cremallera.",
+    discountPercent: 5,
+    linkUrl: "https://onestream.live/shop/tote-tero",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 189.99,
+    compareAtPrice: 199.99,
+    imageUrl: "/products/smartwatch.jpg",
+    position: "bottom-center",
+    enabled: false,
+    scansCount: 89,
+    clicksCount: 51,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-rolling-stones",
+    title: "Hoodie The Rolling Stones Tour",
+    subtitle: "Edición Coleccionista Rock Oficial",
+    description: "Buzo oficial estampado en serigrafía de alta duración con el legendario emblema de la banda. Corte unisex contemporáneo.",
+    discountPercent: 40,
+    linkUrl: "https://onestream.live/shop/rolling-stones-tour",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 29.99,
+    compareAtPrice: 49.99,
+    imageUrl: "/products/hoodie.jpg",
+    position: "bottom-center",
+    enabled: false,
+    scansCount: 114,
+    clicksCount: 78,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-natura-faces",
+    title: "Ritual Gloss Chaveiro Faces",
+    subtitle: "Brillo labial hidratante y llavero",
+    description: "Fórmula ultrabrillante no pegajosa enriquecida con manteca de karité y vitamina E. Incluye accesorio llavero exclusivo para llevar a todas partes.",
+    discountPercent: 35,
+    linkUrl: "https://onestream.live/shop/gloss-faces",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 14.99,
+    compareAtPrice: 22.99,
+    imageUrl: "/products/smartwatch.jpg",
+    position: "bottom-center",
+    enabled: false,
+    scansCount: 43,
+    clicksCount: 22,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
 ];
+// =============================================================
+// LOGO CENTRAL PNG DE MARCA / LIVE SHOPPING (ESTILO NATURA GOJIRAF)
+// =============================================================
+
+export type CenterLogoPosition = "center" | "top";
+export type CenterLogoSize = "sm" | "md" | "lg";
+
+export type CenterLogoConfig = {
+  enabled: boolean;
+  imageUrl: string;
+  size: CenterLogoSize;
+  opacity: number; // 0.6 | 0.85 | 1.0
+  position: CenterLogoPosition;
+  title: string;
+  subtitle: string;
+  subtext: string;
+  showGlow: boolean;
+};
+
+export const DEFAULT_CENTER_LOGO_CONFIG: CenterLogoConfig = {
+  enabled: false,
+  imageUrl: "",
+  size: "md",
+  opacity: 0.9,
+  position: "center",
+  title: "LIVE SHOPPING",
+  subtitle: "TRANSMISIÓN EN VIVO",
+  subtext: "Powered by ViralLive",
+  showGlow: true,
+};
+
 
 
 
