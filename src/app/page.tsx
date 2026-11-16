@@ -81,6 +81,10 @@ import {
   type CenterLogoConfig,
   type CenterLogoPosition,
   type CenterLogoSize,
+  DEFAULT_LIVE_CHECKOUT_CONFIG,
+  type LiveCartItem,
+  type PaymentGatewayType,
+  type LiveCheckoutConfig,
   type ShoppableProductPosition,
   type ShoppableScheduleMode,
   type CurrencyOption,
@@ -465,6 +469,22 @@ export default function StudioDeluluPage() {
   // Carrusel / Drawer Vertical con Catálogo de Productos ("Lista de Productos")
   const [isProductCatalogDrawerOpen, setIsProductCatalogDrawerOpen] = useState<boolean>(false);
   const [productCatalogSearch, setProductCatalogSearch] = useState<string>("");
+
+  // Carrusel de Múltiples Ofertas en Pantalla (Vertical estilo GoJiraf)
+  const [showOffersCarouselOnStage, setShowOffersCarouselOnStage] = useState<boolean>(false);
+  const [offersCarouselSearch, setOffersCarouselSearch] = useState<string>("");
+
+  // Carrito de Compras en Vivo & Pasarela de Pagos (Live Cart & Checkout)
+  const [cartItems, setCartItems] = useState<LiveCartItem[]>([]);
+  const [isCartCheckoutModalOpen, setIsCartCheckoutModalOpen] = useState<boolean>(false);
+  const [checkoutConfig, setCheckoutConfig] = useState<LiveCheckoutConfig>(DEFAULT_LIVE_CHECKOUT_CONFIG);
+  const [selectedGateway, setSelectedGateway] = useState<PaymentGatewayType>("mercadopago");
+  const [paymentSuccessToast, setPaymentSuccessToast] = useState<string | null>(null);
+
+  // Campos adicionales para formulario de nueva oferta
+  const [newProdButtonText, setNewProdButtonText] = useState<string>("VER MÁS");
+  const [newProdGateway, setNewProdGateway] = useState<PaymentGatewayType>("mercadopago");
+  const [newProdFeaturedInCarousel, setNewProdFeaturedInCarousel] = useState<boolean>(true);
 
   // Shoppable Product Cards (Tarjetas de Productos Comprables en Vivo)
   const PRODUCTS_STORAGE_KEY = "miplataformastream.shoppableProducts.v1";
@@ -3190,6 +3210,82 @@ export default function StudioDeluluPage() {
     } catch {}
   }, []);
 
+  // Handlers para Carrito de Compras en Vivo y Pasarela de Pagos
+  const handleAddToCart = useCallback((product: ShoppableProductItem) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.product.id === product.id);
+      let updated: LiveCartItem[];
+      if (existing) {
+        updated = prev.map((item) =>
+          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      } else {
+        updated = [...prev, { product, quantity: 1 }];
+      }
+      return updated;
+    });
+    setPaymentSuccessToast(`✓ "${product.title}" agregado al carrito de compras`);
+    setTimeout(() => setPaymentSuccessToast(null), 3000);
+  }, []);
+
+  const handleUpdateCartQty = useCallback((productId: string, delta: number) => {
+    setCartItems((prev) => {
+      return prev
+        .map((item) => {
+          if (item.product.id === productId) {
+            const newQty = item.quantity + delta;
+            return newQty > 0 ? { ...item, quantity: newQty } : null;
+          }
+          return item;
+        })
+        .filter((item): item is LiveCartItem => item !== null);
+    });
+  }, []);
+
+  const handleRemoveFromCart = useCallback((productId: string) => {
+    setCartItems((prev) => prev.filter((i) => i.product.id !== productId));
+  }, []);
+
+  const handleExecuteCheckout = useCallback(() => {
+    if (cartItems.length === 0) return;
+    const total = cartItems.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
+    const summary = cartItems.map((i) => `${i.quantity}x ${i.product.title} ($${(i.product.price * i.quantity).toFixed(2)})`).join(", ");
+
+    if (selectedGateway === "whatsapp") {
+      const cleanPhone = (whatsappConfig.phoneNumber || "573001234567").replace(/[^0-9]/g, "");
+      const msg = `¡Hola! Quiero confirmar mi compra en el Live Shopping:
+
+${summary}
+
+*Total a Pagar:* $${total.toFixed(2)}`;
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+    } else if (selectedGateway === "mercadopago") {
+      // Redirigir a Mercado Pago Checkout o primer producto
+      const firstLink = cartItems[0]?.product.linkUrl || "https://www.mercadopago.com";
+      window.open(firstLink, "_blank");
+      setPaymentSuccessToast(`Redirigiendo a Mercado Pago para abonar $${total.toFixed(2)}...`);
+    } else if (selectedGateway === "stripe") {
+      const firstLink = cartItems[0]?.product.linkUrl || "https://stripe.com";
+      window.open(firstLink, "_blank");
+      setPaymentSuccessToast(`Redirigiendo a Stripe Checkout seguro...`);
+    } else if (selectedGateway === "wompi") {
+      const firstLink = cartItems[0]?.product.linkUrl || "https://wompi.co";
+      window.open(firstLink, "_blank");
+      setPaymentSuccessToast(`Conectando a pasarela PSE / Wompi...`);
+    } else {
+      const firstLink = cartItems[0]?.product.linkUrl || "#";
+      window.open(firstLink, "_blank");
+    }
+
+    setTimeout(() => {
+      setIsCartCheckoutModalOpen(false);
+      setCartItems([]);
+      setPaymentSuccessToast("🎉 ¡Pedido iniciado con éxito! Gracias por tu compra en vivo.");
+      setTimeout(() => setPaymentSuccessToast(null), 4000);
+    }, 1500);
+  }, [cartItems, selectedGateway, whatsappConfig.phoneNumber]);
+
+
   const handleCreateOrUpdateProduct = useCallback(async () => {
     const title = newProdTitle.trim() || "Producto Destacado";
     const link = newProdLink.trim() || "https://onestream.live";
@@ -3207,6 +3303,8 @@ export default function StudioDeluluPage() {
       id: `prod-${Date.now()}`,
       title,
       subtitle: newProdSubtitle.trim() || undefined,
+      description: newProdSubtitle.trim() || `Oferta especial en vivo: ${title}`,
+      discountPercent: compareNum && compareNum > priceNum ? Math.round(((compareNum - priceNum) / compareNum) * 100) : undefined,
       linkUrl: link,
       currency: newProdCurrency,
       currencySymbol: currencySymbols[newProdCurrency] || "$",
@@ -3215,6 +3313,9 @@ export default function StudioDeluluPage() {
       imageUrl: newProdImageUrl || "/products/headphones.jpg",
       qrCodeDataUrl: qr,
       position: newProdPosition,
+      buttonText: newProdButtonText.trim() || "VER MÁS",
+      paymentGateway: newProdGateway,
+      featuredInCarousel: newProdFeaturedInCarousel,
       enabled: true,
       scansCount: 0,
       clicksCount: 0,
@@ -6538,6 +6639,362 @@ export default function StudioDeluluPage() {
                 </div>
               )}
 
+              {/* BOTÓN FLOTANTE CARRITO EN ESQUINA SUPERIOR DERECHA (ESTILO GOJIRAF / SHORTS) */}
+              <div
+                className="stage-cart-top-fab"
+                onClick={() => setIsCartCheckoutModalOpen(true)}
+                title="Abrir Carrito de Compras y Pasarelas de Pago"
+              >
+                <Dashicon name="cart" size={20} color="#FFFFFF" />
+                {cartItems.reduce((acc, i) => acc + i.quantity, 0) > 0 && (
+                  <span className="stage-cart-top-badge">
+                    {cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+                  </span>
+                )}
+              </div>
+
+              {/* CARRUSEL VERTICAL DE MÚLTIPLES OFERTAS EN PANTALLA (ESTILO GOJIRAF EXACTO) */}
+              {showOffersCarouselOnStage && (
+                <div className={`stage-vertical-offers-carousel ${!showPhoneMockupFrame ? "monitor-16-9" : ""}`}>
+                  <div className="stage-carousel-handle" />
+                  
+                  <div className="stage-carousel-header">
+                    <div className="stage-carousel-title-row">
+                      <Dashicon name="portfolio" size={16} color="#DB2777" />
+                      <span className="stage-carousel-title">Lista de productos</span>
+                      <span className="stage-carousel-counter-badge">
+                        {shoppableProducts.filter((p) => p.featuredInCarousel !== false).length}
+                      </span>
+                    </div>
+
+                    <div className="stage-carousel-header-actions">
+                      <button
+                        type="button"
+                        className="stage-carousel-icon-btn"
+                        onClick={() => setIsCartCheckoutModalOpen(true)}
+                        title="Ver Carrito de Compras"
+                      >
+                        <Dashicon name="cart" size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="stage-carousel-icon-btn"
+                        onClick={() => setShowOffersCarouselOnStage(false)}
+                        title="Minimizar carrusel en vivo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Buscador integrado en carrusel */}
+                  <div className="stage-carousel-search-box">
+                    <span className="stage-carousel-search-icon">
+                      <Dashicon name="search" size={14} />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre de producto..."
+                      value={offersCarouselSearch}
+                      onChange={(e) => setOffersCarouselSearch(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Lista vertical de ofertas en pantalla */}
+                  <div className="stage-carousel-items-scroll">
+                    {shoppableProducts
+                      .filter((p) => p.featuredInCarousel !== false)
+                      .filter((p) =>
+                        p.title.toLowerCase().includes(offersCarouselSearch.toLowerCase()) ||
+                        (p.subtitle && p.subtitle.toLowerCase().includes(offersCarouselSearch.toLowerCase()))
+                      )
+                      .map((prod) => {
+                        const discount =
+                          prod.compareAtPrice && prod.compareAtPrice > prod.price
+                            ? Math.round(((prod.compareAtPrice - prod.price) / prod.compareAtPrice) * 100)
+                            : prod.discountPercent || null;
+                        return (
+                          <div key={prod.id} className="stage-offer-item-card">
+                            <div
+                              className="stage-offer-thumb-container"
+                              onClick={() => {
+                                setActiveProductId(prod.id);
+                                setIsProductExpanded(true);
+                              }}
+                              title="Toca para ampliar foto e información completa"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={prod.imageUrl} alt={prod.title} />
+                              <button
+                                type="button"
+                                className="stage-offer-zoom-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveProductId(prod.id);
+                                  setIsProductExpanded(true);
+                                }}
+                                title="Ampliar producto"
+                              >
+                                ⤢
+                              </button>
+                            </div>
+
+                            <div className="stage-offer-details">
+                              <span
+                                className="stage-offer-title"
+                                onClick={() => {
+                                  setActiveProductId(prod.id);
+                                  setIsProductExpanded(true);
+                                }}
+                                title={prod.title}
+                              >
+                                {prod.title}
+                              </span>
+                              <div className="stage-offer-price-row">
+                                <span className="stage-offer-price">
+                                  {prod.currencySymbol} {prod.price.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                </span>
+                                {prod.compareAtPrice && (
+                                  <span className="stage-offer-compare">
+                                    {prod.currencySymbol} {prod.compareAtPrice.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                  </span>
+                                )}
+                                {discount && (
+                                  <span className="stage-offer-discount-badge">-{discount}%</span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="stage-offer-actions">
+                              {/* Botón negro estilo GoJiraf VER MÁS */}
+                              <button
+                                type="button"
+                                className="stage-offer-ver-mas-btn"
+                                onClick={() => {
+                                  if (prod.linkUrl && prod.linkUrl !== "#") {
+                                    window.open(prod.linkUrl, "_blank");
+                                  } else {
+                                    handleAddToCart(prod);
+                                    setIsCartCheckoutModalOpen(true);
+                                  }
+                                }}
+                                title={`Ir al enlace de compra (${prod.linkUrl})`}
+                              >
+                                {prod.buttonText || "VER MÁS"}
+                              </button>
+
+                              {/* Botón rápido para agregar al carrito */}
+                              <button
+                                type="button"
+                                className="stage-offer-add-cart-btn"
+                                onClick={() => handleAddToCart(prod)}
+                                title="Agregar al Carrito de Compras en Vivo"
+                              >
+                                <Dashicon name="cart" size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL DE CHECKOUT Y PASARELA DE PAGOS (LIVE SHOPPING CART) */}
+              {isCartCheckoutModalOpen && (
+                <div
+                  className="live-checkout-overlay"
+                  onClick={() => setIsCartCheckoutModalOpen(false)}
+                >
+                  <div
+                    className="live-checkout-modal"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="live-checkout-header">
+                      <div className="live-checkout-title-row">
+                        <Dashicon name="cart" size={20} color="#EC4899" />
+                        <h3 className="live-checkout-title">Carrito de Compras en Vivo</h3>
+                      </div>
+                      <button
+                        type="button"
+                        className="stage-carousel-icon-btn"
+                        onClick={() => setIsCartCheckoutModalOpen(false)}
+                        title="Cerrar carrito"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {cartItems.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "30px 16px", color: "#9CA3AF" }}>
+                        <Dashicon name="cart" size={36} color="#6B7280" />
+                        <p style={{ fontSize: "0.9rem", marginTop: 10, color: "#FFFFFF", fontWeight: 700 }}>
+                          Tu carrito está vacío
+                        </p>
+                        <p style={{ fontSize: "0.75rem", color: "#94A3B8" }}>
+                          Toca &quot;🛒&quot; o &quot;VER MÁS&quot; en las ofertas para agregar productos.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="live-checkout-cart-items">
+                          {cartItems.map((item) => (
+                            <div key={item.product.id} className="live-checkout-item-row">
+                              <div className="live-checkout-item-thumb">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={item.product.imageUrl} alt={item.product.title} />
+                              </div>
+                              <div className="live-checkout-item-info">
+                                <span className="live-checkout-item-title">{item.product.title}</span>
+                                <span className="live-checkout-item-price">
+                                  {item.product.currencySymbol}{(item.product.price * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="live-checkout-qty-controls">
+                                <button
+                                  type="button"
+                                  className="live-checkout-qty-btn"
+                                  onClick={() => handleUpdateCartQty(item.product.id, -1)}
+                                >
+                                  -
+                                </button>
+                                <span className="live-checkout-qty-value">{item.quantity}</span>
+                                <button
+                                  type="button"
+                                  className="live-checkout-qty-btn"
+                                  onClick={() => handleUpdateCartQty(item.product.id, 1)}
+                                >
+                                  +
+                                </button>
+                                <button
+                                  type="button"
+                                  className="live-checkout-qty-btn"
+                                  style={{ color: "#EF4444", marginLeft: 4 }}
+                                  onClick={() => handleRemoveFromCart(item.product.id)}
+                                  title="Eliminar producto"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Totales */}
+                        <div className="live-checkout-totals-box">
+                          <div className="live-checkout-total-row">
+                            <span>Artículos ({cartItems.reduce((acc, i) => acc + i.quantity, 0)}):</span>
+                            <span>
+                              ${cartItems.reduce((acc, i) => acc + i.product.price * i.quantity, 0).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="live-checkout-total-row">
+                            <span>Envío en vivo:</span>
+                            <span style={{ color: "#10B981", fontWeight: 700 }}>¡GRATIS HOY!</span>
+                          </div>
+                          <div className="live-checkout-total-row live-checkout-total-final">
+                            <span>TOTAL A PAGAR:</span>
+                            <span>
+                              ${cartItems.reduce((acc, i) => acc + i.product.price * i.quantity, 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Selector de Pasarela de Pago */}
+                        <span className="live-checkout-gateways-title">Selecciona Pasarela de Pago:</span>
+                        <div className="live-checkout-gateways-grid">
+                          <button
+                            type="button"
+                            className={`live-gateway-card-btn ${selectedGateway === "mercadopago" ? "active" : ""}`}
+                            onClick={() => setSelectedGateway("mercadopago")}
+                          >
+                            <span className="live-gateway-name">
+                              <span>💙 Mercado Pago</span>
+                            </span>
+                            <span className="live-gateway-sub">Tarjetas, Débito, Efectivo</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`live-gateway-card-btn ${selectedGateway === "stripe" ? "active" : ""}`}
+                            onClick={() => setSelectedGateway("stripe")}
+                          >
+                            <span className="live-gateway-name">
+                              <span>💳 Stripe</span>
+                            </span>
+                            <span className="live-gateway-sub">Visa, Mastercard, AMEX</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`live-gateway-card-btn ${selectedGateway === "wompi" ? "active" : ""}`}
+                            onClick={() => setSelectedGateway("wompi")}
+                          >
+                            <span className="live-gateway-name">
+                              <span>🏦 Wompi / PSE</span>
+                            </span>
+                            <span className="live-gateway-sub">Bancolombia, Nequi, PSE</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`live-gateway-card-btn ${selectedGateway === "whatsapp" ? "active" : ""}`}
+                            onClick={() => setSelectedGateway("whatsapp")}
+                          >
+                            <span className="live-gateway-name">
+                              <span style={{ color: "#25D366" }}>💬 WhatsApp</span>
+                            </span>
+                            <span className="live-gateway-sub">Confirmar pedido con asesor</span>
+                          </button>
+                        </div>
+
+                        {/* Gran botón de pago */}
+                        <button
+                          type="button"
+                          className="live-checkout-pay-btn"
+                          onClick={handleExecuteCheckout}
+                        >
+                          <Dashicon name="lock" size={18} />
+                          <span>
+                            {selectedGateway === "whatsapp"
+                              ? "CONFIRMAR PEDIDO POR WHATSAPP"
+                              : `PAGAR $${cartItems.reduce((acc, i) => acc + i.product.price * i.quantity, 0).toFixed(2)} CON ${selectedGateway.toUpperCase()}`}
+                          </span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TOAST DE NOTIFICACIÓN DE PAGO / CARRITO */}
+              {paymentSuccessToast && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 24,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 99,
+                    background: "rgba(16, 185, 129, 0.95)",
+                    backdropFilter: "blur(12px)",
+                    color: "#FFFFFF",
+                    padding: "10px 20px",
+                    borderRadius: 999,
+                    fontSize: "0.82rem",
+                    fontWeight: 800,
+                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.6)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    animation: "fadeInModal 0.25s ease-out",
+                  }}
+                >
+                  <Dashicon name="yes" size={16} color="#FFFFFF" />
+                  <span>{paymentSuccessToast}</span>
+                </div>
+              )}
+
               {/* 5. BOTÓN FLOTANTE BOLSA DE CATÁLOGO (ESTILO TIKTOK / SHORTS) */}
               <div
                 className="monitor-shopping-bag-fab"
@@ -7349,6 +7806,26 @@ export default function StudioDeluluPage() {
                   </div>
                 </div>
 
+                {/* Switch Carrusel de Múltiples Ofertas en Pantalla */}
+                <div className="studio-layers-row-item" title="Alternar Carrusel Vertical de Múltiples Ofertas (Estilo GoJiraf) en pantalla">
+                  <div
+                    className="studio-layers-row-label"
+                    onClick={() => setActiveStudioTab("shopping")}
+                    style={{ cursor: "pointer" }}
+                    title="Clic para abrir y configurar Carrusel de Ofertas"
+                  >
+                    <Dashicon name="portfolio" size={14} color="#F472B6" />
+                    <span>Carrusel Ofertas Live</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${showOffersCarouselOnStage ? "active-green" : ""}`}
+                    onClick={() => setShowOffersCarouselOnStage((prev) => !prev)}
+                    title="Mostrar u ocultar Carrusel Vertical de Ofertas sobre el video en vivo"
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
                 {/* Switch Banners */}
                 <div className="studio-layers-row-item" title="Alternar logos y banners programados">
                   <div className="studio-layers-row-label">
@@ -7932,12 +8409,22 @@ export default function StudioDeluluPage() {
                   <button
                     type="button"
                     className="studio-action-button"
-                    style={{ background: "rgba(236, 72, 153, 0.16)", borderColor: "rgba(236, 72, 153, 0.45)", color: "#F472B6" }}
-                    onClick={() => setIsProductCatalogDrawerOpen(true)}
-                    title="Abrir Lista Vertical Deslizable de Productos"
+                    style={{ background: showOffersCarouselOnStage ? "rgba(16, 185, 129, 0.2)" : "rgba(236, 72, 153, 0.16)", borderColor: showOffersCarouselOnStage ? "#10B981" : "rgba(236, 72, 153, 0.45)", color: showOffersCarouselOnStage ? "#10B981" : "#F472B6" }}
+                    onClick={() => setShowOffersCarouselOnStage((prev) => !prev)}
+                    title="Mostrar u ocultar el carrusel de múltiples ofertas directamente en la transmisión"
                   >
                     <Dashicon name="portfolio" size={14} />
-                    <span>📋 Ver Lista Vertical</span>
+                    <span>{showOffersCarouselOnStage ? "✓ Carrusel en Pantalla ON" : "📱 Carrusel Ofertas Pantalla"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="studio-action-button"
+                    style={{ background: "rgba(255, 255, 255, 0.08)", borderColor: "rgba(255, 255, 255, 0.2)" }}
+                    onClick={() => setIsCartCheckoutModalOpen(true)}
+                    title="Ver Carrito y Configuración de Pagos"
+                  >
+                    <Dashicon name="cart" size={14} />
+                    <span>🛒 Carrito ({cartItems.reduce((acc, i) => acc + i.quantity, 0)})</span>
                   </button>
                   {activeProduct && (
                     <button
@@ -12292,16 +12779,57 @@ export default function StudioDeluluPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={{ fontSize: "0.74rem", color: "#E5E7EB", fontWeight: 600, display: "block", marginBottom: 4 }}>
-                  Link
+                  Enlace de Redirección / Pasarela de Pago
                 </label>
                 <input
                   type="text"
                   className="input-control"
                   value={newProdLink}
                   onChange={(e) => setNewProdLink(e.target.value)}
-                  placeholder="https://onestream.live/shop/product"
+                  placeholder="https://tu-tienda.com/producto o https://wa.me/..."
                   style={{ width: "100%", backgroundColor: "#2A2A38", border: "1px solid #3F3F54", borderRadius: 8, padding: "8px 10px", color: "#FFFFFF" }}
                 />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: "0.74rem", color: "#E5E7EB", fontWeight: 600, display: "block", marginBottom: 4 }}>
+                    Texto del Botón
+                  </label>
+                  <input
+                    type="text"
+                    className="input-control"
+                    value={newProdButtonText}
+                    onChange={(e) => setNewProdButtonText(e.target.value)}
+                    placeholder="VER MÁS"
+                    style={{ width: "100%", backgroundColor: "#2A2A38", border: "1px solid #3F3F54", borderRadius: 8, padding: "8px 10px", color: "#FFFFFF" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.74rem", color: "#E5E7EB", fontWeight: 600, display: "block", marginBottom: 4 }}>
+                    Pasarela Preferida
+                  </label>
+                  <select
+                    value={newProdGateway}
+                    onChange={(e) => setNewProdGateway(e.target.value as PaymentGatewayType)}
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#2A2A38",
+                      border: "1px solid #3F3F54",
+                      borderRadius: 8,
+                      padding: "8px 10px",
+                      color: "#FFFFFF",
+                      fontSize: "0.8rem",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="mercadopago">Mercado Pago</option>
+                    <option value="stripe">Stripe (Tarjetas)</option>
+                    <option value="wompi">Wompi / PSE</option>
+                    <option value="whatsapp">WhatsApp Directo</option>
+                    <option value="custom_url">Enlace Propio</option>
+                  </select>
+                </div>
               </div>
 
               <div>

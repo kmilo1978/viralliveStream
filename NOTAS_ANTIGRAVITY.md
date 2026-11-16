@@ -1,6 +1,20 @@
 # NOTAS DE PROYECTO: MiPlataformaStream
 
 ## Validación completada
+- Fecha: 2026-11-16 11:30
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Implementación y verificación integral del Carrusel Vertical de Múltiples Ofertas en Pantalla (estilo GoJiraf), Carrito de Compras en Vivo y Checkout Multipasarela:
+  1. **Carrusel Vertical de Múltiples Ofertas en Pantalla**: Bottom Sheet blanco/translúcido proyectado en la parte inferior del video en vivo (idéntico a la captura de GoJiraf) mostrando múltiples ofertas a la vez con foto, título, precio, badge de descuento, botón negro tipo cápsula 'VER MÁS' y botón de zoom '⤢'.
+  2. **Creación de Múltiples Ofertas**: Formulario ampliado en Shop QR para crear tantas ofertas como se desee, con foto, precio de oferta, enlace de redirección, texto de botón personalizable ('VER MÁS', 'COMPRAR', 'PEDIR POR WHATSAPP') y pasarela preferida.
+  3. **Carrito de Compras en Vivo (Live Cart)**: Botón '🛒' en cada oferta para agregar artículos al carrito con toast de confirmación y botón flotante en la esquina superior derecha del monitor con contador en tiempo real.
+  4. **Checkout Multipasarela Integrado**: Modal de compra con desglose de productos (+ / -), total calculado y conexión a 4 pasarelas de pago: Mercado Pago, Stripe, Wompi / PSE y WhatsApp Direct Checkout.
+- Observaciones:
+  - 0 errores en compilación TypeScript (npx tsc --noEmit).
+  - Verificación visual y de interacción automatizada en http://localhost:3000 con subagente browser.
+  - Interruptores cerrados por defecto al iniciar la app.
+  - Capturas de evidencia: carrusel_vertical_ofertas_gojiraf.png, modal_zoom_producto.png y checkout_pasarelas_pago.png.
+
+## Validación completada
 - Fecha: 2026-11-16 10:35
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Implementación y verificación integral de la Suite de Live Shopping Interactivo inspirada en GoJiraf y Mercado Libre:

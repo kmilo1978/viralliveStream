@@ -1369,6 +1369,9 @@ export type ShoppableProductItem = {
   description?: string;
   discountPercent?: number;
   linkUrl: string;
+  buttonText?: string;
+  paymentGateway?: "stripe" | "mercadopago" | "wompi" | "whatsapp" | "custom_url";
+  featuredInCarousel?: boolean;
   currency: CurrencyOption;
   currencySymbol: string;
   price: number;
@@ -1517,6 +1520,81 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     currentDisplayCount: 0,
   },
   {
+    id: "prod-rolling-voodoo",
+    title: "Hoodie The Rolling Stones Voodoo",
+    subtitle: "Edición Voodoo Lounge Oficial",
+    description: "Buzo con capucha exclusivo de la gira Voodoo Lounge. Algodón pesado de máxima suavidad, bolsillo canguro y estampado serigráfico vintage.",
+    discountPercent: 20,
+    linkUrl: "https://onestream.live/shop/rolling-stones-voodoo",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 119.90,
+    compareAtPrice: 149.90,
+    imageUrl: "/products/hoodie.jpg",
+    position: "bottom-center",
+    buttonText: "VER MÁS",
+    paymentGateway: "mercadopago",
+    featuredInCarousel: true,
+    enabled: false,
+    scansCount: 145,
+    clicksCount: 92,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-rolling-tour-1994",
+    title: "The Rolling Stones Tour 1994",
+    subtitle: "Camiseta Oficial Colección Tour 1994",
+    description: "Camiseta clásica vintage con arte original del tour mundial de 1994. Costuras reforzadas y ajuste contemporáneo para uso diario.",
+    discountPercent: 25,
+    linkUrl: "https://onestream.live/shop/rolling-tour-1994",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 59.90,
+    compareAtPrice: 79.90,
+    imageUrl: "/products/smartwatch.jpg",
+    position: "bottom-center",
+    buttonText: "VER MÁS",
+    paymentGateway: "mercadopago",
+    featuredInCarousel: true,
+    enabled: false,
+    scansCount: 168,
+    clicksCount: 112,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-rolling-mick",
+    title: "The Rolling Stones Mick Jagger",
+    subtitle: "Remera Negra Edición Especial",
+    description: "Diseño minimalista con silueta icónica de Mick Jagger. Acabado de algodón peinado 100% orgánico y cuello acanalado.",
+    discountPercent: 22,
+    linkUrl: "https://onestream.live/shop/rolling-mick",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 69.90,
+    compareAtPrice: 89.90,
+    imageUrl: "/products/headphones.jpg",
+    position: "bottom-center",
+    buttonText: "VER MÁS",
+    paymentGateway: "mercadopago",
+    featuredInCarousel: true,
+    enabled: false,
+    scansCount: 97,
+    clicksCount: 64,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
     id: "prod-natura-faces",
     title: "Ritual Gloss Chaveiro Faces",
     subtitle: "Brillo labial hidratante y llavero",
@@ -1569,6 +1647,35 @@ export const DEFAULT_CENTER_LOGO_CONFIG: CenterLogoConfig = {
   subtext: "Powered by ViralLive",
   showGlow: true,
 };
+
+// =============================================================
+// CARRITO DE COMPRAS EN VIVO Y PASARELA DE PAGO (LIVE SHOPPING CART)
+// =============================================================
+
+export type LiveCartItem = {
+  product: ShoppableProductItem;
+  quantity: number;
+};
+
+export type PaymentGatewayType = "stripe" | "mercadopago" | "wompi" | "whatsapp" | "custom_url";
+
+export type LiveCheckoutConfig = {
+  activeGateway: PaymentGatewayType;
+  stripePublishableKey?: string;
+  mercadoPagoPublicKey?: string;
+  wompiPublicKey?: string;
+  whatsappCheckoutNumber?: string;
+  storeName?: string;
+  currency: CurrencyOption;
+};
+
+export const DEFAULT_LIVE_CHECKOUT_CONFIG: LiveCheckoutConfig = {
+  activeGateway: "mercadopago",
+  whatsappCheckoutNumber: "+573001234567",
+  storeName: "ViralLive Shop Oficial",
+  currency: "USD",
+};
+
 
 
 

@@ -11969,3 +11969,651 @@ body {
   border: 1.5px solid #0E0E14;
 }
 
+
+
+/* =============================================================
+   CARRUSEL VERTICAL DE MÚLTIPLES OFERTAS EN PANTALLA (ESTILO GOJIRAF)
+   Y CARRITO DE COMPRAS CON PASARELAS DE PAGO
+   ============================================================= */
+
+/* 1. Carrusel Vertical Flotante en Pantalla (Lista de Productos) */
+.stage-vertical-offers-carousel {
+  position: absolute;
+  z-index: 54;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: #111827;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.65);
+  border-top: 1.5px solid rgba(236, 72, 153, 0.4);
+  max-height: 52%;
+  height: 48%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  animation: slideUpCarousel 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  user-select: none;
+}
+
+@keyframes slideUpCarousel {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* En modo monitor horizontal 16:9, se ubica como panel flotante elegante */
+@media (min-width: 900px) {
+  .stage-vertical-offers-carousel.monitor-16-9 {
+    max-width: 390px;
+    left: 20px;
+    right: auto;
+    bottom: 20px;
+    border-radius: 24px;
+    border: 1.5px solid rgba(236, 72, 153, 0.4);
+    max-height: 60%;
+    height: 55%;
+  }
+}
+
+.stage-carousel-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #D1D5DB;
+  margin: 0 auto 8px auto;
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.stage-carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.stage-carousel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stage-carousel-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.2px;
+}
+
+.stage-carousel-counter-badge {
+  background: rgba(236, 72, 153, 0.15);
+  color: #DB2777;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.stage-carousel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stage-carousel-icon-btn {
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  color: #374151;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.stage-carousel-icon-btn:hover {
+  background: #E5E7EB;
+  color: #111827;
+}
+
+/* Buscador en carrusel */
+.stage-carousel-search-box {
+  position: relative;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.stage-carousel-search-box input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  color: #111827;
+  font-size: 0.8rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.stage-carousel-search-box input:focus {
+  border-color: #EC4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+}
+
+.stage-carousel-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+/* Lista deslizable de ofertas */
+.stage-carousel-items-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex-grow: 1;
+}
+
+.stage-carousel-items-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.stage-carousel-items-scroll::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 8px;
+}
+
+/* Tarjeta individual de oferta (Estilo GoJiraf) */
+.stage-offer-item-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #F3F4F6;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+
+.stage-offer-item-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.09);
+  border-color: rgba(236, 72, 153, 0.35);
+}
+
+.stage-offer-thumb-container {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  border-radius: 12px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.stage-offer-thumb-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.stage-offer-thumb-container:hover img {
+  transform: scale(1.08);
+}
+
+.stage-offer-zoom-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.75);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.stage-offer-zoom-btn:hover {
+  background: #EC4899;
+}
+
+.stage-offer-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stage-offer-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1F2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.stage-offer-title:hover {
+  color: #EC4899;
+}
+
+.stage-offer-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.stage-offer-price {
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #111827;
+}
+
+.stage-offer-compare {
+  font-size: 0.74rem;
+  color: #9CA3AF;
+  text-decoration: line-through;
+}
+
+.stage-offer-discount-badge {
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+
+.stage-offer-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Botón negro estilo GoJiraf VER MÁS */
+.stage-offer-ver-mas-btn {
+  background: #000000;
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.stage-offer-ver-mas-btn:hover {
+  background: #EC4899;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
+}
+
+.stage-offer-add-cart-btn {
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  color: #1F2937;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.stage-offer-add-cart-btn:hover {
+  background: #EC4899;
+  color: #FFFFFF;
+  border-color: #EC4899;
+}
+
+/* 2. Botón Flotante Carrito en Esquina Superior Derecha del Monitor (Estilo GoJiraf) */
+.stage-cart-top-fab {
+  position: absolute;
+  top: 68px;
+  right: 16px;
+  z-index: 55;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stage-cart-top-fab:hover {
+  transform: scale(1.08);
+  background: rgba(236, 72, 153, 0.9);
+  border-color: #FFFFFF;
+}
+
+.stage-cart-top-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 900;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #111827;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.7);
+  animation: pulseDiscount 2s infinite ease-in-out;
+}
+
+/* 3. Modal de Checkout y Pasarela de Pagos */
+.live-checkout-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 12, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+.live-checkout-modal {
+  background: linear-gradient(180deg, #181826 0%, #0E0E18 100%);
+  border: 1.5px solid rgba(236, 72, 153, 0.45);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 30px rgba(236, 72, 153, 0.25);
+  border-radius: 26px;
+  max-width: 440px;
+  width: 100%;
+  max-height: 90%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  color: #FFFFFF;
+  animation: popUpModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.live-checkout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.live-checkout-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-checkout-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.live-checkout-cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.live-checkout-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.live-checkout-item-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #0B0B14;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.live-checkout-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.live-checkout-item-info {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.live-checkout-item-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-checkout-item-price {
+  font-size: 0.8rem;
+  color: #F472B6;
+  font-weight: 800;
+}
+
+.live-checkout-qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.live-checkout-qty-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.live-checkout-qty-btn:hover {
+  background: rgba(236, 72, 153, 0.3);
+  border-color: #EC4899;
+}
+
+.live-checkout-qty-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Resumen de totales */
+.live-checkout-totals-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-checkout-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #CBD5E1;
+}
+
+.live-checkout-total-final {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.live-checkout-total-final span:last-child {
+  color: #F472B6;
+  text-shadow: 0 0 14px rgba(244, 114, 182, 0.5);
+}
+
+/* Selector de Pasarelas de Pago */
+.live-checkout-gateways-title {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.live-checkout-gateways-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.live-gateway-card-btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.live-gateway-card-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.live-gateway-card-btn.active {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: #EC4899;
+  box-shadow: 0 0 16px rgba(236, 72, 153, 0.3);
+}
+
+.live-gateway-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-gateway-sub {
+  font-size: 0.65rem;
+  color: #94A3B8;
+}
+
+/* Gran botón de pago final */
+.live-checkout-pay-btn {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 28px rgba(236, 72, 153, 0.5);
+  transition: all 0.2s ease;
+}
+
+.live-checkout-pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(236, 72, 153, 0.7);
+  background: linear-gradient(135deg, #F472B6 0%, #A855F7 100%);
+}
+
+.live-checkout-pay-btn:active {
+  transform: translateY(0);
+}
+
