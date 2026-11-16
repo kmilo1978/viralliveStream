@@ -659,9 +659,7 @@ export default function StudioDeluluPage() {
         setSplitView(false);
         setPreprocOpts((prev) => ({ ...prev, cropMode: "9:16" }));
         setPhoneMockupMode(true);
-        if (!activeTikTokTheme) {
-          setActiveTikTokTheme(DEFAULT_TIKTOK_BRAND_THEMES[0]);
-        }
+        // Respetar switches y capas apagadas por defecto; no forzar banner en pantalla
         return;
       }
       if (tab === "CAM") {
@@ -6215,7 +6213,7 @@ ${summary}
                   style={
                     showPhoneMockupFrame
                       ? {
-                          justifyContent: "flex-start",
+                          justifyContent: "flex-end",
                           border: `2px solid ${activeTikTokTheme.accentColor}`,
                           borderRadius: 34,
                         }
@@ -6225,44 +6223,49 @@ ${summary}
                   {showPhoneMockupFrame ? (
                     <div
                       style={{
-                        marginTop: 114,
+                        marginBottom: 68,
                         marginLeft: 12,
-                        marginRight: 12,
-                        padding: "6px 12px",
-                        borderRadius: 12,
-                        background: `linear-gradient(90deg, ${activeTikTokTheme.secondaryColor}CC 0%, rgba(10,10,16,0.75) 100%)`,
-                        border: `1px solid ${activeTikTokTheme.accentColor}88`,
-                        display: "flex",
-                        justifyContent: "space-between",
+                        marginRight: "auto",
+                        maxWidth: 240,
+                        padding: "5px 10px",
+                        borderRadius: 999,
+                        background: "rgba(10, 10, 18, 0.88)",
+                        border: `1.5px solid ${activeTikTokTheme.accentColor}`,
+                        display: "inline-flex",
                         alignItems: "center",
-                        backdropFilter: "blur(6px)",
+                        gap: 8,
+                        backdropFilter: "blur(8px)",
+                        boxShadow: `0 4px 16px rgba(0, 0, 0, 0.5), 0 0 10px ${activeTikTokTheme.accentColor}33`,
+                        cursor: "pointer",
                       }}
+                      onClick={() => setShowProductCatalogModal(true)}
+                      title={`Ver tienda de ${activeTikTokTheme.brandName}`}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, overflow: "hidden" }}>
                         {activeTikTokTheme.logoUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={activeTikTokTheme.logoUrl}
                             alt={`${activeTikTokTheme.brandName} logo`}
-                            style={{ width: 24, height: 24, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+                            style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
                           />
                         ) : (
-                          <span>{activeTikTokTheme.decorations[0]}</span>
+                          <span style={{ fontSize: "0.9rem" }}>🛍️</span>
                         )}
-                        <div>
-                          <div style={{ fontSize: "0.74rem", fontWeight: 900, color: "#FFFFFF", lineHeight: 1.1 }}>
+                        <div style={{ minWidth: 0, overflow: "hidden" }}>
+                          <div style={{ fontSize: "0.72rem", fontWeight: 900, color: "#FFFFFF", lineHeight: 1.1, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
                             {activeTikTokTheme.brandName}
                           </div>
-                          <div style={{ fontSize: "0.62rem", color: activeTikTokTheme.accentColor, fontWeight: 700 }}>
+                          <div style={{ fontSize: "0.58rem", color: activeTikTokTheme.accentColor, fontWeight: 700, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
                             {activeTikTokTheme.tagline}
                           </div>
                         </div>
                       </div>
                       <span
                         className="tiktok-shop-pill-btn"
-                        style={{ backgroundColor: activeTikTokTheme.accentColor, color: "#000", fontSize: "0.62rem", padding: "3px 8px", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        style={{ backgroundColor: activeTikTokTheme.accentColor, color: "#000", fontSize: "0.6rem", fontWeight: 800, padding: "3px 8px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}
                       >
-                        <Dashicon name="cart" size={11} /> SHOP
+                        <Dashicon name="cart" size={10} /> TIENDA
                       </span>
                     </div>
                   ) : (
@@ -6683,19 +6686,19 @@ ${summary}
                 </div>
               )}
 
-              {/* BOTÓN FLOTANTE CARRITO EN ESQUINA SUPERIOR DERECHA (ESTILO GOJIRAF / SHORTS) */}
-              <div
-                className="stage-cart-top-fab"
-                onClick={() => setIsCartCheckoutModalOpen(true)}
-                title="Abrir Carrito de Compras y Pasarelas de Pago"
-              >
-                <Dashicon name="cart" size={20} color="#FFFFFF" />
-                {cartItems.reduce((acc, i) => acc + i.quantity, 0) > 0 && (
+              {/* BOTÓN FLOTANTE CARRITO EN ESQUINA SUPERIOR DERECHA (SÓLO SI HAY PRODUCTOS EN CARRITO) */}
+              {cartItems.reduce((acc, i) => acc + i.quantity, 0) > 0 && (
+                <div
+                  className="stage-cart-top-fab"
+                  onClick={() => setIsCartCheckoutModalOpen(true)}
+                  title="Abrir Carrito de Compras y Pasarelas de Pago"
+                >
+                  <Dashicon name="cart" size={20} color="#FFFFFF" />
                   <span className="stage-cart-top-badge">
                     {cartItems.reduce((acc, i) => acc + i.quantity, 0)}
                   </span>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* CARRUSEL HORIZONTAL DE OFERTAS EN PANTALLA CON AUTO-SCROLL (ESTILO GOJIRAF) */}
               {shoppingCustomization.horizontalCarouselEnabled && (
@@ -7140,17 +7143,6 @@ ${summary}
                 </div>
               )}
 
-              {/* 5. BOTÓN FLOTANTE BOLSA DE CATÁLOGO (ESTILO TIKTOK / SHORTS) */}
-              <div
-                className="monitor-shopping-bag-fab"
-                onClick={() => setIsProductCatalogDrawerOpen((prev) => !prev)}
-                title="Abrir Lista Vertical de Productos"
-              >
-                <Dashicon name="cart" size={20} color="#FFFFFF" />
-                {shoppableProducts.length > 0 && (
-                  <span className="monitor-shopping-bag-badge">{shoppableProducts.length}</span>
-                )}
-              </div>
 
               {/* BURBUJA FLOTANTE DE WHATSAPP EN PANTALLA (SI ESTÁ ACTIVA EN CAPAS) */}
               {whatsappConfig.showOnScreen && (
