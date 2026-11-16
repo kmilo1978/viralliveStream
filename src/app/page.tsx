@@ -4747,16 +4747,8 @@ ${summary}
                 </button>
               </div>
             )}
-            {/* Barra superior de conexión: OBS, Multistream 45+ y Live Shopping */}
+            {/* Barra superior de transmisión: Estado Multistream, Controles de Monitor y Configuración */}
             <div className="stage-top-pills-row">
-              <div className="alert-install-vcam-pill vcam-full-span" onClick={() => setShowObsModal(true)} style={{ margin: 0 }}>
-                <span className="vcam-pill-prefix" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <Dashicon name="share" size={14} />
-                  <span className="vcam-prefix-desktop">TRANSMITE EN CUALQUIER APP O LLAMADA</span>
-                </span>
-                <span className="alert-vcam-cta">VIRTUAL CAMERA / OBS</span>
-              </div>
-
               {/* Botón Multistream OneStream 45+ */}
               <button
                 type="button"
@@ -4771,28 +4763,16 @@ ${summary}
                 </span>
               </button>
 
-              {/* Botón Shoppable Product Cards */}
+              {/* Acceso Rápido a Configuración Técnica */}
               <button
                 type="button"
                 className="multistream-stage-pill"
-                style={{ borderColor: "rgba(168, 85, 247, 0.6)", color: "#E9D5FF" }}
-                onClick={() => setShowProductCatalogModal(true)}
-                title="Mostrar y vender productos con código QR en pantalla"
-              >
-                <Dashicon name="cart" size={14} />
-                <span>LIVE SHOPPING ({activeProduct ? `1 Activo: ${activeProduct.title}` : "Sin producto"})</span>
-              </button>
-
-              {/* Botón Stream Config */}
-              <button
-                type="button"
-                className="multistream-stage-pill"
-                style={{ borderColor: "#EC4899", color: "#F472B6", background: "rgba(236, 72, 153, 0.12)" }}
+                style={{ borderColor: "rgba(255, 255, 255, 0.16)", color: "#CBD5E1" }}
                 onClick={() => setShowStreamConfigModal(true)}
-                title="Configurar transmisión (Audiencia, Grabación y Plataforma) en viralive.app"
+                title="Ajustes técnicos de transmisión, plataforma y presets"
               >
                 <Dashicon name="admin-generic" size={14} />
-                <span>STREAM CONFIG</span>
+                <span>CONFIGURACIÓN</span>
               </button>
 
               {/* Guía Visual Externa para Cabina CLIPS (fuera de la pantalla de video) */}
