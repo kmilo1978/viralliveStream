@@ -1595,6 +1595,81 @@ export const DEFAULT_SHOPPABLE_PRODUCTS: ShoppableProductItem[] = [
     currentDisplayCount: 0,
   },
   {
+    id: "prod-botineta-yatu",
+    title: "Botineta Yatu",
+    subtitle: "Botín rojo de diseño urbano con suela track",
+    description: "Calzado de alta durabilidad en caucho vulcanizado con plantilla confort anatómica y elásticos laterales.",
+    discountPercent: 15,
+    linkUrl: "https://onestream.live/shop/botineta-yatu",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 39000,
+    compareAtPrice: 46000,
+    imageUrl: "/products/headphones.jpg",
+    position: "bottom-center",
+    buttonText: "VER MÁS",
+    paymentGateway: "mercadopago",
+    featuredInCarousel: true,
+    enabled: false,
+    scansCount: 88,
+    clicksCount: 52,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-stanley-quencher",
+    title: "Vaso Stanley Quencher 1.18L",
+    subtitle: "Acero Inoxidable con Manija & Bombilla",
+    description: "El vaso térmico viral con aislamiento al vacío de doble pared. Mantiene bebidas frías hasta 11 horas o heladas por 2 días completos.",
+    discountPercent: 34,
+    linkUrl: "https://onestream.live/shop/stanley-quencher",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 94430,
+    compareAtPrice: 142000,
+    imageUrl: "/products/smartwatch.jpg",
+    position: "bottom-center",
+    buttonText: "VER MÁS",
+    paymentGateway: "mercadopago",
+    featuredInCarousel: true,
+    enabled: false,
+    scansCount: 230,
+    clicksCount: 165,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
+    id: "prod-stanley-termo-azul",
+    title: "Termo Stanley Clásico Azul 1L",
+    subtitle: "Aislamiento Legendario al Vacío",
+    description: "El termo clásico e indestructible para mate, café o agua caliente. Tapa que funciona como taza y cierre hermético a prueba de fugas.",
+    discountPercent: 25,
+    linkUrl: "https://onestream.live/shop/stanley-azul",
+    currency: "USD",
+    currencySymbol: "$",
+    price: 89900,
+    compareAtPrice: 120000,
+    imageUrl: "/products/hoodie.jpg",
+    position: "bottom-center",
+    buttonText: "VER MÁS",
+    paymentGateway: "mercadopago",
+    featuredInCarousel: true,
+    enabled: false,
+    scansCount: 142,
+    clicksCount: 98,
+    scheduleMode: "manual",
+    intervalMinutes: 2,
+    displayDurationSeconds: 15,
+    repeatCount: 3,
+    currentDisplayCount: 0,
+  },
+  {
     id: "prod-natura-faces",
     title: "Ritual Gloss Chaveiro Faces",
     subtitle: "Brillo labial hidratante y llavero",
@@ -3018,4 +3093,54 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
   showOnScreen: false,
   position: "bottom-left",
   callToAction: "Escríbenos en vivo a WhatsApp",
+};
+
+
+// =============================================================
+// PERSONALIZACIÓN AVANZADA DE LIVE SHOPPING Y CHAT ELEGANTE
+// (Fondos, Colores de CTA, Copys, Carrusel Horizontal Auto-Scroll, Fuentes de Chat)
+// =============================================================
+
+export type OfferCardBackgroundTheme = "white" | "dark" | "glass" | "gradient";
+export type OfferCtaColor = "black" | "pink" | "green" | "blue" | "purple";
+
+export type LiveShoppingCustomizationConfig = {
+  cardBackgroundTheme: OfferCardBackgroundTheme;
+  ctaColor: OfferCtaColor;
+  globalCtaCopy: string;
+  globalOfferBadgeCopy: string;
+  horizontalCarouselEnabled: boolean;
+  horizontalAutoScrollEnabled: boolean;
+  autoScrollIntervalSeconds: number;
+};
+
+export const DEFAULT_LIVE_SHOPPING_CUSTOMIZATION: LiveShoppingCustomizationConfig = {
+  cardBackgroundTheme: "white",
+  ctaColor: "black",
+  globalCtaCopy: "VER MÁS",
+  globalOfferBadgeCopy: "OFERTA HOY",
+  horizontalCarouselEnabled: false,
+  horizontalAutoScrollEnabled: true,
+  autoScrollIntervalSeconds: 3.5,
+};
+
+export type LiveChatTheme = "glass-dark" | "glass-white" | "neon-pink" | "clean-minimal";
+export type LiveChatFontFamily = "sans-modern" | "poppins-soft" | "serif-editorial" | "mono-tech";
+
+export type LiveChatCustomizationConfig = {
+  theme: LiveChatTheme;
+  fontFamily: LiveChatFontFamily;
+  authorColor: string;
+  textColor: string;
+  bubbleOpacity: number;
+  fontSize: "sm" | "md" | "lg";
+};
+
+export const DEFAULT_LIVE_CHAT_CUSTOMIZATION: LiveChatCustomizationConfig = {
+  theme: "glass-dark",
+  fontFamily: "sans-modern",
+  authorColor: "#FFFFFF",
+  textColor: "#FFFFFF",
+  bubbleOpacity: 0.65,
+  fontSize: "md",
 };

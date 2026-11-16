@@ -85,6 +85,14 @@ import {
   type LiveCartItem,
   type PaymentGatewayType,
   type LiveCheckoutConfig,
+  DEFAULT_LIVE_SHOPPING_CUSTOMIZATION,
+  type LiveShoppingCustomizationConfig,
+  type OfferCardBackgroundTheme,
+  type OfferCtaColor,
+  DEFAULT_LIVE_CHAT_CUSTOMIZATION,
+  type LiveChatCustomizationConfig,
+  type LiveChatTheme,
+  type LiveChatFontFamily,
   type ShoppableProductPosition,
   type ShoppableScheduleMode,
   type CurrencyOption,
@@ -473,6 +481,13 @@ export default function StudioDeluluPage() {
   // Carrusel de Múltiples Ofertas en Pantalla (Vertical estilo GoJiraf)
   const [showOffersCarouselOnStage, setShowOffersCarouselOnStage] = useState<boolean>(false);
   const [offersCarouselSearch, setOffersCarouselSearch] = useState<string>("");
+
+  // Personalización de Live Shopping (Fondos, Colores de CTA, Copys, Carrusel Horizontal con Auto-Scroll)
+  const [shoppingCustomization, setShoppingCustomization] = useState<LiveShoppingCustomizationConfig>(DEFAULT_LIVE_SHOPPING_CUSTOMIZATION);
+  const horizontalCarouselRef = useRef<HTMLDivElement | null>(null);
+
+  // Personalización de Chat Elegante (Fuente, Colores, Temas de Burbuja)
+  const [chatCustomization, setChatCustomization] = useState<LiveChatCustomizationConfig>(DEFAULT_LIVE_CHAT_CUSTOMIZATION);
 
   // Carrito de Compras en Vivo & Pasarela de Pagos (Live Cart & Checkout)
   const [cartItems, setCartItems] = useState<LiveCartItem[]>([]);
@@ -3209,6 +3224,30 @@ export default function StudioDeluluPage() {
       window.localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(items));
     } catch {}
   }, []);
+
+  // Desplazamiento automático suave (Auto-Scroll) por switch para el Carrusel Horizontal
+  useEffect(() => {
+    if (!shoppingCustomization.horizontalCarouselEnabled || !shoppingCustomization.horizontalAutoScrollEnabled) return;
+    const el = horizontalCarouselRef.current;
+    if (!el) return;
+
+    const intervalMs = (shoppingCustomization.autoScrollIntervalSeconds || 3.5) * 1000;
+    const timer = setInterval(() => {
+      if (!el) return;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= maxScroll - 15) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        el.scrollBy({ left: 300, behavior: "smooth" });
+      }
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [
+    shoppingCustomization.autoScrollIntervalSeconds,
+    shoppingCustomization.horizontalAutoScrollEnabled,
+    shoppingCustomization.horizontalCarouselEnabled,
+  ]);
 
   // Handlers para Carrito de Compras en Vivo y Pasarela de Pagos
   const handleAddToCart = useCallback((product: ShoppableProductItem) => {
@@ -6176,6 +6215,10 @@ ${summary}
                   }
                   externalMessageToPush={underMonitorChatPush}
                   chatLanguage={chatLanguage}
+                  chatTheme={chatCustomization.theme}
+                  chatFontFamily={chatCustomization.fontFamily}
+                  chatAuthorColor={chatCustomization.authorColor}
+                  chatTextColor={chatCustomization.textColor}
                 />
               )}
 
@@ -6653,6 +6696,107 @@ ${summary}
                 )}
               </div>
 
+              {/* CARRUSEL HORIZONTAL DE OFERTAS EN PANTALLA CON AUTO-SCROLL (ESTILO GOJIRAF) */}
+              {shoppingCustomization.horizontalCarouselEnabled && (
+                <div
+                  ref={horizontalCarouselRef}
+                  className="stage-horizontal-offers-carousel"
+                  title="Carrusel horizontal de ofertas con rotación automática"
+                >
+                  {shoppableProducts
+                    .filter((p) => p.featuredInCarousel !== false)
+                    .map((prod) => {
+                      const discount =
+                        prod.compareAtPrice && prod.compareAtPrice > prod.price
+                          ? Math.round(((prod.compareAtPrice - prod.price) / prod.compareAtPrice) * 100)
+                          : prod.discountPercent || null;
+                      return (
+                        <div
+                          key={prod.id}
+                          className={`stage-horizontal-offer-card card-bg-${shoppingCustomization.cardBackgroundTheme}`}
+                        >
+                          <div
+                            className="stage-offer-thumb-container"
+                            onClick={() => {
+                              setActiveProductId(prod.id);
+                              setIsProductExpanded(true);
+                            }}
+                            title="Toca para ampliar foto"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={prod.imageUrl} alt={prod.title} />
+                            {discount && (
+                              <span className="shoppable-discount-badge" style={{ top: 2, left: 2, fontSize: "0.62rem", padding: "1px 5px" }}>
+                                -{discount}%
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              className="stage-offer-zoom-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveProductId(prod.id);
+                                setIsProductExpanded(true);
+                              }}
+                              title="Ampliar producto"
+                            >
+                              ⤢
+                            </button>
+                          </div>
+
+                          <div className="stage-offer-details">
+                            <span
+                              className="stage-offer-title card-title"
+                              onClick={() => {
+                                setActiveProductId(prod.id);
+                                setIsProductExpanded(true);
+                              }}
+                              title={prod.title}
+                            >
+                              {prod.title}
+                            </span>
+                            <div className="stage-offer-price-row">
+                              <span className="stage-offer-price card-price">
+                                {prod.currencySymbol} {prod.price.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                              </span>
+                              {prod.compareAtPrice && (
+                                <span className="stage-offer-compare">
+                                  {prod.currencySymbol} {prod.compareAtPrice.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="stage-offer-actions">
+                            <button
+                              type="button"
+                              className={`stage-offer-ver-mas-btn cta-btn-${shoppingCustomization.ctaColor}`}
+                              onClick={() => {
+                                if (prod.linkUrl && prod.linkUrl !== "#") {
+                                  window.open(prod.linkUrl, "_blank");
+                                } else {
+                                  handleAddToCart(prod);
+                                  setIsCartCheckoutModalOpen(true);
+                                }
+                              }}
+                            >
+                              {prod.buttonText || shoppingCustomization.globalCtaCopy || "VER MÁS"}
+                            </button>
+                            <button
+                              type="button"
+                              className="stage-offer-add-cart-btn"
+                              onClick={() => handleAddToCart(prod)}
+                              title="Agregar al Carrito"
+                            >
+                              <Dashicon name="cart" size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
               {/* CARRUSEL VERTICAL DE MÚLTIPLES OFERTAS EN PANTALLA (ESTILO GOJIRAF EXACTO) */}
               {showOffersCarouselOnStage && (
                 <div className={`stage-vertical-offers-carousel ${!showPhoneMockupFrame ? "monitor-16-9" : ""}`}>
@@ -6714,7 +6858,7 @@ ${summary}
                             ? Math.round(((prod.compareAtPrice - prod.price) / prod.compareAtPrice) * 100)
                             : prod.discountPercent || null;
                         return (
-                          <div key={prod.id} className="stage-offer-item-card">
+                          <div key={prod.id} className={`stage-offer-item-card card-bg-${shoppingCustomization.cardBackgroundTheme}`}>
                             <div
                               className="stage-offer-thumb-container"
                               onClick={() => {
@@ -6769,7 +6913,7 @@ ${summary}
                               {/* Botón negro estilo GoJiraf VER MÁS */}
                               <button
                                 type="button"
-                                className="stage-offer-ver-mas-btn"
+                                className={`stage-offer-ver-mas-btn cta-btn-${shoppingCustomization.ctaColor}`}
                                 onClick={() => {
                                   if (prod.linkUrl && prod.linkUrl !== "#") {
                                     window.open(prod.linkUrl, "_blank");
@@ -7826,6 +7970,26 @@ ${summary}
                   </div>
                 </div>
 
+                {/* Switch Carrusel Horizontal en Pantalla */}
+                <div className="studio-layers-row-item" title="Alternar Carrusel Horizontal con rotación automática (Auto-Scroll) en pantalla">
+                  <div
+                    className="studio-layers-row-label"
+                    onClick={() => setActiveStudioTab("shopping")}
+                    style={{ cursor: "pointer" }}
+                    title="Clic para abrir y configurar Carrusel Horizontal"
+                  >
+                    <Dashicon name="slides" size={14} color="#10B981" />
+                    <span>Carrusel Horizontal Auto</span>
+                  </div>
+                  <div
+                    className={`switchy-toggle ${shoppingCustomization.horizontalCarouselEnabled ? "active-green" : ""}`}
+                    onClick={() => setShoppingCustomization((prev) => ({ ...prev, horizontalCarouselEnabled: !prev.horizontalCarouselEnabled }))}
+                    title="Mostrar u ocultar Carrusel Horizontal en la parte inferior de la pantalla"
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
                 {/* Switch Banners */}
                 <div className="studio-layers-row-item" title="Alternar logos y banners programados">
                   <div className="studio-layers-row-label">
@@ -8721,6 +8885,176 @@ ${summary}
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* TARJETA DE PERSONALIZACIÓN: FONDOS, COLORES CTA, COPYS Y AUTO-SCROLL HORIZONTAL */}
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 16,
+                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(236, 72, 153, 0.08) 100%)",
+                    border: "1.5px solid rgba(236, 72, 153, 0.35)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    marginBottom: 14,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Dashicon name="admin-customizer" size={18} color="#F472B6" />
+                      <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                        Personalizar Live Shopping &amp; Carrusel
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Switch Carrusel Horizontal y Switch Auto-scroll */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div
+                      style={{
+                        padding: "8px 10px",
+                        background: "rgba(0,0,0,0.35)",
+                        borderRadius: 12,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#FFFFFF" }}>Carrusel Horizontal</span>
+                        <span style={{ fontSize: "0.62rem", color: "#94A3B8" }}>Abajo en pantalla</span>
+                      </div>
+                      <div
+                        className={`switchy-toggle ${shoppingCustomization.horizontalCarouselEnabled ? "active-green" : ""}`}
+                        onClick={() => setShoppingCustomization((prev) => ({ ...prev, horizontalCarouselEnabled: !prev.horizontalCarouselEnabled }))}
+                        title="Activar carrusel horizontal en vivo"
+                      >
+                        <div className="switchy-thumb" />
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: "8px 10px",
+                        background: "rgba(0,0,0,0.35)",
+                        borderRadius: 12,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#FFFFFF" }}>Auto-Scroll Suave</span>
+                        <span style={{ fontSize: "0.62rem", color: "#94A3B8" }}>Rotar automáticamente</span>
+                      </div>
+                      <div
+                        className={`switchy-toggle ${shoppingCustomization.horizontalAutoScrollEnabled ? "active-green" : ""}`}
+                        onClick={() => setShoppingCustomization((prev) => ({ ...prev, horizontalAutoScrollEnabled: !prev.horizontalAutoScrollEnabled }))}
+                        title="Desplazamiento automático"
+                      >
+                        <div className="switchy-thumb" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Selector de Fondo de Tarjeta */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94A3B8" }}>
+                      Fondo de las Tarjetas de Oferta:
+                    </span>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+                      {[
+                        { id: "white", label: "Blanco GoJiraf" },
+                        { id: "dark", label: "Oscuro" },
+                        { id: "glass", label: "Cristal Glass" },
+                        { id: "gradient", label: "Neón Gradiente" },
+                      ].map((bg) => (
+                        <button
+                          key={bg.id}
+                          type="button"
+                          className={`pill-ctrl-button ${shoppingCustomization.cardBackgroundTheme === bg.id ? "active-pink" : ""}`}
+                          style={{ padding: "5px 4px", fontSize: "0.68rem", fontWeight: shoppingCustomization.cardBackgroundTheme === bg.id ? 800 : 500 }}
+                          onClick={() => setShoppingCustomization((prev) => ({ ...prev, cardBackgroundTheme: bg.id as OfferCardBackgroundTheme }))}
+                        >
+                          {bg.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Selector de Color de Botón CTA */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94A3B8" }}>
+                      Color de los Botones CTA (Acción):
+                    </span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
+                      {[
+                        { id: "black", label: "Negro", color: "#000000" },
+                        { id: "pink", label: "Rosa", color: "#EC4899" },
+                        { id: "green", label: "Verde", color: "#10B981" },
+                        { id: "blue", label: "Azul", color: "#2563EB" },
+                        { id: "purple", label: "Púrpura", color: "#8B5CF6" },
+                      ].map((cta) => (
+                        <button
+                          key={cta.id}
+                          type="button"
+                          className={`pill-ctrl-button ${shoppingCustomization.ctaColor === cta.id ? "active-pink" : ""}`}
+                          style={{
+                            padding: "5px 2px",
+                            fontSize: "0.68rem",
+                            fontWeight: shoppingCustomization.ctaColor === cta.id ? 800 : 500,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 4,
+                          }}
+                          onClick={() => setShoppingCustomization((prev) => ({ ...prev, ctaColor: cta.id as OfferCtaColor }))}
+                        >
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: cta.color, display: "inline-block" }} />
+                          <span>{cta.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Copy Personalizable del CTA */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <label style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Copy del Botón CTA:</label>
+                      <input
+                        type="text"
+                        className="studio-input"
+                        style={{ padding: "5px 8px", fontSize: "0.75rem" }}
+                        value={shoppingCustomization.globalCtaCopy}
+                        onChange={(e) => setShoppingCustomization((prev) => ({ ...prev, globalCtaCopy: e.target.value }))}
+                        placeholder="VER MÁS"
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <label style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Velocidad Auto-Scroll:</label>
+                      <select
+                        value={shoppingCustomization.autoScrollIntervalSeconds}
+                        onChange={(e) => setShoppingCustomization((prev) => ({ ...prev, autoScrollIntervalSeconds: Number(e.target.value) }))}
+                        style={{
+                          backgroundColor: "#1E1E2E",
+                          border: "1px solid rgba(255,255,255,0.15)",
+                          borderRadius: 8,
+                          padding: "5px 8px",
+                          color: "#FFFFFF",
+                          fontSize: "0.75rem",
+                          outline: "none",
+                        }}
+                      >
+                        <option value={2.5}>Rápido (2.5 segundos)</option>
+                        <option value={3.5}>Equilibrado (3.5 segundos)</option>
+                        <option value={5.0}>Suave / Lento (5.0 segundos)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="shoppable-dock-grid">
@@ -9707,6 +10041,73 @@ ${summary}
               {/* PANEL DE CHAT Y AGENTE IA CON SWITCHES DENTRO DE CAM */}
               {(isDockStackedView || activeStudioTab === "chat") && (
                 <div className="studio-dock-card" style={{ padding: 12 }}>
+                  {/* TARJETA DE PERSONALIZACIÓN DE CHAT ELEGANTE (FUENTES Y COLORES) */}
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 14,
+                      background: "rgba(255, 255, 255, 0.04)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      marginBottom: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "#FFFFFF", display: "flex", alignItems: "center", gap: 6 }}>
+                        <Dashicon name="editor-textcolor" size={14} color="#38BDF8" />
+                        <span>Tipografía &amp; Estilo de Chat Elegante</span>
+                      </span>
+                    </div>
+
+                    {/* Selector de Fuentes */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Tipografía de Comentarios:</span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        {[
+                          { id: "sans-modern", label: "Inter Moderna (Clean)" },
+                          { id: "poppins-soft", label: "Poppins Redondeada" },
+                          { id: "serif-editorial", label: "Playfair (Serif Lujo)" },
+                          { id: "mono-tech", label: "Mono Tech (Streamer)" },
+                        ].map((fn) => (
+                          <button
+                            key={fn.id}
+                            type="button"
+                            className={`pill-ctrl-button ${chatCustomization.fontFamily === fn.id ? "active-pink" : ""}`}
+                            style={{ padding: "4px 8px", fontSize: "0.68rem", fontWeight: chatCustomization.fontFamily === fn.id ? 800 : 500 }}
+                            onClick={() => setChatCustomization((prev) => ({ ...prev, fontFamily: fn.id as LiveChatFontFamily }))}
+                          >
+                            {fn.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Selector de Temas de Burbuja */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Tema Visual de las Burbujas:</span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+                        {[
+                          { id: "glass-dark", label: "Glass Dark" },
+                          { id: "glass-white", label: "Glass White" },
+                          { id: "neon-pink", label: "Neón Pink" },
+                          { id: "clean-minimal", label: "Minimalista" },
+                        ].map((th) => (
+                          <button
+                            key={th.id}
+                            type="button"
+                            className={`pill-ctrl-button ${chatCustomization.theme === th.id ? "active-pink" : ""}`}
+                            style={{ padding: "4px 6px", fontSize: "0.68rem", fontWeight: chatCustomization.theme === th.id ? 800 : 500 }}
+                            onClick={() => setChatCustomization((prev) => ({ ...prev, theme: th.id as LiveChatTheme }))}
+                          >
+                            {th.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   <UnifiedLiveChatPanel
                     compactSidebar
                     sectionMode={splitChatComposerToLeftInDuo ? "feed" : "all"}

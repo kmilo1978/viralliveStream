@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { type UnifiedChatMessage, type ViewerRangeOption, DEFAULT_VIEWER_RANGES } from "@/lib/studio-data";
+import { type UnifiedChatMessage, type ViewerRangeOption, DEFAULT_VIEWER_RANGES, type LiveChatTheme, type LiveChatFontFamily } from "@/lib/studio-data";
 import { PlatformLogo, SocialIcon } from "@/components/PlatformLogos";
 import { getFaceAvatarUrl } from "@/lib/avatar-helper";
 
@@ -24,6 +24,10 @@ interface RealFeelLiveChatOverlayProps {
   onOpenWhatsApp?: () => void;
   hasActiveProduct?: boolean;
   chatLanguage?: ChatLanguageOption;
+  chatTheme?: LiveChatTheme;
+  chatFontFamily?: LiveChatFontFamily;
+  chatAuthorColor?: string;
+  chatTextColor?: string;
 }
 
 type HeartParticle = {
@@ -388,6 +392,10 @@ export function RealFeelLiveChatOverlay({
   onOpenWhatsApp,
   hasActiveProduct = false,
   chatLanguage = "es",
+  chatTheme = "glass-dark",
+  chatFontFamily = "sans-modern",
+  chatAuthorColor,
+  chatTextColor,
 }: RealFeelLiveChatOverlayProps) {
   const [localMessages, setLocalMessages] = useState<UnifiedChatMessage[]>(() =>
     propMessages && propMessages.length > 0
@@ -532,7 +540,7 @@ export function RealFeelLiveChatOverlay({
 
   return (
     <div
-      className={`real-feel-live-chat-overlay ${hasActiveProduct ? "has-active-shop-card" : ""}`}
+      className={`real-feel-live-chat-overlay chat-font-${chatFontFamily} ${hasActiveProduct ? "has-active-shop-card" : ""}`}
       style={{
         position: "absolute",
         inset: 0,
@@ -665,7 +673,7 @@ export function RealFeelLiveChatOverlay({
             return (
               <div
                 key={msg.id}
-                className="tiktok-live-msg-row"
+                className={`tiktok-live-msg-row chat-bubble-theme-${chatTheme}`}
                 style={{
                   display: "flex",
                   alignItems: "flex-start",

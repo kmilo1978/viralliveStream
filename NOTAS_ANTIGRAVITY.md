@@ -1,6 +1,21 @@
 # NOTAS DE PROYECTO: MiPlataformaStream
 
 ## Validación completada
+- Fecha: 2026-11-16 12:15
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Implementación y verificación integral de la personalización de fondos, colores de CTA, copys, carrusel horizontal con auto-scroll y fuentes de chat elegantes:
+  1. **Carrusel Horizontal Flotante con Auto-Scroll Suave**: Nuevo modo de carrusel horizontal inferior (estilo exacto GoJiraf / Mercado Libre con Vaso Stanley y Botineta Yatu) que rota automáticamente las ofertas de izquierda a derecha de forma continua y suave cada 3.5 segundos mediante switch dedicado.
+  2. **Personalización de Fondos de Tarjetas**: Selector de 4 acabados en Shop QR: Blanco GoJiraf, Oscuro Cyber, Cristal Glass translúcido con blur y Gradiente Neón.
+  3. **Personalización de Colores de Botones CTA**: Selector de 5 colores para los botones de acción: Negro GoJiraf (#000000), Rosa Neón (#EC4899), Verde Éxito/WhatsApp (#10B981), Azul Eléctrico (#2563EB) y Púrpura (#8B5CF6).
+  4. **Personalización de Copys**: Campo de texto editable para modificar al instante el texto de llamada a la acción de las ofertas ('VER MÁS', 'COMPRAR', 'LO QUIERO', 'PEDIR AHORA').
+  5. **Tipografía y Estilo de Chat Elegante**: Selector de 4 fuentes tipográficas de alta gama en Chat IA: Playfair Editorial (Serif Lujo), Inter Moderna (Sans), Poppins Redondeada y Mono Tech; junto con selector de 4 temas visuales de burbuja: Glass Dark, Glass White, Neón Pink y Clean Minimalista.
+- Observaciones:
+  - 0 errores en compilación TypeScript (npx tsc --noEmit).
+  - Verificación visual y de interacción automatizada en http://localhost:3000 con subagente browser.
+  - Todos los interruptores inician en OFF por defecto cumpliendo la directriz del sistema.
+  - Capturas de evidencia: carrusel_horizontal_cristal_cta_verde.png, carrusel_horizontal_autoscroll_rotando.png y chat_elegante_playfair_neon_pink.png.
+
+## Validación completada
 - Fecha: 2026-11-16 11:30
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Implementación y verificación integral del Carrusel Vertical de Múltiples Ofertas en Pantalla (estilo GoJiraf), Carrito de Compras en Vivo y Checkout Multipasarela:
