@@ -1956,3 +1956,23 @@ px tsc --noEmit completado con código 0.
   4. Sincronizar todos los cambios en el repositorio remoto GitHub en la rama principal `main`.
 - Pendientes:
   - Todo el ecosistema verificado y operativo al 100%. Listo para emitir.
+
+## Validación completada
+- Fecha: 2026-11-16T14:55:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Limpieza visual del monitor en la pestaña CLIPS retirando insignias sobreimpresas dentro de la pantalla ("ANTES" y "DESPUÉS") y reubicándolas como guía externa del estudio.
+- Observaciones:
+  - Se eliminaron las insignias flotantes `1. ORIGINAL (ANTES)` y `2. DESPUÉS (TRANSFORMADO IA)` del interior del contenedor del video en `src/app/page.tsx`.
+  - El video en CLIPS ahora se reproduce al 100% libre de textos u obstáculos visuales en la pantalla del monitor.
+  - Se añadió una pastilla discreta de guía en la barra superior de control del estudio (`● GUÍA: ORIGINAL ➔ ● MEJORADO IA`) externa a la pantalla para orientación del streamer.
+  - Se actualizó el texto del placeholder a `Video Mejorado (Salida IA)`.
+  - `npx tsc --noEmit` completado con código 0 y cambios subidos a GitHub en la rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-16 14:55
+- Solicitud: En clips en la pantalla no quiero que aparezca visualmente dentro de esta antes y después, solo es una guía visual.
+- Decisiones clave:
+  1. No sobreimprimir textos identificadores dentro del video transmitido o previsualizado en el monitor.
+  2. Mantener la guía de referencia fuera de la pantalla de reproducción.
+- Pendientes:
+  - Ninguno. La pantalla de clips está 100% limpia.
