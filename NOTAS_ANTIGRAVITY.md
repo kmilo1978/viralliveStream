@@ -2016,3 +2016,24 @@ px tsc --noEmit completado con código 0.
   3. Ocultar el icono del carrito cuando el total de productos sea 0.
 - Pendientes:
   - Todo funcionando con visualización limpia, contrastada y reactiva.
+
+## Validación completada
+- Fecha: 2026-11-16T16:15:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Limpieza integral de la barra superior del monitor de transmisión, eliminación de elementos duplicados y centralización de la información técnica en el panel oficial de Configuraciones.
+- Observaciones:
+  - Se eliminó el cartel publicitario `TRANSMITE EN CUALQUIER APP O LLAMADA VIRTUAL CAMERA / OBS` de la barra superior; toda la guía y configuración de Cámara Virtual ya reside completa en la pestaña `CONFIGURACIÓN -> OBS Studio` (con la tabla de videollamadas `VirtualCameraGuideTable`).
+  - Se eliminó la pastilla duplicada `LIVE SHOPPING (Sin producto)` de la barra superior, ya que la gestión de catálogo, ofertas y códigos QR se opera de forma centralizada en el panel derecho de `Shop QR`.
+  - Se reemplazó el botón largo `STREAM CONFIG` por un botón sobrio y compacto `CONFIGURACIÓN` para ajustes directos de transmisión.
+  - La barra superior ahora contiene únicamente la información 100% relevante para el streamer durante la emisión en vivo: destinos activos de `MULTISTREAM`, formato `VISTA MÓVIL / ESCENARIO`, selector de escala `TAMAÑO` y acceso rápido a ajustes.
+  - Compilación con TypeScript sin errores y cambios sincronizados en GitHub en la rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-16 16:15
+- Solicitud: Deja solo la información relevante, revisa si hay contenido duplicado, y si alguna información debería ir en configuraciones (relacionado con la parte superior de la transmisión).
+- Decisiones clave:
+  1. Eliminar carteles tutoriales y banners extensos sobre el monitor.
+  2. Centralizar la configuración de OBS y Cámara Virtual en el módulo de Configuración.
+  3. No duplicar el acceso de Live Shopping en la barra superior si ya está destacado en el panel derecho de herramientas.
+- Pendientes:
+  - Ninguno. La barra superior quedó despejada, profesional y equilibrada.
