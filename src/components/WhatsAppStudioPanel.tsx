@@ -436,27 +436,33 @@ export function WhatsAppStudioPanel({
             <span className="studio-input-label">
               <span>Proveedor / Plataforma API de WhatsApp</span>
             </span>
-            <div className="tiktok-tabs-row" style={{ marginTop: 2 }}>
+            <div className="whatsapp-tabs-row" style={{ marginTop: 6, gap: 8 }}>
               <button
                 type="button"
-                className={`tiktok-tab-btn ${config.apiProvider === "webhook" ? "active" : ""}`}
+                className={`whatsapp-tab-pill ${config.apiProvider === "webhook" ? "active" : ""}`}
                 onClick={() => onChangeConfig({ ...config, apiProvider: "webhook" })}
+                style={{ gap: 6 }}
               >
-                Webhook / n8n / Make
+                <Dashicon name="rest-api" size={13} />
+                <span>Webhook / n8n / Make</span>
               </button>
               <button
                 type="button"
-                className={`tiktok-tab-btn ${config.apiProvider === "evolution_api" ? "active" : ""}`}
+                className={`whatsapp-tab-pill ${config.apiProvider === "evolution_api" ? "active" : ""}`}
                 onClick={() => onChangeConfig({ ...config, apiProvider: "evolution_api" })}
+                style={{ gap: 6 }}
               >
-                Evolution API
+                <Dashicon name="networking" size={13} />
+                <span>Evolution API</span>
               </button>
               <button
                 type="button"
-                className={`tiktok-tab-btn ${config.apiProvider === "cloud_api" ? "active" : ""}`}
+                className={`whatsapp-tab-pill ${config.apiProvider === "cloud_api" ? "active" : ""}`}
                 onClick={() => onChangeConfig({ ...config, apiProvider: "cloud_api" })}
+                style={{ gap: 6 }}
               >
-                Meta Cloud API
+                <Dashicon name="share" size={13} />
+                <span>Meta Cloud API</span>
               </button>
             </div>
           </div>

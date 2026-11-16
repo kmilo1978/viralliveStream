@@ -79,6 +79,7 @@ input[type="file"]::file-selector-button:hover {
 button {
   font: inherit;
   color: inherit;
+  background-color: transparent;
 }
 
 /* -------------------------------------------------------------
@@ -10644,14 +10645,16 @@ body {
   gap: 12px;
 }
 
-.whatsapp-tabs-row {
+.whatsapp-tabs-row,
+.tiktok-tabs-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.whatsapp-tab-pill {
+.whatsapp-tab-pill,
+.tiktok-tab-btn {
   padding: 6px 12px;
   border-radius: 9999px;
   font-size: 0.76rem;
@@ -10666,12 +10669,14 @@ body {
   gap: 6px;
 }
 
-.whatsapp-tab-pill:hover {
+.whatsapp-tab-pill:hover,
+.tiktok-tab-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #FFFFFF;
 }
 
-.whatsapp-tab-pill.active {
+.whatsapp-tab-pill.active,
+.tiktok-tab-btn.active {
   background: rgba(37, 211, 102, 0.16);
   border-color: #25D366;
   color: #25D366;
