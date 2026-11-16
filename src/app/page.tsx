@@ -3299,21 +3299,32 @@ ${summary}
 *Total a Pagar:* $${total.toFixed(2)}`;
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
     } else if (selectedGateway === "mercadopago") {
-      // Redirigir a Mercado Pago Checkout o primer producto
-      const firstLink = cartItems[0]?.product.linkUrl || "https://www.mercadopago.com";
-      window.open(firstLink, "_blank");
+      // Redirigir a Mercado Pago Checkout o enlace personalizado del vendedor
+      const customLink = cartItems[0]?.product.linkUrl;
+      const targetUrl = customLink && customLink !== "#" && !customLink.includes("onestream.live")
+        ? customLink
+        : "https://www.mercadopago.com";
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
       setPaymentSuccessToast(`Redirigiendo a Mercado Pago para abonar $${total.toFixed(2)}...`);
     } else if (selectedGateway === "stripe") {
-      const firstLink = cartItems[0]?.product.linkUrl || "https://stripe.com";
-      window.open(firstLink, "_blank");
+      const customLink = cartItems[0]?.product.linkUrl;
+      const targetUrl = customLink && customLink !== "#" && !customLink.includes("onestream.live")
+        ? customLink
+        : "https://stripe.com";
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
       setPaymentSuccessToast(`Redirigiendo a Stripe Checkout seguro...`);
     } else if (selectedGateway === "wompi") {
-      const firstLink = cartItems[0]?.product.linkUrl || "https://wompi.co";
-      window.open(firstLink, "_blank");
+      const customLink = cartItems[0]?.product.linkUrl;
+      const targetUrl = customLink && customLink !== "#" && !customLink.includes("onestream.live")
+        ? customLink
+        : "https://wompi.co";
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
       setPaymentSuccessToast(`Conectando a pasarela PSE / Wompi...`);
     } else {
-      const firstLink = cartItems[0]?.product.linkUrl || "#";
-      window.open(firstLink, "_blank");
+      const customLink = cartItems[0]?.product.linkUrl;
+      if (customLink && customLink !== "#" && !customLink.includes("onestream.live")) {
+        window.open(customLink, "_blank", "noopener,noreferrer");
+      }
     }
 
     setTimeout(() => {
@@ -6532,7 +6543,15 @@ ${summary}
                       <button
                         type="button"
                         className="shoppable-cta-buy-btn"
-                        onClick={() => window.open(activeProduct.linkUrl, "_blank")}
+                        onClick={() => {
+                          if (activeProduct.linkUrl && activeProduct.linkUrl !== "#" && !activeProduct.linkUrl.includes("onestream.live")) {
+                            window.open(activeProduct.linkUrl, "_blank", "noopener,noreferrer");
+                          } else {
+                            handleAddToCart(activeProduct);
+                            setIsProductExpanded(false);
+                            setIsCartCheckoutModalOpen(true);
+                          }
+                        }}
                       >
                         <Dashicon name="cart" size={18} />
                         <span>VER MÁS / COMPRAR AHORA</span>
@@ -6653,8 +6672,15 @@ ${summary}
                                 <button
                                   type="button"
                                   className="shoppable-drawer-buy-btn"
-                                  onClick={() => window.open(prod.linkUrl, "_blank")}
-                                  title="Abrir enlace de compra"
+                                  onClick={() => {
+                                    if (prod.linkUrl && prod.linkUrl !== "#" && !prod.linkUrl.includes("onestream.live")) {
+                                      window.open(prod.linkUrl, "_blank", "noopener,noreferrer");
+                                    } else {
+                                      setActiveProductId(prod.id);
+                                      setIsProductExpanded(true);
+                                    }
+                                  }}
+                                  title="Abrir detalles de producto"
                                 >
                                   VER MÁS
                                 </button>
@@ -6772,11 +6798,11 @@ ${summary}
                               type="button"
                               className={`stage-offer-ver-mas-btn cta-btn-${shoppingCustomization.ctaColor}`}
                               onClick={() => {
-                                if (prod.linkUrl && prod.linkUrl !== "#") {
-                                  window.open(prod.linkUrl, "_blank");
+                                if (prod.linkUrl && prod.linkUrl !== "#" && !prod.linkUrl.includes("onestream.live")) {
+                                  window.open(prod.linkUrl, "_blank", "noopener,noreferrer");
                                 } else {
-                                  handleAddToCart(prod);
-                                  setIsCartCheckoutModalOpen(true);
+                                  setActiveProductId(prod.id);
+                                  setIsProductExpanded(true);
                                 }
                               }}
                             >
@@ -6915,14 +6941,14 @@ ${summary}
                                 type="button"
                                 className={`stage-offer-ver-mas-btn cta-btn-${shoppingCustomization.ctaColor}`}
                                 onClick={() => {
-                                  if (prod.linkUrl && prod.linkUrl !== "#") {
-                                    window.open(prod.linkUrl, "_blank");
+                                  if (prod.linkUrl && prod.linkUrl !== "#" && !prod.linkUrl.includes("onestream.live")) {
+                                    window.open(prod.linkUrl, "_blank", "noopener,noreferrer");
                                   } else {
-                                    handleAddToCart(prod);
-                                    setIsCartCheckoutModalOpen(true);
+                                    setActiveProductId(prod.id);
+                                    setIsProductExpanded(true);
                                   }
                                 }}
-                                title={`Ir al enlace de compra (${prod.linkUrl})`}
+                                title={`Ver detalles de ${prod.title}`}
                               >
                                 {prod.buttonText || "VER MÁS"}
                               </button>
