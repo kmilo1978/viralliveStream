@@ -1976,3 +1976,22 @@ px tsc --noEmit completado con código 0.
   2. Mantener la guía de referencia fuera de la pantalla de reproducción.
 - Pendientes:
   - Ninguno. La pantalla de clips está 100% limpia.
+
+## Validación completada
+- Fecha: 2026-11-16T15:30:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección de botones ilegibles en blanco en la sección de WhatsApp & API y protección global contra fondos blancos en botones de la cabina.
+- Observaciones:
+  - Se diagnosticó la causa: los botones de selección de proveedor API (`Webhook / n8n / Make`, `Evolution API`, `Meta Cloud API`) tenían asignada la clase `tiktok-tab-btn` sin estilos en el CSS, lo que provocaba que el navegador Windows renderizara el fondo blanco/grisáceo por defecto (`buttonface`) heredando texto blanco (#FFFFFF).
+  - Se actualizaron los botones en `src/components/WhatsAppStudioPanel.tsx` a la clase `.whatsapp-tab-pill` con iconos dedicados (`rest-api`, `networking`, `share`), fondo oscuro traslúcido, bordes nítidos y resaltado verde activo.
+  - Se aplicó una regla global en `src/app/globals.css` (`button { background-color: transparent }`) y se definió `.tiktok-tab-btn` para asegurar que ningún botón de la plataforma vuelva a mostrarse en blanco.
+  - Compilación con TypeScript sin errores y cambios sincronizados en GitHub rama `main`.
+
+## Nueva sesión
+- Fecha: 2026-11-16 15:30
+- Solicitud: En configuración en whatsapp y API como en las configuraciones de la derecha sale esta información en blanco que no deja leer, corrige esto.
+- Decisiones clave:
+  1. Utilizar pastillas oscuras con iconos para los proveedores API de WhatsApp.
+  2. Proteger la hoja de estilos global con un reset transparente para evitar botones nativos claros.
+- Pendientes:
+  - Ninguno. La información es 100% legible y con contraste óptimo.
