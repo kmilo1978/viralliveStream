@@ -4797,6 +4797,29 @@ ${summary}
                 <span>STREAM CONFIG</span>
               </button>
 
+              {/* Guía Visual Externa para Cabina CLIPS (fuera de la pantalla de video) */}
+              {activeTab === "CLIPS" && (
+                <div
+                  className="multistream-stage-pill"
+                  style={{
+                    borderColor: "rgba(59, 130, 246, 0.4)",
+                    color: "#93C5FD",
+                    background: "rgba(15, 23, 42, 0.65)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    cursor: "default",
+                  }}
+                  title="Guía de referencia del monitor: Lado izquierdo/arriba = Original | Lado derecho/abajo = Mejorado IA"
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6" }} />
+                  <span style={{ fontWeight: 700, fontSize: "0.68rem" }}>GUÍA: ORIGINAL</span>
+                  <span style={{ color: "#64748B", fontSize: "0.65rem" }}>➔</span>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EC4899", boxShadow: "0 0 6px #EC4899" }} />
+                  <span style={{ color: "#F472B6", fontWeight: 700, fontSize: "0.68rem" }}>MEJORADO IA</span>
+                </div>
+              )}
+
               {/* Selector de Tamaño de Monitor (Normal, Grande, Extra Grande) disponible en CAM, TRY ON y DÚO en cualquier formato */}
               {!isMobileViewport && (
                 <>
@@ -5794,30 +5817,6 @@ ${summary}
                           background: "radial-gradient(circle at center, rgba(30, 41, 59, 0.5) 0%, rgba(10, 10, 18, 0.96) 85%)",
                         }}
                       >
-                        {/* Badge Identificador Original */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 10,
-                            left: 10,
-                            zIndex: 20,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 5,
-                            background: "rgba(0, 0, 0, 0.75)",
-                            backdropFilter: "blur(6px)",
-                            border: "1px solid rgba(59, 130, 246, 0.5)",
-                            borderRadius: 12,
-                            padding: "3px 9px",
-                            fontSize: "0.68rem",
-                            fontWeight: 800,
-                            color: "#93C5FD",
-                          }}
-                        >
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6" }} />
-                          <span>1. ORIGINAL (ANTES)</span>
-                        </div>
-
                         {clipsDualState.originalUrl || (sourceMode === "video_file" && localVideoFileUrl) ? (
                           <video
                             key={clipsDualState.originalUrl || localVideoFileUrl || "orig-video"}
@@ -5878,30 +5877,6 @@ ${summary}
                           background: "radial-gradient(circle at center, rgba(236, 72, 153, 0.16) 0%, rgba(10, 10, 18, 0.96) 85%)",
                         }}
                       >
-                        {/* Badge Identificador Salida IA */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 10,
-                            right: 10,
-                            zIndex: 20,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 5,
-                            background: "rgba(0, 0, 0, 0.75)",
-                            backdropFilter: "blur(6px)",
-                            border: "1px solid rgba(236, 72, 153, 0.6)",
-                            borderRadius: 12,
-                            padding: "3px 9px",
-                            fontSize: "0.68rem",
-                            fontWeight: 800,
-                            color: "#F472B6",
-                          }}
-                        >
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EC4899", boxShadow: "0 0 8px #EC4899" }} />
-                          <span>2. DESPUÉS (TRANSFORMADO IA)</span>
-                        </div>
-
                         {clipsDualState.processedUrl ? (
                           <video
                             key={clipsDualState.processedUrl}
@@ -5931,7 +5906,7 @@ ${summary}
                               <Dashicon name="art" size={20} />
                             </div>
                             <span style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF" }}>
-                              Video Mejorado (Después)
+                              Video Mejorado (Salida IA)
                             </span>
                             <span style={{ display: "block", fontSize: "0.68rem", color: "#94A3B8", marginTop: 2, maxWidth: 220 }}>
                               Aquí se reproducirá el clip transformado con IA al procesarlo
