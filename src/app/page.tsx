@@ -874,12 +874,22 @@ export default function StudioDeluluPage() {
       const cams = list.filter((d) => d.kind === "videoinput");
       const mics = list.filter((d) => d.kind === "audioinput");
 
-      // Ordenar cámaras: físicas reales primero, virtuales (OBS) al final
+      // Ordenar cámaras: cámaras web físicas integradas primero, capturadoras externas (5843) después, y virtuales (OBS) al final
       const sortedCams = [...cams].sort((a, b) => {
         const aIsObs = /obs|virtual/i.test(a.label || "");
         const bIsObs = /obs|virtual/i.test(b.label || "");
-        if (aIsObs === bIsObs) return 0;
-        return aIsObs ? 1 : -1;
+        if (aIsObs !== bIsObs) return aIsObs ? 1 : -1;
+
+        // Priorizar cámaras web reales (UVC / HD) sobre dongles de captura HDMI sin señal (5843)
+        const aIsCapture = /5843|capture/i.test(a.label || "");
+        const bIsCapture = /5843|capture/i.test(b.label || "");
+        if (aIsCapture !== bIsCapture) return aIsCapture ? 1 : -1;
+
+        const aIsUvc = /uvc|integrated|internal|azurewave|sunplus|chicony/i.test(a.label || "");
+        const bIsUvc = /uvc|integrated|internal|azurewave|sunplus|chicony/i.test(b.label || "");
+        if (aIsUvc !== bIsUvc) return aIsUvc ? -1 : 1;
+
+        return 0;
       });
 
       setCameraDevices(sortedCams);
@@ -1130,10 +1140,25 @@ export default function StudioDeluluPage() {
           }
         }
 
-        // Ordenar: físicas primero, virtuales (OBS) al final
-        const realCams = cams.filter((c) => !/obs|virtual|screen|ndi|vcam|droidcam/i.test(c.label || ""));
-        const obsCams = cams.filter((c) => /obs|virtual/i.test(c.label || ""));
-        const sortedCams = [...realCams, ...obsCams];
+        // Ordenar: cámaras web físicas integradas primero, capturadoras (5843) después, virtuales (OBS) al final
+        const sortedCams = [...cams].sort((a, b) => {
+          const aIsObs = /obs|virtual/i.test(a.label || "");
+          const bIsObs = /obs|virtual/i.test(b.label || "");
+          if (aIsObs !== bIsObs) return aIsObs ? 1 : -1;
+
+          const aIsCapture = /5843|capture/i.test(a.label || "");
+          const bIsCapture = /5843|capture/i.test(b.label || "");
+          if (aIsCapture !== bIsCapture) return aIsCapture ? 1 : -1;
+
+          const aIsUvc = /uvc|integrated|internal|azurewave|sunplus|chicony/i.test(a.label || "");
+          const bIsUvc = /uvc|integrated|internal|azurewave|sunplus|chicony/i.test(b.label || "");
+          if (aIsUvc !== bIsUvc) return aIsUvc ? -1 : 1;
+
+          return 0;
+        });
+
+        const realCams = sortedCams.filter((c) => !/obs|virtual|screen|ndi|vcam|droidcam/i.test(c.label || ""));
+        const obsCams = sortedCams.filter((c) => /obs|virtual/i.test(c.label || ""));
         if (sortedCams.length > 0) {
           setCameraDevices(sortedCams);
         }
@@ -1150,11 +1175,11 @@ export default function StudioDeluluPage() {
           }
         }
 
-        // Determinar ID objetivo
+        // Determinar ID objetivo (priorizando cámara web integrada si savedCamId apunta a una capturadora 5843 sin señal)
         let targetId = "";
         if (overrideCameraId) {
           targetId = overrideCameraId;
-        } else if (savedCamId && realCams.some((c) => c.deviceId === savedCamId)) {
+        } else if (savedCamId && realCams.some((c) => c.deviceId === savedCamId && !/5843/i.test(c.label || ""))) {
           targetId = savedCamId;
         } else if (realCams.length > 0) {
           targetId = realCams[0].deviceId;
@@ -7792,34 +7817,70 @@ ${summary}
                 <option value="4k">4K</option>
               </select>
 
-              {/* Si es cámara: selector de dispositivo */}
+              {/* Si es cámara: selector de dispositivo y botón de alternar rápido */}
               {sourceMode === "camera" && cameraDevices.length > 0 && (
-                <select
-                  className="select-ctrl-pill select-device-wide"
-                  aria-label="Seleccionar cámara"
-                  value={selectedCameraId}
-                  onChange={(e) => {
-                    const newCamId = e.target.value;
-                    setSelectedCameraId(newCamId);
-                    if (typeof window !== "undefined") {
-                      const isObs = cameraDevices.some((c) => c.deviceId === newCamId && /obs|virtual/i.test(c.label || ""));
-                      if (!isObs) {
-                        localStorage.setItem("virallive_preferred_camera", newCamId);
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <select
+                    className="select-ctrl-pill select-device-wide"
+                    aria-label="Seleccionar cámara"
+                    value={selectedCameraId}
+                    onChange={(e) => {
+                      const newCamId = e.target.value;
+                      setSelectedCameraId(newCamId);
+                      if (typeof window !== "undefined") {
+                        const isObs = cameraDevices.some((c) => c.deviceId === newCamId && /obs|virtual/i.test(c.label || ""));
+                        if (!isObs) {
+                          localStorage.setItem("virallive_preferred_camera", newCamId);
+                        }
                       }
-                    }
-                    void startCamera(newCamId);
-                  }}
-                >
-                  {cameraDevices.map((d) => {
-                    const isObs = /obs|virtual/i.test(d.label || "");
-                    return (
-                      <option key={d.deviceId} value={d.deviceId}>
-                        {isObs ? "🎬 " : "📷 "}
-                        {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
-                      </option>
-                    );
-                  })}
-                </select>
+                      void startCamera(newCamId);
+                    }}
+                  >
+                    {cameraDevices.map((d) => {
+                      const isObs = /obs|virtual/i.test(d.label || "");
+                      return (
+                        <option key={d.deviceId} value={d.deviceId}>
+                          {isObs ? "🎬 " : "📷 "}
+                          {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
+                        </option>
+                      );
+                    })}
+                  </select>
+
+                  {cameraDevices.length > 1 && (
+                    <button
+                      type="button"
+                      className="pill-ctrl-button"
+                      style={{
+                        borderColor: "rgba(236, 72, 153, 0.5)",
+                        color: "#F472B6",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "5px 10px",
+                        fontSize: "0.72rem",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        const currentIdx = cameraDevices.findIndex((c) => c.deviceId === selectedCameraId);
+                        const nextIdx = (currentIdx + 1) % cameraDevices.length;
+                        const nextCam = cameraDevices[nextIdx];
+                        if (nextCam) {
+                          setSelectedCameraId(nextCam.deviceId);
+                          if (typeof window !== "undefined") {
+                            const isObs = /obs|virtual/i.test(nextCam.label || "");
+                            if (!isObs) localStorage.setItem("virallive_preferred_camera", nextCam.deviceId);
+                          }
+                          void startCamera(nextCam.deviceId);
+                        }
+                      }}
+                      title="Alternar entre tus cámaras conectadas (si una pantalla se ve negra)"
+                    >
+                      <Dashicon name="camera-alt" size={13} color="#EC4899" />
+                      <span>Cambiar Cámara</span>
+                    </button>
+                  )}
+                </div>
               )}
 
               {/* Si es video pregrabado: botón de cargar */}
