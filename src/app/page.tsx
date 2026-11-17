@@ -585,12 +585,12 @@ export default function StudioDeluluPage() {
   const [showStreamConfigModal, setShowStreamConfigModal] = useState<boolean>(false);
   const [streamerName, setStreamerName] = useState<string>("Maddy");
 
-  // Previsualización de Fondos en el momento sin gastar créditos
+  // Previsualización de Fondos en el momento sin gastar créditos (por defecto PiP para verse siempre sin tela verde)
   const [bgPreviewEnabled, setBgPreviewEnabled] = useState<boolean>(false);
-  const [bgPreviewMode, setBgPreviewMode] = useState<"chroma_key" | "backdrop" | "pip_camera">("chroma_key");
+  const [bgPreviewMode, setBgPreviewMode] = useState<"chroma_key" | "backdrop" | "pip_camera">("pip_camera");
   const [chromaKeyEnabled, setChromaKeyEnabled] = useState<boolean>(false);
-  const [chromaSimilarity, setChromaSimilarity] = useState<number>(0.35);
-  const [chromaSmoothness, setChromaSmoothness] = useState<number>(0.12);
+  const [chromaSimilarity, setChromaSimilarity] = useState<number>(0.22);
+  const [chromaSmoothness, setChromaSmoothness] = useState<number>(0.10);
   const [chromaDespill, setChromaDespill] = useState<boolean>(true);
   const [activeLocalStream, setActiveLocalStream] = useState<MediaStream | null>(null);
   const [screenButtonsVisible, setScreenButtonsVisible] = useState<boolean>(false);
@@ -897,36 +897,51 @@ export default function StudioDeluluPage() {
 
       if (sortedCams.length > 0) {
         const realCams = sortedCams.filter((c) => !/obs|virtual/i.test(c.label || ""));
+        const trueWebcams = realCams.filter((c) => !/5843|capture/i.test(c.label || ""));
         const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
 
-        // Purgar OBS de localStorage si hay cámaras físicas disponibles
-        if (savedCam && realCams.length > 0) {
-          const isSavedObs = sortedCams.some((c) => c.deviceId === savedCam && /obs|virtual/i.test(c.label || ""));
-          if (isSavedObs && typeof window !== "undefined") {
+        // Purgar OBS y capturadoras 5843 sin señal de localStorage si hay cámaras web físicas reales
+        if (savedCam && trueWebcams.length > 0) {
+          const isBadSaved = sortedCams.some((c) => c.deviceId === savedCam && /obs|virtual|5843|capture/i.test(c.label || ""));
+          if (isBadSaved && typeof window !== "undefined") {
             try {
               localStorage.removeItem("virallive_preferred_camera");
             } catch {}
           }
         }
 
-        const matchedSaved =
-          savedCam && realCams.some((c) => c.deviceId === savedCam)
+        const validSaved =
+          savedCam && trueWebcams.some((c) => c.deviceId === savedCam)
             ? sortedCams.find((c) => c.deviceId === savedCam)
             : null;
 
-        const preferred = matchedSaved || (realCams.length > 0 ? realCams[0] : sortedCams[0]);
+        const preferred = validSaved || (trueWebcams.length > 0 ? trueWebcams[0] : (realCams.length > 0 ? realCams[0] : sortedCams[0]));
 
         if (preferred) {
           setSelectedCameraId((prev) => {
             if (prev && sortedCams.some((c) => c.deviceId === prev)) {
               const currentCam = sortedCams.find((c) => c.deviceId === prev);
-              const isCurrentObs = /obs|virtual/i.test(currentCam?.label || "");
-              if (!isCurrentObs || realCams.length === 0) {
+              const isCurrentBad = /obs|virtual|5843|capture/i.test(currentCam?.label || "");
+              if (isCurrentBad && trueWebcams.length > 0) {
+                return preferred.deviceId;
+              }
+              if (!isCurrentBad) {
                 return prev;
               }
             }
             return preferred.deviceId;
           });
+        }
+
+        // Si la cámara activa actual es una capturadora 5843 sin señal, y tenemos la webcam física, conmutar en caliente
+        if (trueWebcams.length > 0) {
+          const currentTrack = rawStreamRef.current?.getVideoTracks()[0];
+          const currentTrackLabel = currentTrack?.label || "";
+          if (/5843|capture/i.test(currentTrackLabel)) {
+            console.log("[ViralLive AutoSwitch] Conmutando automáticamente desde capturadora 5843 a la webcam integrada:", trueWebcams[0].label);
+            setSelectedCameraId(trueWebcams[0].deviceId);
+            void startCamera(trueWebcams[0].deviceId);
+          }
         }
       }
 
@@ -1158,16 +1173,21 @@ export default function StudioDeluluPage() {
         });
 
         const realCams = sortedCams.filter((c) => !/obs|virtual|screen|ndi|vcam|droidcam/i.test(c.label || ""));
+        const trueWebcams = realCams.filter((c) => !/5843|capture/i.test(c.label || ""));
+        const captureCams = realCams.filter((c) => /5843|capture/i.test(c.label || ""));
         const obsCams = sortedCams.filter((c) => /obs|virtual/i.test(c.label || ""));
         if (sortedCams.length > 0) {
           setCameraDevices(sortedCams);
         }
 
-        // Limpiar de localStorage cualquier referencia a OBS si hay cámaras físicas reales
+        let activeCandId = "";
+        let activeCandLabel = "";
+
+        // Limpiar de localStorage cualquier referencia a OBS o capturadoras 5843 si hay webcams físicas reales
         let savedCamId = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
-        if (savedCamId && realCams.length > 0) {
-          const isSavedObs = obsCams.some((c) => c.deviceId === savedCamId);
-          if (isSavedObs) {
+        if (savedCamId && trueWebcams.length > 0) {
+          const isBadSaved = sortedCams.some((c) => c.deviceId === savedCamId && /obs|virtual|5843|capture/i.test(c.label || ""));
+          if (isBadSaved) {
             try {
               localStorage.removeItem("virallive_preferred_camera");
             } catch {}
@@ -1175,12 +1195,14 @@ export default function StudioDeluluPage() {
           }
         }
 
-        // Determinar ID objetivo (priorizando cámara web integrada si savedCamId apunta a una capturadora 5843 sin señal)
+        // Determinar ID objetivo (priorizando cámara web integrada como USB2.0 HD UVC WebCam sobre capturadoras 5843 sin señal)
         let targetId = "";
         if (overrideCameraId) {
           targetId = overrideCameraId;
-        } else if (savedCamId && realCams.some((c) => c.deviceId === savedCamId && !/5843/i.test(c.label || ""))) {
+        } else if (savedCamId && trueWebcams.some((c) => c.deviceId === savedCamId)) {
           targetId = savedCamId;
+        } else if (trueWebcams.length > 0) {
+          targetId = trueWebcams[0].deviceId;
         } else if (realCams.length > 0) {
           targetId = realCams[0].deviceId;
         } else if (sortedCams.length > 0) {
@@ -1189,32 +1211,38 @@ export default function StudioDeluluPage() {
 
         let stream: MediaStream | null = null;
 
-        // Si ya obtuvimos tempStream y no es OBS (o no hay cámaras físicas), USARLO directamente sin detenerlo
+        // Si ya obtuvimos tempStream: verificar si es una capturadora 5843 o OBS
         if (tempStream) {
           const track = tempStream.getVideoTracks()[0];
           const trackId = track?.getSettings()?.deviceId;
           const isTrackObs = /obs|virtual/i.test(track?.label || "");
-          if (!isTrackObs || realCams.length === 0) {
-            stream = tempStream;
-            const matchedCam = realCams.find((c) => c.label && c.label === track?.label);
-            activeCandId = matchedCam?.deviceId || trackId || (realCams[0]?.deviceId ?? "");
-            activeCandLabel = track?.label || "";
-            if (activeCandId) targetId = activeCandId;
-          } else {
-            // Solo si era OBS y tenemos cámara física real, detenerlo dando tiempo al driver DirectShow de Windows
+          const isTrackCapture = /5843|capture/i.test(track?.label || "");
+
+          // Si el stream temporal cayó en la capturadora 5843 (pantalla negra) o en OBS, y tenemos una webcam física real:
+          if ((isTrackObs || isTrackCapture) && trueWebcams.length > 0) {
             tempStream.getTracks().forEach((t) => t.stop());
             tempStream = null;
-            await new Promise((r) => setTimeout(r, 200));
+            await new Promise((r) => setTimeout(r, 150));
+          } else {
+            stream = tempStream;
+            const matchedCam = realCams.find((c) => c.label && c.label === track?.label);
+            activeCandId = matchedCam?.deviceId || trackId || (trueWebcams[0]?.deviceId ?? realCams[0]?.deviceId ?? "");
+            activeCandLabel = track?.label || "";
+            if (activeCandId) targetId = activeCandId;
           }
         }
 
         // Lista de candidatos en orden prioritario:
-        // 1. targetId
-        // 2. Otras cámaras físicas reales
-        // 3. Cámaras virtuales (solo si todo lo anterior falla)
+        // 1. targetId (webcam física)
+        // 2. Otras cámaras web integradas reales
+        // 3. Capturadoras externas
+        // 4. Cámaras virtuales (solo si todo lo anterior falla)
         const candidates: string[] = [];
         if (targetId) candidates.push(targetId);
-        realCams.forEach((c) => {
+        trueWebcams.forEach((c) => {
+          if (!candidates.includes(c.deviceId)) candidates.push(c.deviceId);
+        });
+        captureCams.forEach((c) => {
           if (!candidates.includes(c.deviceId)) candidates.push(c.deviceId);
         });
         obsCams.forEach((c) => {
@@ -1229,7 +1257,7 @@ export default function StudioDeluluPage() {
                 ? {
                     deviceId: { ideal: candId },
                   }
-                : true;
+                : {};
 
               const s = await navigator.mediaDevices.getUserMedia({
                 video: videoConstraints,
@@ -1264,11 +1292,12 @@ export default function StudioDeluluPage() {
           const finalId = activeCandId || vt?.getSettings()?.deviceId || "";
           const finalLabel = activeCandLabel || vt?.label || "";
           const isFinalObs = /obs|virtual/i.test(finalLabel);
+          const isFinalBad = isFinalObs || /5843|capture/i.test(finalLabel);
 
           // Sincronizar ID de cámara
           if (finalId) {
             setSelectedCameraId(finalId);
-            if (typeof window !== "undefined" && !isFinalObs) {
+            if (typeof window !== "undefined" && !isFinalBad) {
               localStorage.setItem("virallive_preferred_camera", finalId);
             }
           }
@@ -5147,50 +5176,52 @@ ${summary}
                   </>
                 )}
 
-              {/* CAPA DE LOGOS Y BANNERS PROGRAMADOS EN PANTALLA */}
-              <div className="monitor-overlay-layer">
-                {scheduledOverlays.map((item) => {
-                  const visible = isOverlayVisible(item, overlayTick);
-                  return (
-                    <div
-                      key={item.id}
-                      className={`scheduled-overlay-element pos-${item.position} anim-${item.animation} ${visible ? "visible" : "hidden"} ${item.targetUrl ? "clickable-banner" : ""}`}
-                      style={{
-                        width: `${item.sizePercent}%`,
-                        opacity: visible ? item.opacity : 0,
-                        pointerEvents: visible && item.targetUrl ? "auto" : "none",
-                      }}
-                      onClick={(e) => {
-                        if (item.targetUrl) {
-                          e.stopPropagation();
-                          handleExecuteBannerUrl(item);
-                        }
-                      }}
-                      title={`${item.name} (${item.displayMode === "permanent" ? "Fijo" : `Cada ${item.intervalSeconds}s por ${item.durationSeconds}s`})${item.targetUrl ? ` · 🔗 Clic para abrir: ${item.targetUrl}` : ""}`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.imageUrl} alt={item.name} />
-                      {item.targetUrl && (
-                        <span className="banner-link-indicator" title={`URL Ejecutable: ${item.targetUrl}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <Dashicon name="external" size={11} /> URL
-                        </span>
-                      )}
-                      {item.copyableText && (
-                        <button
-                          type="button"
-                          className={`banner-copy-btn ${copiedBannerId === item.id ? "copied" : ""}`}
-                          onClick={(e) => handleCopyBannerText(item, e)}
-                          title={`Copiar texto: "${item.copyableText}"`}
-                          style={{ position: "absolute", bottom: -8, right: 8, pointerEvents: "auto", display: "inline-flex", alignItems: "center", gap: 4 }}
-                        >
-                          <Dashicon name={copiedBannerId === item.id ? "yes-alt" : "clipboard"} size={11} />
-                          <span>{copiedBannerId === item.id ? "¡Copiado!" : "Copiar"}</span>
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              {/* CAPA DE LOGOS Y BANNERS PROGRAMADOS EN PANTALLA (OCULTOS EN TRY ON PARA DESPEJAR LA ROPA) */}
+              {activeTab !== "TRY_ON" && (
+                <div className="monitor-overlay-layer">
+                  {scheduledOverlays.map((item) => {
+                    const visible = isOverlayVisible(item, overlayTick);
+                    return (
+                      <div
+                        key={item.id}
+                        className={`scheduled-overlay-element pos-${item.position} anim-${item.animation} ${visible ? "visible" : "hidden"} ${item.targetUrl ? "clickable-banner" : ""}`}
+                        style={{
+                          width: `${item.sizePercent}%`,
+                          opacity: visible ? item.opacity : 0,
+                          pointerEvents: visible && item.targetUrl ? "auto" : "none",
+                        }}
+                        onClick={(e) => {
+                          if (item.targetUrl) {
+                            e.stopPropagation();
+                            handleExecuteBannerUrl(item);
+                          }
+                        }}
+                        title={`${item.name} (${item.displayMode === "permanent" ? "Fijo" : `Cada ${item.intervalSeconds}s por ${item.durationSeconds}s`})${item.targetUrl ? ` · 🔗 Clic para abrir: ${item.targetUrl}` : ""}`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.imageUrl} alt={item.name} />
+                        {item.targetUrl && (
+                          <span className="banner-link-indicator" title={`URL Ejecutable: ${item.targetUrl}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            <Dashicon name="external" size={11} /> URL
+                          </span>
+                        )}
+                        {item.copyableText && (
+                          <button
+                            type="button"
+                            className={`banner-copy-btn ${copiedBannerId === item.id ? "copied" : ""}`}
+                            onClick={(e) => handleCopyBannerText(item, e)}
+                            title={`Copiar texto: "${item.copyableText}"`}
+                            style={{ position: "absolute", bottom: -8, right: 8, pointerEvents: "auto", display: "inline-flex", alignItems: "center", gap: 4 }}
+                          >
+                            <Dashicon name={copiedBannerId === item.id ? "yes-alt" : "clipboard"} size={11} />
+                            <span>{copiedBannerId === item.id ? "¡Copiado!" : "Copiar"}</span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Badge de Grabación en Vivo con Parpadeo */}
               {isRecording && (
@@ -5219,8 +5250,8 @@ ${summary}
                 </div>
               )}
 
-              {/* TELEPROMPTER EN PANTALLA (HUD PRIVADO EXCLUSIVO DEL STREAMER - INVISIBLE PARA LA AUDIENCIA Y OBS) */}
-              {teleprompterActive && teleprompterPosition !== "dock" && (
+              {/* TELEPROMPTER EN PANTALLA (HUD PRIVADO EXCLUSIVO DEL STREAMER - OCULTO EN TRY ON PARA VISIBILIDAD DE ROPA) */}
+              {activeTab !== "TRY_ON" && teleprompterActive && teleprompterPosition !== "dock" && (
                 <div
                   className={`teleprompter-stage-overlay pos-${teleprompterPosition} ${teleprompterMirror ? "mirror-mode" : ""}`}
                   style={{ backgroundColor: `rgba(0, 0, 0, ${teleprompterOpacity})` }}
@@ -6244,6 +6275,66 @@ ${summary}
                         </div>
                       )}
                     </>
+                  )}
+
+                  {/* Banner de aviso interactivo si la cámara activa es la capturadora HDMI 5843 sin señal */}
+                  {sourceMode === "camera" && cameraStreamActive && cameraDevices.some((c) => c.deviceId === selectedCameraId && /5843|capture/i.test(c.label || "")) && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 18,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: "rgba(15, 23, 42, 0.95)",
+                        border: "1.5px solid #EC4899",
+                        borderRadius: 14,
+                        padding: "10px 18px",
+                        zIndex: 65,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.85), 0 0 20px rgba(236, 72, 153, 0.4)",
+                        maxWidth: "92%",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: "1.2rem" }}>⚠️</span>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                            Cámara seleccionada: &quot;Web Camera (5843:7884)&quot; (Sin señal HDMI)
+                          </span>
+                          <span style={{ fontSize: "0.72rem", color: "#CBD5E1" }}>
+                            Si ves la pantalla negra, pulsa aquí para encender la webcam integrada de tu portátil:
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button active-pink"
+                        style={{
+                          background: "#EC4899",
+                          color: "#FFFFFF",
+                          fontWeight: 800,
+                          padding: "6px 14px",
+                          fontSize: "0.76rem",
+                          borderRadius: 10,
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                        onClick={() => {
+                          const trueCam = cameraDevices.find((c) => !/5843|capture|obs|virtual/i.test(c.label || ""));
+                          if (trueCam) {
+                            setSelectedCameraId(trueCam.deviceId);
+                            if (typeof window !== "undefined") {
+                              localStorage.setItem("virallive_preferred_camera", trueCam.deviceId);
+                            }
+                            void startCamera(trueCam.deviceId);
+                          }
+                        }}
+                      >
+                        📷 Cambiar a Webcam de Portátil
+                      </button>
+                    </div>
                   )}
 
                   <video
@@ -7312,10 +7403,10 @@ ${summary}
               )}
 
 
-              {/* BURBUJA FLOTANTE DE WHATSAPP EN PANTALLA (SI ESTÁ ACTIVA EN CAPAS) */}
+              {/* BURBUJA FLOTANTE DE WHATSAPP EN PANTALLA (SI ESTÁ ACTIVA EN CAPAS) CON SOPORTE M, L, XL */}
               {whatsappConfig.showOnScreen && (
                 <div
-                  className={`whatsapp-stage-floating-bubble pos-${whatsappConfig.position || "bottom-left"} ${showPhoneMockupFrame ? "in-mockup" : ""}`}
+                  className={`whatsapp-stage-floating-bubble pos-${whatsappConfig.position || "bottom-left"} ${showPhoneMockupFrame ? "in-mockup" : ""} size-${whatsappConfig.displaySize || "M"}`}
                   onClick={() => setShowWhatsAppBubblePopover((prev) => !prev)}
                   style={{
                     position: "absolute",
@@ -7325,24 +7416,43 @@ ${summary}
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
-                    background: "rgba(14, 20, 18, 0.92)",
+                    gap: (whatsappConfig.displaySize === "XL") ? 10 : 8,
+                    background: (whatsappConfig.displaySize === "XL") ? "rgba(10, 16, 14, 0.96)" : "rgba(14, 20, 18, 0.92)",
                     backdropFilter: "blur(12px)",
-                    border: "1.5px solid #25D366",
-                    borderRadius: 24,
-                    padding: "6px 12px",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(37, 211, 102, 0.35)",
+                    border: (whatsappConfig.displaySize === "XL") ? "2px solid #25D366" : "1.5px solid #25D366",
+                    borderRadius: (whatsappConfig.displaySize === "XL") ? 14 : 24,
+                    padding: (whatsappConfig.displaySize === "XL") ? "8px 14px" : (whatsappConfig.displaySize === "L") ? "8px 14px" : "6px 12px",
+                    boxShadow: (whatsappConfig.displaySize === "XL") ? "0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(37, 211, 102, 0.4)" : "0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(37, 211, 102, 0.35)",
                     color: "#FFFFFF",
-                    fontSize: "0.75rem",
+                    fontSize: (whatsappConfig.displaySize === "XL") ? "0.86rem" : (whatsappConfig.displaySize === "L") ? "0.82rem" : "0.75rem",
                     fontWeight: 700,
                     transition: "transform 0.2s ease, box-shadow 0.2s ease",
                   }}
                   title={`Clic para abrir WhatsApp (${whatsappConfig.phoneNumber})`}
                 >
+                  {whatsappConfig.displaySize === "XL" && whatsappConfig.qrCodeDataUrl && (
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        background: "#FFFFFF",
+                        borderRadius: 6,
+                        padding: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={whatsappConfig.qrCodeDataUrl} alt="QR WhatsApp" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                    </div>
+                  )}
+
                   <div
                     style={{
-                      width: 28,
-                      height: 28,
+                      width: (whatsappConfig.displaySize === "XL") ? 32 : (whatsappConfig.displaySize === "L") ? 30 : 28,
+                      height: (whatsappConfig.displaySize === "XL") ? 32 : (whatsappConfig.displaySize === "L") ? 30 : 28,
                       borderRadius: "50%",
                       background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
                       display: "flex",
@@ -7351,9 +7461,16 @@ ${summary}
                       flexShrink: 0,
                     }}
                   >
-                    <SocialIcon network="whatsapp" size={17} />
+                    <SocialIcon network="whatsapp" size={(whatsappConfig.displaySize === "XL") ? 19 : 17} />
                   </div>
-                  <span>{whatsappConfig.callToAction || "WhatsApp"}</span>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span>{whatsappConfig.callToAction || "WhatsApp"}</span>
+                    {whatsappConfig.displaySize === "XL" && (
+                      <span style={{ fontSize: "0.68rem", color: "#A7F3D0", fontWeight: 600 }}>
+                        {whatsappConfig.phoneNumber}
+                      </span>
+                    )}
+                  </div>
                   {whatsappConfig.aiAgentEnabled && (
                     <span
                       style={{
@@ -7819,7 +7936,7 @@ ${summary}
 
               {/* Si es cámara: selector de dispositivo y botón de alternar rápido */}
               {sourceMode === "camera" && cameraDevices.length > 0 && (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   <select
                     className="select-ctrl-pill select-device-wide"
                     aria-label="Seleccionar cámara"
@@ -7828,8 +7945,8 @@ ${summary}
                       const newCamId = e.target.value;
                       setSelectedCameraId(newCamId);
                       if (typeof window !== "undefined") {
-                        const isObs = cameraDevices.some((c) => c.deviceId === newCamId && /obs|virtual/i.test(c.label || ""));
-                        if (!isObs) {
+                        const isBad = cameraDevices.some((c) => c.deviceId === newCamId && /obs|virtual|5843|capture/i.test(c.label || ""));
+                        if (!isBad) {
                           localStorage.setItem("virallive_preferred_camera", newCamId);
                         }
                       }
@@ -7838,14 +7955,56 @@ ${summary}
                   >
                     {cameraDevices.map((d) => {
                       const isObs = /obs|virtual/i.test(d.label || "");
+                      const isCapture = /5843|capture/i.test(d.label || "");
+                      const isUvc = /uvc|integrated|internal|webcam/i.test(d.label || "");
                       return (
                         <option key={d.deviceId} value={d.deviceId}>
-                          {isObs ? "🎬 " : "📷 "}
+                          {isObs
+                            ? "🎬 OBS Virtual: "
+                            : isCapture
+                            ? "⚠️ Capturadora HDMI (5843 - Sin señal): "
+                            : isUvc
+                            ? "📷 Webcam Integrada: "
+                            : "📷 "}
                           {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
+                          {isUvc ? " ★ Recomendada" : isCapture ? " (Pantalla negra)" : ""}
                         </option>
                       );
                     })}
                   </select>
+
+                  {/* Botón de rescate si la cámara seleccionada es la capturadora 5843 sin señal */}
+                  {cameraDevices.some((c) => c.deviceId === selectedCameraId && /5843|capture/i.test(c.label || "")) && (
+                    <button
+                      type="button"
+                      className="pill-ctrl-button active-pink"
+                      style={{
+                        background: "#EC4899",
+                        color: "#FFFFFF",
+                        fontWeight: 800,
+                        padding: "5px 12px",
+                        fontSize: "0.72rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        boxShadow: "0 0 12px rgba(236, 72, 153, 0.5)",
+                      }}
+                      onClick={() => {
+                        const realCam = cameraDevices.find((c) => !/5843|capture|obs|virtual/i.test(c.label || ""));
+                        if (realCam) {
+                          setSelectedCameraId(realCam.deviceId);
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem("virallive_preferred_camera", realCam.deviceId);
+                          }
+                          void startCamera(realCam.deviceId);
+                        }
+                      }}
+                      title="Activar la cámara integrada de tu portátil para que salgas en pantalla de inmediato"
+                    >
+                      <Dashicon name="camera" size={13} color="#FFFFFF" />
+                      <span>📷 Usar Webcam de Portátil</span>
+                    </button>
+                  )}
 
                   {cameraDevices.length > 1 && (
                     <button
@@ -7868,15 +8027,15 @@ ${summary}
                         if (nextCam) {
                           setSelectedCameraId(nextCam.deviceId);
                           if (typeof window !== "undefined") {
-                            const isObs = /obs|virtual/i.test(nextCam.label || "");
-                            if (!isObs) localStorage.setItem("virallive_preferred_camera", nextCam.deviceId);
+                            const isBad = /obs|virtual|5843|capture/i.test(nextCam.label || "");
+                            if (!isBad) localStorage.setItem("virallive_preferred_camera", nextCam.deviceId);
                           }
                           void startCamera(nextCam.deviceId);
                         }
                       }}
                       title="Alternar entre tus cámaras conectadas (si una pantalla se ve negra)"
                     >
-                      <Dashicon name="camera-alt" size={13} color="#EC4899" />
+                      <Dashicon name="camera" size={13} color="#EC4899" />
                       <span>Cambiar Cámara</span>
                     </button>
                   )}

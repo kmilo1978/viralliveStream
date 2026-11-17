@@ -301,12 +301,12 @@ export class BrowserVideoPreprocessor {
         this.offscreenCtx.drawImage(this.videoEl, sx, sy, sw, sh, 0, 0, cw, ch);
         this.offscreenCtx.restore();
 
-        // 2. Extraer pixels y aplicar filtro Chroma Key
+        // 2. Extraer pixels y aplicar filtro Chroma Key mejorado multirango
         const imgData = this.offscreenCtx.getImageData(0, 0, cw, ch);
         const data = imgData.data;
         const total = data.length;
-        const sim = this.options.chromaSimilarity ?? 0.35;
-        const smooth = this.options.chromaSmoothness ?? 0.12;
+        const sim = this.options.chromaSimilarity ?? 0.22;
+        const smooth = this.options.chromaSmoothness ?? 0.10;
         const despill = this.options.spillReduction !== false;
 
         for (let i = 0; i < total; i += 4) {
@@ -316,14 +316,16 @@ export class BrowserVideoPreprocessor {
 
           const maxRB = r > b ? r : b;
           const diff = (g - maxRB) / 255;
+          // Ratio de dominancia verde para telas verdes en iluminación cálida o tenue
+          const isGreenDominant = g > 65 && g > r * 1.2 && g > b * 1.15;
 
-          if (diff > sim) {
+          if (diff > sim || (isGreenDominant && diff > sim * 0.75)) {
             // Fondo verde detectado: hacer transparente
             data[i + 3] = 0;
           } else if (diff > sim - smooth) {
             // Transición suave antialias
             const alphaFactor = (sim - diff) / smooth;
-            data[i + 3] = Math.round(255 * alphaFactor);
+            data[i + 3] = Math.round(255 * Math.max(0, Math.min(1, alphaFactor)));
             if (despill && g > maxRB) {
               data[i + 1] = maxRB;
             }

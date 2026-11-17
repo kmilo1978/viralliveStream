@@ -3075,6 +3075,7 @@ export type WhatsAppConfig = {
   aiSystemPrompt: string;
   // Pantalla
   showOnScreen: boolean;
+  displaySize?: "M" | "L" | "XL";
   position: "bottom-left" | "bottom-right" | "top-left" | "top-right";
   callToAction: string;
 };
@@ -3091,6 +3092,7 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
   aiModel: "openai/gpt-4o-mini",
   aiSystemPrompt: "Eres el Agente de Ventas y Atención Oficial por WhatsApp de la transmisión en vivo. Tu misión es responder cordialmente en español, resolver dudas sobre los productos vistos en el stream, informar precios y guiar al cliente para completar su pedido por este chat.",
   showOnScreen: false,
+  displaySize: "M",
   position: "bottom-left",
   callToAction: "Escríbenos en vivo a WhatsApp",
 };

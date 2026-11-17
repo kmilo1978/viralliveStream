@@ -22,6 +22,7 @@ export function WhatsAppStudioPanel({
   const [activeTab, setActiveTab] = useState<WhatsAppIntegrationMode>(config.mode || "number");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [qrUrl, setQrUrl] = useState<string>(config.qrCodeDataUrl || "");
+  const [showAdvancedApi, setShowAdvancedApi] = useState<boolean>(activeCabinName === "TRY ON" ? false : false);
 
   // Simulador de prueba de Agente IA
   const [simQuery, setSimQuery] = useState<string>("¡Hola! Me interesó la prenda que mostraron en el stream, ¿tienen talla M y cuánto cuesta?");
@@ -152,6 +153,49 @@ export function WhatsAppStudioPanel({
           <SocialIcon network="whatsapp" size={14} />
           <span>{config.showOnScreen ? "EN PANTALLA: ON" : "EN PANTALLA: OFF"}</span>
         </button>
+      </div>
+
+      {/* SELECTOR DE TAMAÑO EN PANTALLA (ON/OFF DOCK RÁPIDO) */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "rgba(255, 255, 255, 0.04)",
+          padding: "6px 10px",
+          borderRadius: 10,
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          marginTop: 8,
+          marginBottom: 6,
+        }}
+      >
+        <span style={{ fontSize: "0.72rem", color: "#94A3B8", fontWeight: 700 }}>
+          Tamaño en Pantalla:
+        </span>
+        <div style={{ display: "flex", gap: 5 }}>
+          {(["M", "L", "XL"] as const).map((sz) => {
+            const isSelected = (config.displaySize || "M") === sz;
+            return (
+              <button
+                key={sz}
+                type="button"
+                className={`pill-ctrl-button ${isSelected ? "active-pink" : ""}`}
+                style={{
+                  padding: "3px 9px",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  borderColor: isSelected ? "#25D366" : undefined,
+                  background: isSelected ? "rgba(37, 211, 102, 0.22)" : undefined,
+                  color: isSelected ? "#25D366" : undefined,
+                }}
+                onClick={() => onChangeConfig({ ...config, displaySize: sz })}
+                title={`Tamaño ${sz === "M" ? "Normal" : sz === "L" ? "Destacado" : "Banner Completo"}`}
+              >
+                {sz === "M" ? "M (Estándar)" : sz === "L" ? "L (Destacado)" : "XL (Banner)"}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {copyFeedback && (
@@ -431,162 +475,206 @@ export function WhatsAppStudioPanel({
             </div>
           </div>
 
-          {/* Selector de Proveedor API */}
-          <div className="studio-input-group">
-            <span className="studio-input-label">
-              <span>Proveedor / Plataforma API de WhatsApp</span>
-            </span>
-            <div className="whatsapp-tabs-row" style={{ marginTop: 6, gap: 8 }}>
-              <button
-                type="button"
-                className={`whatsapp-tab-pill ${config.apiProvider === "webhook" ? "active" : ""}`}
-                onClick={() => onChangeConfig({ ...config, apiProvider: "webhook" })}
-                style={{
-                  gap: 6,
-                  background: config.apiProvider === "webhook" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
-                  color: config.apiProvider === "webhook" ? "#25D366" : "#CBD5E1",
-                  borderColor: config.apiProvider === "webhook" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
-                }}
-              >
-                <Dashicon name="rest-api" size={13} />
-                <span>Webhook / n8n / Make</span>
-              </button>
-              <button
-                type="button"
-                className={`whatsapp-tab-pill ${config.apiProvider === "evolution_api" ? "active" : ""}`}
-                onClick={() => onChangeConfig({ ...config, apiProvider: "evolution_api" })}
-                style={{
-                  gap: 6,
-                  background: config.apiProvider === "evolution_api" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
-                  color: config.apiProvider === "evolution_api" ? "#25D366" : "#CBD5E1",
-                  borderColor: config.apiProvider === "evolution_api" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
-                }}
-              >
-                <Dashicon name="networking" size={13} />
-                <span>Evolution API</span>
-              </button>
-              <button
-                type="button"
-                className={`whatsapp-tab-pill ${config.apiProvider === "cloud_api" ? "active" : ""}`}
-                onClick={() => onChangeConfig({ ...config, apiProvider: "cloud_api" })}
-                style={{
-                  gap: 6,
-                  background: config.apiProvider === "cloud_api" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
-                  color: config.apiProvider === "cloud_api" ? "#25D366" : "#CBD5E1",
-                  borderColor: config.apiProvider === "cloud_api" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
-                }}
-              >
-                <Dashicon name="share" size={13} />
-                <span>Meta Cloud API</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="studio-input-group">
-            <label htmlFor={webhookUrlInputId} className="studio-input-label">
-              <span>URL del Webhook de WhatsApp</span>
-              <span className="muted-hint">Recibe los mensajes del chat</span>
-            </label>
-            <input
-              id={webhookUrlInputId}
-              type="text"
-              className="studio-input"
-              value={config.webhookUrl}
-              onChange={(e) => onChangeConfig({ ...config, webhookUrl: e.target.value })}
-              placeholder="https://tu-servidor.com/webhook/whatsapp o endpoint n8n"
-            />
-          </div>
-
-          <div className="studio-input-group">
-            <label htmlFor={apiKeyInputId} className="studio-input-label">
-              <span>Token de Autenticación / API Key (Opcional)</span>
-            </label>
-            <input
-              id={apiKeyInputId}
-              type="password"
-              className="studio-input"
-              value={config.apiKey}
-              onChange={(e) => onChangeConfig({ ...config, apiKey: e.target.value })}
-              placeholder="Bearer token o WhatsApp Access Token"
-            />
-          </div>
-
-          <div className="studio-input-group" style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-            <label htmlFor={aiPromptTextareaId} className="studio-input-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <span style={{ fontWeight: 700, color: "#E2E8F0" }}>Instrucciones del Agente IA (System Prompt de Ventas)</span>
-              <span style={{ color: "#25D366", fontSize: "0.72rem", fontWeight: 700, background: "rgba(37,211,102,0.15)", padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(37,211,102,0.3)" }}>Personalizable</span>
-            </label>
-            <textarea
-              id={aiPromptTextareaId}
-              className="studio-textarea"
-              rows={5}
-              value={config.aiSystemPrompt}
-              onChange={(e) => onChangeConfig({ ...config, aiSystemPrompt: e.target.value })}
-              placeholder="Define la personalidad, productos que vendes, precios y cómo cerrar la compra..."
-              style={{ fontSize: "0.84rem", minHeight: 110, width: "100%", display: "block" }}
-            />
-          </div>
-
-          {/* SIMULADOR INTERACTIVO DE AGENTE IA */}
+          {/* Tarjeta de conexión técnica de API: limpia y desplegable para no saturar el dock en vivo */}
           <div
             style={{
               padding: "10px 12px",
-              background: "rgba(18, 18, 28, 0.95)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: "rgba(255, 255, 255, 0.03)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
               borderRadius: 12,
               display: "flex",
               flexDirection: "column",
-              gap: 8,
+              gap: 10,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#25D366", display: "flex", alignItems: "center", gap: 5 }}>
-                <Dashicon name="format-chat" size={13} />
-                <span>Simulador de Prueba del Agente IA</span>
-              </span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div>
+                <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#E2E8F0", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Dashicon name="admin-generic" size={14} color="#25D366" />
+                  <span>Ajustes Técnicos de API (Webhooks / Evolution / Meta)</span>
+                </span>
+                <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>
+                  {config.apiProvider === "webhook" ? "Webhook n8n / Make" : config.apiProvider === "evolution_api" ? "Evolution API" : "Meta Cloud API"} · {config.webhookUrl ? "Conectado" : "Pendiente de configuración"}
+                </span>
+              </div>
               <button
                 type="button"
-                className="pill-ctrl-button active-pink"
+                className="pill-ctrl-button"
                 style={{
-                  padding: "2px 8px",
-                  fontSize: "0.7rem",
-                  background: "#25D366",
-                  borderColor: "#25D366",
-                  color: "#000",
-                  fontWeight: 800,
+                  padding: "4px 10px",
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  borderColor: showAdvancedApi ? "#25D366" : "rgba(37, 211, 102, 0.4)",
+                  color: showAdvancedApi ? "#25D366" : "#A7F3D0",
+                  background: showAdvancedApi ? "rgba(37, 211, 102, 0.12)" : "transparent",
                 }}
-                onClick={handleSimulateAiResponse}
-                disabled={isSimulating}
+                onClick={() => setShowAdvancedApi((prev) => !prev)}
               >
-                {isSimulating ? "Pensando..." : "Probar Respuesta"}
+                {showAdvancedApi ? "▲ Ocultar Campos Técnicos" : "⚙️ Configurar Webhook y Tokens"}
               </button>
             </div>
 
-            <input
-              type="text"
-              className="studio-input"
-              value={simQuery}
-              onChange={(e) => setSimQuery(e.target.value)}
-              placeholder="Escribe como un cliente..."
-              style={{ fontSize: "0.76rem", padding: "5px 8px" }}
-            />
-
-            {simResponse && (
-              <div
-                style={{
-                  padding: "8px 10px",
-                  background: "rgba(37, 211, 102, 0.14)",
-                  borderLeft: "3px solid #25D366",
-                  borderRadius: 6,
-                  fontSize: "0.76rem",
-                  color: "#E2E8F0",
-                  lineHeight: 1.35,
-                }}
-              >
-                <div style={{ fontSize: "0.64rem", color: "#25D366", fontWeight: 800, marginBottom: 2 }}>
-                  🤖 RESPUESTA EN VIVO DEL AGENTE IA DE WHATSAPP:
+            {showAdvancedApi && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                {/* Selector de Proveedor API */}
+                <div className="studio-input-group">
+                  <span className="studio-input-label">
+                    <span>Proveedor / Plataforma API de WhatsApp</span>
+                  </span>
+                  <div className="whatsapp-tabs-row" style={{ marginTop: 6, gap: 8 }}>
+                    <button
+                      type="button"
+                      className={`whatsapp-tab-pill ${config.apiProvider === "webhook" ? "active" : ""}`}
+                      onClick={() => onChangeConfig({ ...config, apiProvider: "webhook" })}
+                      style={{
+                        gap: 6,
+                        background: config.apiProvider === "webhook" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
+                        color: config.apiProvider === "webhook" ? "#25D366" : "#CBD5E1",
+                        borderColor: config.apiProvider === "webhook" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
+                      }}
+                    >
+                      <Dashicon name="rest-api" size={13} />
+                      <span>Webhook / n8n / Make</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`whatsapp-tab-pill ${config.apiProvider === "evolution_api" ? "active" : ""}`}
+                      onClick={() => onChangeConfig({ ...config, apiProvider: "evolution_api" })}
+                      style={{
+                        gap: 6,
+                        background: config.apiProvider === "evolution_api" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
+                        color: config.apiProvider === "evolution_api" ? "#25D366" : "#CBD5E1",
+                        borderColor: config.apiProvider === "evolution_api" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
+                      }}
+                    >
+                      <Dashicon name="networking" size={13} />
+                      <span>Evolution API</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`whatsapp-tab-pill ${config.apiProvider === "cloud_api" ? "active" : ""}`}
+                      onClick={() => onChangeConfig({ ...config, apiProvider: "cloud_api" })}
+                      style={{
+                        gap: 6,
+                        background: config.apiProvider === "cloud_api" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
+                        color: config.apiProvider === "cloud_api" ? "#25D366" : "#CBD5E1",
+                        borderColor: config.apiProvider === "cloud_api" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
+                      }}
+                    >
+                      <Dashicon name="share" size={13} />
+                      <span>Meta Cloud API</span>
+                    </button>
+                  </div>
                 </div>
-                {simResponse}
+
+                <div className="studio-input-group">
+                  <label htmlFor={webhookUrlInputId} className="studio-input-label">
+                    <span>URL del Webhook de WhatsApp</span>
+                    <span className="muted-hint">Recibe los mensajes del chat</span>
+                  </label>
+                  <input
+                    id={webhookUrlInputId}
+                    type="text"
+                    className="studio-input"
+                    value={config.webhookUrl}
+                    onChange={(e) => onChangeConfig({ ...config, webhookUrl: e.target.value })}
+                    placeholder="https://tu-servidor.com/webhook/whatsapp o endpoint n8n"
+                  />
+                </div>
+
+                <div className="studio-input-group">
+                  <label htmlFor={apiKeyInputId} className="studio-input-label">
+                    <span>Token de Autenticación / API Key (Opcional)</span>
+                  </label>
+                  <input
+                    id={apiKeyInputId}
+                    type="password"
+                    className="studio-input"
+                    value={config.apiKey}
+                    onChange={(e) => onChangeConfig({ ...config, apiKey: e.target.value })}
+                    placeholder="Bearer token o WhatsApp Access Token"
+                  />
+                </div>
+
+                <div className="studio-input-group" style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+                  <label htmlFor={aiPromptTextareaId} className="studio-input-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                    <span style={{ fontWeight: 700, color: "#E2E8F0" }}>Instrucciones del Agente IA (System Prompt de Ventas)</span>
+                    <span style={{ color: "#25D366", fontSize: "0.72rem", fontWeight: 700, background: "rgba(37,211,102,0.15)", padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(37,211,102,0.3)" }}>Personalizable</span>
+                  </label>
+                  <textarea
+                    id={aiPromptTextareaId}
+                    className="studio-textarea"
+                    rows={5}
+                    value={config.aiSystemPrompt}
+                    onChange={(e) => onChangeConfig({ ...config, aiSystemPrompt: e.target.value })}
+                    placeholder="Define la personalidad, productos que vendes, precios y cómo cerrar la compra..."
+                    style={{ fontSize: "0.84rem", minHeight: 110, width: "100%", display: "block" }}
+                  />
+                </div>
+
+                {/* SIMULADOR INTERACTIVO DE AGENTE IA */}
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    background: "rgba(18, 18, 28, 0.95)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    borderRadius: 12,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#25D366", display: "flex", alignItems: "center", gap: 5 }}>
+                      <Dashicon name="format-chat" size={13} />
+                      <span>Simulador de Prueba del Agente IA</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="pill-ctrl-button active-pink"
+                      style={{
+                        padding: "2px 8px",
+                        fontSize: "0.7rem",
+                        background: "#25D366",
+                        borderColor: "#25D366",
+                        color: "#000",
+                        fontWeight: 800,
+                      }}
+                      onClick={handleSimulateAiResponse}
+                      disabled={isSimulating}
+                    >
+                      {isSimulating ? "Pensando..." : "Probar Respuesta"}
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    className="studio-input"
+                    value={simQuery}
+                    onChange={(e) => setSimQuery(e.target.value)}
+                    placeholder="Escribe como un cliente..."
+                    style={{ fontSize: "0.76rem", padding: "5px 8px" }}
+                  />
+
+                  {simResponse && (
+                    <div
+                      style={{
+                        padding: "8px 10px",
+                        background: "rgba(37, 211, 102, 0.14)",
+                        borderLeft: "3px solid #25D366",
+                        borderRadius: 6,
+                        fontSize: "0.76rem",
+                        color: "#E2E8F0",
+                        lineHeight: 1.35,
+                      }}
+                    >
+                      <div style={{ fontSize: "0.64rem", color: "#25D366", fontWeight: 800, marginBottom: 2 }}>
+                        🤖 RESPUESTA EN VIVO DEL AGENTE IA DE WHATSAPP:
+                      </div>
+                      {simResponse}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

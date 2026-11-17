@@ -713,205 +713,207 @@ export function TikTokBrandedStudioPanel({
               <span>APLICAR MARCO TIKTOK AL MONITOR (9:16)</span>
             </button>
           )}
-          {/* SECCIÓN 1: SELECCIONAR O SUBIR FONDOS (TIPO FONDO VERDE O ESCENARIO) */}
-          <div className="customizer-card-box" style={{ border: "1px solid #10B981" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#FFFFFF", display: "flex", alignItems: "center", gap: 6 }}>
-                  <Dashicon name="format-gallery" size={16} color="#10B981" />
-                  <span>1. Fondos para TikTok Live (Tipo Fondo Verde / Chroma Key)</span>
-                </h3>
-                <p style={{ margin: "2px 0 0 0", fontSize: "0.72rem", color: "var(--text-secondary)" }}>
-                  Elige transmitir con <strong>Fondo Verde (#00FF00)</strong> para OBS o escoge un escenario de marca.
-                </p>
-              </div>
-
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <label className="pill-ctrl-button" style={{ padding: "4px 8px", fontSize: "0.7rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <Dashicon name="format-image" size={13} />
-                  <span>Subir Foto</span>
-                  <input
-                    ref={bgUploadRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) handleUploadBg(f, "image");
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-                <label className="pill-ctrl-button" style={{ padding: "4px 8px", fontSize: "0.7rem", cursor: "pointer", borderColor: "#00F0FF", color: "#00F0FF", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <Dashicon name="format-video" size={13} />
-                  <span>Subir Video Bucle</span>
-                  <input
-                    ref={bgVideoUploadRef}
-                    type="file"
-                    accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) handleUploadBg(f, "video");
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Control Switch Chroma Key en TikTok */}
-            <div
-              style={{
-                background: chromaKeyEnabled ? "rgba(16, 185, 129, 0.12)" : "rgba(255, 255, 255, 0.04)",
-                border: `1px solid ${chromaKeyEnabled ? "rgba(16, 185, 129, 0.45)" : "rgba(255, 255, 255, 0.08)"}`,
-                borderRadius: 10,
-                padding: "8px 12px",
-                marginBottom: 10,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: "1.1rem" }}>🟩</span>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
-                        Chroma Key / Pantalla Verde
-                      </span>
-                      {chromaKeyEnabled && (
-                        <span style={{ fontSize: "0.6rem", fontWeight: 800, color: "#10B981", background: "rgba(16, 185, 129, 0.2)", padding: "1px 6px", borderRadius: 6 }}>
-                          ACTIVO DETRÁS
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: "0.68rem", color: "rgba(255, 255, 255, 0.65)" }}>
-                      Proyecta el fondo seleccionado detrás de ti en el live vertical sin desaparecer
-                    </span>
-                  </div>
+          {/* SECCIÓN 1: SELECCIONAR O SUBIR FONDOS (Solo en modo vista completa, en dockMode se usa la barra unificada superior para evitar duplicados) */}
+          {!dockMode && (
+            <div className="customizer-card-box" style={{ border: "1px solid #10B981" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "0.95rem", color: "#FFFFFF", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Dashicon name="format-gallery" size={16} color="#10B981" />
+                    <span>1. Fondos para TikTok Live (Tipo Fondo Verde / Chroma Key)</span>
+                  </h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.72rem", color: "var(--text-secondary)" }}>
+                    Elige transmitir con <strong>Fondo Verde (#00FF00)</strong> para OBS o escoge un escenario de marca.
+                  </p>
                 </div>
 
-                <div
-                  className={`switchy-toggle ${chromaKeyEnabled ? "active-green" : ""}`}
-                  onClick={() => onToggleChromaKey?.(!chromaKeyEnabled)}
-                  title="Alternar Chroma Key para TikTok Live"
-                >
-                  <div className="switchy-thumb" />
-                </div>
-              </div>
-
-              {chromaKeyEnabled && (
-                <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: 6 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#E2E8F0" }}>
-                    <span>Sensibilidad Verde (Tolerancia)</span>
-                    <span style={{ fontWeight: 800, color: "#10B981" }}>{Math.round((chromaSimilarity ?? 0.35) * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.15"
-                    max="0.60"
-                    step="0.01"
-                    value={chromaSimilarity ?? 0.35}
-                    onChange={(e) => onChromaSimilarityChange?.(Number.parseFloat(e.target.value))}
-                    style={{ width: "100%", accentColor: "#10B981", height: 4, cursor: "pointer", marginTop: 2 }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Grid de fondos */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(135px, 1fr))", gap: 8 }}>
-              {bgList.map((bg) => {
-                const isSelected = tiktokBgId === bg.id;
-                const isDefault = defaultBgId === bg.id;
-                return (
-                  <div
-                    key={bg.id}
-                    onClick={() => handleSelectBackground(bg)}
-                    style={{
-                      position: "relative",
-                      borderRadius: 10,
-                      padding: 6,
-                      background: isSelected ? "rgba(16, 185, 129, 0.18)" : "#1C1C2A",
-                      border: isSelected ? "2px solid #10B981" : "1px solid #2E2E3E",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 4,
-                    }}
-                  >
-                    {/* Miniatura del fondo */}
-                    <div
-                      style={{
-                        width: "100%",
-                        height: 52,
-                        borderRadius: 6,
-                        overflow: "hidden",
-                        backgroundColor: bg.id === "bg-chroma-green" ? "#00FF00" : bg.previewColor || "#1E1E2E",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <label className="pill-ctrl-button" style={{ padding: "4px 8px", fontSize: "0.7rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <Dashicon name="format-image" size={13} />
+                    <span>Subir Foto</span>
+                    <input
+                      ref={bgUploadRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleUploadBg(f, "image");
+                        e.target.value = "";
                       }}
-                    >
-                      {bg.id === "bg-chroma-green" ? (
-                        <span style={{ fontSize: "0.68rem", fontWeight: 900, color: "#004400", background: "rgba(255,255,255,0.7)", padding: "2px 6px", borderRadius: 4 }}>
-                          CHROMA KEY
+                    />
+                  </label>
+                  <label className="pill-ctrl-button" style={{ padding: "4px 8px", fontSize: "0.7rem", cursor: "pointer", borderColor: "#00F0FF", color: "#00F0FF", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <Dashicon name="format-video" size={13} />
+                    <span>Subir Video Bucle</span>
+                    <input
+                      ref={bgVideoUploadRef}
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleUploadBg(f, "video");
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Control Switch Chroma Key en TikTok */}
+              <div
+                style={{
+                  background: chromaKeyEnabled ? "rgba(16, 185, 129, 0.12)" : "rgba(255, 255, 255, 0.04)",
+                  border: `1px solid ${chromaKeyEnabled ? "rgba(16, 185, 129, 0.45)" : "rgba(255, 255, 255, 0.08)"}`,
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  marginBottom: 10,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: "1.1rem" }}>🟩</span>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#FFFFFF" }}>
+                          Chroma Key / Pantalla Verde
                         </span>
-                      ) : bg.mediaType === "video" || bg.customVideoUrl ? (
-                        <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                          <video src={bg.customVideoUrl || bg.customImageUrl} muted loop autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          <span style={{ position: "absolute", bottom: 2, right: 2, fontSize: "0.55rem", background: "rgba(0, 240, 255, 0.85)", color: "#000", fontWeight: 900, padding: "0 3px", borderRadius: 2 }}>
-                            LOOP
+                        {chromaKeyEnabled && (
+                          <span style={{ fontSize: "0.6rem", fontWeight: 800, color: "#10B981", background: "rgba(16, 185, 129, 0.2)", padding: "1px 6px", borderRadius: 6 }}>
+                            ACTIVO DETRÁS
                           </span>
-                        </div>
-                      ) : bg.customImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={bg.customImageUrl} alt={bg.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <Dashicon name="format-gallery" size={20} color="#94A3B8" />
-                      )}
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {bg.name}
+                        )}
+                      </div>
+                      <span style={{ fontSize: "0.68rem", color: "rgba(255, 255, 255, 0.65)" }}>
+                        Proyecta el fondo seleccionado detrás de ti en el live vertical sin desaparecer
                       </span>
-                      {isDefault && (
-                        <span style={{ fontSize: "0.65rem", color: "#FBBF24", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 2 }} title="Fondo predeterminado">
-                          <Dashicon name="star-filled" size={11} /> Def
-                        </span>
-                      )}
                     </div>
-
-                    {/* Botón para marcar como predeterminado */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSetAsDefault(bg);
-                      }}
-                      style={{
-                        background: isDefault ? "#10B981" : "transparent",
-                        border: isDefault ? "none" : "1px solid #4B5563",
-                        color: isDefault ? "#000000" : "#9CA3AF",
-                        borderRadius: 4,
-                        padding: "2px 4px",
-                        fontSize: "0.62rem",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                      }}
-                      title="Establecer como fondo predeterminado de TikTok Live"
-                    >
-                      {isDefault ? "★ PREDETERMINADO" : "Poner por Defecto"}
-                    </button>
                   </div>
-                );
-              })}
+
+                  <div
+                    className={`switchy-toggle ${chromaKeyEnabled ? "active-green" : ""}`}
+                    onClick={() => onToggleChromaKey?.(!chromaKeyEnabled)}
+                    title="Alternar Chroma Key para TikTok Live"
+                  >
+                    <div className="switchy-thumb" />
+                  </div>
+                </div>
+
+                {chromaKeyEnabled && (
+                  <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: 6 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#E2E8F0" }}>
+                      <span>Sensibilidad Verde (Tolerancia)</span>
+                      <span style={{ fontWeight: 800, color: "#10B981" }}>{Math.round((chromaSimilarity ?? 0.35) * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.15"
+                      max="0.60"
+                      step="0.01"
+                      value={chromaSimilarity ?? 0.35}
+                      onChange={(e) => onChromaSimilarityChange?.(Number.parseFloat(e.target.value))}
+                      style={{ width: "100%", accentColor: "#10B981", height: 4, cursor: "pointer", marginTop: 2 }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Grid de fondos */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(135px, 1fr))", gap: 8 }}>
+                {bgList.map((bg) => {
+                  const isSelected = tiktokBgId === bg.id;
+                  const isDefault = defaultBgId === bg.id;
+                  return (
+                    <div
+                      key={bg.id}
+                      onClick={() => handleSelectBackground(bg)}
+                      style={{
+                        position: "relative",
+                        borderRadius: 10,
+                        padding: 6,
+                        background: isSelected ? "rgba(16, 185, 129, 0.18)" : "#1C1C2A",
+                        border: isSelected ? "2px solid #10B981" : "1px solid #2E2E3E",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      {/* Miniatura del fondo */}
+                      <div
+                        style={{
+                          width: "100%",
+                          height: 52,
+                          borderRadius: 6,
+                          overflow: "hidden",
+                          backgroundColor: bg.id === "bg-chroma-green" ? "#00FF00" : bg.previewColor || "#1E1E2E",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {bg.id === "bg-chroma-green" ? (
+                          <span style={{ fontSize: "0.68rem", fontWeight: 900, color: "#004400", background: "rgba(255,255,255,0.7)", padding: "2px 6px", borderRadius: 4 }}>
+                            CHROMA KEY
+                          </span>
+                        ) : bg.mediaType === "video" || bg.customVideoUrl ? (
+                          <div style={{ position: "relative", width: "100%", height: "100%" }}>
+                            <video src={bg.customVideoUrl || bg.customImageUrl} muted loop autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <span style={{ position: "absolute", bottom: 2, right: 2, fontSize: "0.55rem", background: "rgba(0, 240, 255, 0.85)", color: "#000", fontWeight: 900, padding: "0 3px", borderRadius: 2 }}>
+                              LOOP
+                            </span>
+                          </div>
+                        ) : bg.customImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={bg.customImageUrl} alt={bg.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <Dashicon name="format-gallery" size={20} color="#94A3B8" />
+                        )}
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#FFFFFF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {bg.name}
+                        </span>
+                        {isDefault && (
+                          <span style={{ fontSize: "0.65rem", color: "#FBBF24", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 2 }} title="Fondo predeterminado">
+                            <Dashicon name="star-filled" size={11} /> Def
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Botón para marcar como predeterminado */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetAsDefault(bg);
+                        }}
+                        style={{
+                          background: isDefault ? "#10B981" : "transparent",
+                          border: isDefault ? "none" : "1px solid #4B5563",
+                          color: isDefault ? "#000000" : "#9CA3AF",
+                          borderRadius: 4,
+                          padding: "2px 4px",
+                          fontSize: "0.62rem",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                        }}
+                        title="Establecer como fondo predeterminado de TikTok Live"
+                      >
+                        {isDefault ? "★ PREDETERMINADO" : "Poner por Defecto"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* SECCIÓN 2: SELECCIONAR ESTILO DE MARCA, COLORES RGB Y LOGO PNG */}
           <div className="customizer-card-box">
