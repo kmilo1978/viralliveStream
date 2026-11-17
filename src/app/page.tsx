@@ -6453,6 +6453,19 @@ ${summary}
                     </div>
                   </div>
 
+                  {/* Botón CTA estilo TikTok Live (Ref: Botineta Yatu / Stanley) */}
+                  <button
+                    type="button"
+                    className="shoppable-tiktok-cta-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsProductExpanded(true);
+                    }}
+                    title="Ver detalles del producto"
+                  >
+                    {activeProduct.buttonText || "VER MÁS"}
+                  </button>
+
                   <div
                     className="shoppable-card-qr-box"
                     title="Escanea este código QR con tu celular para abrir y comprar el producto"

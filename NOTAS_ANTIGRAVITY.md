@@ -2067,4 +2067,31 @@ px tsc --noEmit completado con código 0.
   1. Eliminar la prioridad y bucle forzado de OBS Studio en el arranque.
   2. Condicionar la visibilidad del personalizador de chat a que el chat esté activado en pantalla.
 - Pendientes:
-  - Sistema 100% estable, libre de errores y en sintonía con las solicitudes del usuario.
+  - Ninguno. Resuelto y verificado.
+
+## Validación completada
+- Fecha: 2026-11-17T10:10:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Rediseño nativo del banner de Live Shopping en TikTok vertical y eliminación de superposición con el carrito de compras.
+- Observaciones:
+  - Se rediseñó la tarjeta de producto fijado (`shoppable-product-card-stage`) en el mockup de teléfono vertical 9:16 siguiendo fielmente las imágenes de referencia (estilo Botineta Yatu / Vaso Stanley):
+    1. Fondo blanco puro (#ffffff) con bordes redondeados (16px) y sombra suave.
+    2. Miniatura nítida a la izquierda con badge rojo de descuento (-% OFF).
+    3. Título y precio en tipografía negra de alto contraste.
+    4. Botón CTA negro sólido "VER MÁS" con texto blanco.
+    5. Ancho compacto (máx. 255px) anclado abajo a la izquierda (`bottom: 16px; left: 12px; right: auto`).
+  - Resolución de la superposición con el carrito:
+    1. El botón flotante del carrito se ubica abajo a la derecha (`bottom: 16px; right: 12px`).
+    2. El banner al tener ancho acotado deja libre el lateral derecho (con más de 150px de holgura).
+    3. El banner y el carrito conviven en pantalla sin tocarse ni taparse jamás.
+    4. El carrito solo se muestra si el usuario añade al menos 1 producto (`cartItems.length > 0`), manteniéndose 100% oculto con el carrito vacío.
+  - Verificado visualmente en navegador mediante subagente automatizado (screenshot `step_26_shot_1_tiktok_live_shopping_banner_limpio_y_carrito.png`) y 0 errores de compilación TypeScript.
+
+## Nueva sesión
+- Fecha: 2026-11-17 10:10
+- Solicitud: En TikTok la versión Live Shopping el banner no se ve bien además tapa el carrito de compras.
+- Decisiones clave:
+  1. Rediseñar el banner de Live Shopping estilo TikTok Shop (fondo blanco, botón VER MÁS negro, tipografía limpia).
+  2. Limitar el ancho del banner a la izquierda para que nunca invada la esquina inferior derecha del carrito.
+- Pendientes:
+  - Todo funcionando con visualización nativa y pulida.
