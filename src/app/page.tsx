@@ -877,8 +877,15 @@ export default function StudioDeluluPage() {
       if (cams.length > 0) {
         const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
         const matchedSaved = savedCam ? cams.find((c) => c.deviceId === savedCam) : null;
+        const realCams = cams.filter((c) => !/obs|virtual/i.test(c.label || ""));
         const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
-        const preferred = matchedSaved || obsCam || cams[0];
+        // Priorizar cámaras físicas reales siempre. Nunca forzar OBS Virtual Camera por defecto si hay una cámara real.
+        const preferred =
+          (matchedSaved && (!/obs/i.test(matchedSaved.label || "") || realCams.length === 0) ? matchedSaved : null) ||
+          realCams[0] ||
+          matchedSaved ||
+          obsCam ||
+          cams[0];
         if (!selectedCameraId || (matchedSaved && selectedCameraId !== matchedSaved.deviceId)) {
           setSelectedCameraId(preferred.deviceId);
         }
@@ -1037,8 +1044,10 @@ export default function StudioDeluluPage() {
 
   // Iniciar cámara con detección inteligente para OBS Studio y fallback automático en cascada
   const startCamera = useCallback(
-    async (overrideCameraId?: string) => {
-      setSourceError(null);
+    async (overrideCameraId?: string, isSilentMount = false) => {
+      if (!isSilentMount) {
+        setSourceError(null);
+      }
       setSourceMode("camera");
       setLocalVideoFileUrl(null);
       try {
@@ -1054,23 +1063,23 @@ export default function StudioDeluluPage() {
         const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
         const requestedId = overrideCameraId !== undefined ? overrideCameraId : (selectedCameraId || savedCam || "");
 
-        // 2. Orden de candidatos para probar en cascada sin trabar
+        // 2. Orden de candidatos: probar cámaras físicas reales PRIMERO
         const candidates: { id?: string; label?: string }[] = [];
         if (requestedId) {
           const m = cams.find((c) => c.deviceId === requestedId);
           candidates.push({ id: requestedId, label: m?.label });
         }
-        // Si hay OBS Virtual Camera y no es la primera, agregarla
+        // Cámaras físicas reales disponibles
+        cams.forEach((c) => {
+          if (c.deviceId !== requestedId && !/obs|virtual/i.test(c.label || "")) {
+            candidates.push({ id: c.deviceId, label: c.label });
+          }
+        });
+        // Dispositivos virtuales (OBS) sólo al final si no hay físicas
         const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
         if (obsCam && obsCam.deviceId !== requestedId) {
           candidates.push({ id: obsCam.deviceId, label: obsCam.label });
         }
-        // Agregar el resto de cámaras disponibles
-        cams.forEach((c) => {
-          if (c.deviceId !== requestedId && (!obsCam || c.deviceId !== obsCam.deviceId)) {
-            candidates.push({ id: c.deviceId, label: c.label });
-          }
-        });
         if (candidates.length === 0) {
           candidates.push({});
         }
@@ -1111,6 +1120,7 @@ export default function StudioDeluluPage() {
             if (cand.label) {
               setStreamInfo(`Conectado a: ${cand.label}`);
             }
+            setSourceError(null);
             break;
           } catch (cErr) {
             console.warn(`Intento con cámara ${cand.label || cand.id || "default"} falló:`, cErr);
@@ -1122,6 +1132,7 @@ export default function StudioDeluluPage() {
         if (!stream) {
           try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            setSourceError(null);
           } catch (gErr) {
             throw lastErr || gErr;
           }
@@ -1142,38 +1153,28 @@ export default function StudioDeluluPage() {
         if (stream) {
           await attachNewLocalStream(stream);
           void enumerateDevices();
+          setSourceError(null);
         }
       } catch (err) {
         setCameraStreamActive(false);
-        const errStr = err instanceof Error ? `${err.name} ${err.message}` : String(err);
-        const isDeviceInUse = /in use|notreadable|busy|track start|could not start/i.test(errStr);
+        // Si fue una comprobación silenciosa al cargar la página, NO mostrar cartel de error para mantener la cabina limpia en espera
+        if (!isSilentMount) {
+          const errStr = err instanceof Error ? `${err.name} ${err.message}` : String(err);
+          const isObsSelected = selectedCameraId && cameraDevices.some((c) => c.deviceId === selectedCameraId && /obs/i.test(c.label || ""));
+          const isDeviceInUse = /in use|notreadable|busy|track start|could not start/i.test(errStr);
 
-        setSourceError(
-          isDeviceInUse
-            ? "Tus cámaras están ocupadas por OBS Studio o la Cámara Virtual de OBS aún no está emitiendo. Abre OBS Studio y pulsa 'Iniciar cámara virtual' (o cierra OBS para usar tu cámara directa)."
-            : err instanceof Error
-            ? `No se pudo abrir la cámara: ${err.message}. Verifica permisos.`
-            : "Error abriendo cámara.",
-        );
+          if (isObsSelected && isDeviceInUse) {
+            setSourceError("La Cámara Virtual de OBS aún no está emitiendo. Inicia 'Cámara virtual' en OBS Studio o selecciona tu cámara web.");
+          } else if (isDeviceInUse) {
+            setSourceError("La cámara parece ocupada por otra aplicación. Cierra la otra app o prueba seleccionar otra cámara.");
+          } else {
+            setSourceError(err instanceof Error ? `No se pudo conectar: ${err.message}` : "Cámara en espera.");
+          }
+        }
       }
     },
-    [attachNewLocalStream, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
+    [attachNewLocalStream, cameraDevices, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
   );
-
-  // Auto-detección en segundo plano cuando las cámaras están bloqueadas por OBS Studio (detecta en cuanto el usuario inicie la cámara virtual)
-  useEffect(() => {
-    if (!cameraStreamActive && sourceMode === "camera" && sourceError && /obs/i.test(sourceError)) {
-      const timer = setInterval(() => {
-        const obsCam = cameraDevices.find((c) => /obs/i.test(c.label || ""));
-        if (obsCam) {
-          void startCamera(obsCam.deviceId);
-        } else {
-          void startCamera();
-        }
-      }, 3000);
-      return () => clearInterval(timer);
-    }
-  }, [cameraDevices, cameraStreamActive, sourceError, sourceMode, startCamera]);
 
   // Iniciar video pregrabado
   const handleVideoFileSelected = useCallback(
@@ -3489,10 +3490,10 @@ ${summary}
 
 
 
-  // Iniciar cámara por defecto al montar o al resolver dispositivo si no hay fuente
+  // Iniciar cámara por defecto al montar o al resolver dispositivo si no hay fuente (de forma silenciosa sin alarmar en espera)
   useEffect(() => {
     if (!localStreamRef.current && sourceMode === "camera") {
-      void startCamera();
+      void startCamera(undefined, true);
     }
   }, [selectedCameraId, sourceMode, startCamera]);
 
@@ -5975,18 +5976,62 @@ ${summary}
                                 gap: 6,
                                 lineHeight: 1.4,
                                 boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                                position: "relative",
                               }}
                             >
+                              <button
+                                type="button"
+                                onClick={() => setSourceError(null)}
+                                style={{
+                                  position: "absolute",
+                                  top: 6,
+                                  right: 8,
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "#FCA5A5",
+                                  cursor: "pointer",
+                                  fontSize: "0.85rem",
+                                  fontWeight: 700,
+                                  lineHeight: 1,
+                                }}
+                                title="Cerrar aviso"
+                              >
+                                ✕
+                              </button>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 800, color: "#F87171" }}>
                                 <Dashicon name="warning" size={16} color="#EF4444" />
-                                <span>{/obs/i.test(sourceError) ? "OBS STUDIO EN USO" : "AVISO DE CÁMARA"}</span>
+                                <span>{/obs/i.test(sourceError) ? "OBS STUDIO EN ESPERA" : "AVISO DE CÁMARA"}</span>
                               </div>
                               <span>{sourceError}</span>
-                              {/obs/i.test(sourceError) && (
-                                <span style={{ fontSize: "0.64rem", color: "#94A3B8", marginTop: 2 }}>
-                                  💡 Detectando señal automáticamente... en cuanto pulses &quot;Iniciar cámara virtual&quot; en OBS, la imagen aparecerá sola.
-                                </span>
-                              )}
+                              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                                <button
+                                  type="button"
+                                  onClick={() => setSourceError(null)}
+                                  className="pill-ctrl-button"
+                                  style={{ padding: "3px 8px", fontSize: "0.66rem" }}
+                                >
+                                  Cerrar
+                                </button>
+                                {cameraDevices.some((c) => !/obs|virtual/i.test(c.label || "")) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const real = cameraDevices.find((c) => !/obs|virtual/i.test(c.label || ""));
+                                      if (real) {
+                                        setSelectedCameraId(real.deviceId);
+                                        if (typeof window !== "undefined") {
+                                          localStorage.setItem("virallive_preferred_camera", real.deviceId);
+                                        }
+                                        void startCamera(real.deviceId);
+                                      }
+                                    }}
+                                    className="pill-ctrl-button active-pink"
+                                    style={{ padding: "3px 8px", fontSize: "0.66rem" }}
+                                  >
+                                    Usar Cámara Física
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           )}
 
@@ -10014,72 +10059,115 @@ ${summary}
               {/* PANEL DE CHAT Y AGENTE IA CON SWITCHES DENTRO DE CAM */}
               {(isDockStackedView || activeStudioTab === "chat") && (
                 <div className="studio-dock-card" style={{ padding: 12 }}>
-                  {/* TARJETA DE PERSONALIZACIÓN DE CHAT ELEGANTE (FUENTES Y COLORES) */}
-                  <div
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 14,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      marginBottom: 12,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "#FFFFFF", display: "flex", alignItems: "center", gap: 6 }}>
-                        <Dashicon name="media-text" size={14} color="#38BDF8" />
-                        <span>Tipografía &amp; Estilo de Chat Elegante</span>
-                      </span>
+                  {/* Si el chat en pantalla está apagado, invitar a activarlo sin saturar la vista */}
+                  {!realFeelChatEnabled && (
+                    <div
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        background: "rgba(255, 255, 255, 0.03)",
+                        border: "1px dashed rgba(255, 255, 255, 0.15)",
+                        marginBottom: 12,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Dashicon name="format-chat" size={16} color="#A78BFA" />
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#FFFFFF" }}>
+                            Chat en Pantalla: OFF
+                          </span>
+                          <span style={{ fontSize: "0.66rem", color: "#94A3B8" }}>
+                            Abre el chat para activar fuentes y estilos elegantes
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="pill-ctrl-button active-pink"
+                        style={{ padding: "4px 12px", fontSize: "0.7rem", fontWeight: 800 }}
+                        onClick={() => setRealFeelChatEnabled(true)}
+                        title="Activar comentarios en vivo en la pantalla del monitor"
+                      >
+                        Abrir Chat
+                      </button>
                     </div>
+                  )}
 
-                    {/* Selector de Fuentes */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Tipografía de Comentarios:</span>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                        {[
-                          { id: "sans-modern", label: "Inter Moderna (Clean)" },
-                          { id: "poppins-soft", label: "Poppins Redondeada" },
-                          { id: "serif-editorial", label: "Playfair (Serif Lujo)" },
-                          { id: "mono-tech", label: "Mono Tech (Streamer)" },
-                        ].map((fn) => (
-                          <button
-                            key={fn.id}
-                            type="button"
-                            className={`pill-ctrl-button ${chatCustomization.fontFamily === fn.id ? "active-pink" : ""}`}
-                            style={{ padding: "4px 8px", fontSize: "0.68rem", fontWeight: chatCustomization.fontFamily === fn.id ? 800 : 500 }}
-                            onClick={() => setChatCustomization((prev) => ({ ...prev, fontFamily: fn.id as LiveChatFontFamily }))}
-                          >
-                            {fn.label}
-                          </button>
-                        ))}
+                  {/* TARJETA DE PERSONALIZACIÓN DE CHAT ELEGANTE (FUENTES Y COLORES) - SÓLO SE ACTIVA AL ABRIR EL CHAT */}
+                  {realFeelChatEnabled && (
+                    <div
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 14,
+                        background: "rgba(255, 255, 255, 0.04)",
+                        border: "1px solid rgba(56, 189, 248, 0.28)",
+                        marginBottom: 12,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "#FFFFFF", display: "flex", alignItems: "center", gap: 6 }}>
+                          <Dashicon name="media-text" size={14} color="#38BDF8" />
+                          <span>Tipografía &amp; Estilo de Chat Elegante</span>
+                        </span>
+                        <span style={{ fontSize: "0.66rem", fontWeight: 700, color: "#38BDF8", background: "rgba(56, 189, 248, 0.12)", padding: "2px 8px", borderRadius: 10 }}>
+                          CHAT ACTIVO
+                        </span>
+                      </div>
+
+                      {/* Selector de Fuentes */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Tipografía de Comentarios:</span>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                          {[
+                            { id: "sans-modern", label: "Inter Moderna (Clean)" },
+                            { id: "poppins-soft", label: "Poppins Redondeada" },
+                            { id: "serif-editorial", label: "Playfair (Serif Lujo)" },
+                            { id: "mono-tech", label: "Mono Tech (Streamer)" },
+                          ].map((fn) => (
+                            <button
+                              key={fn.id}
+                              type="button"
+                              className={`pill-ctrl-button ${chatCustomization.fontFamily === fn.id ? "active-pink" : ""}`}
+                              style={{ padding: "4px 8px", fontSize: "0.68rem", fontWeight: chatCustomization.fontFamily === fn.id ? 800 : 500 }}
+                              onClick={() => setChatCustomization((prev) => ({ ...prev, fontFamily: fn.id as LiveChatFontFamily }))}
+                            >
+                              {fn.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Selector de Temas de Burbuja */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Tema Visual de las Burbujas:</span>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+                          {[
+                            { id: "glass-dark", label: "Glass Dark" },
+                            { id: "glass-white", label: "Glass White" },
+                            { id: "neon-pink", label: "Neón Pink" },
+                            { id: "clean-minimal", label: "Minimalista" },
+                          ].map((th) => (
+                            <button
+                              key={th.id}
+                              type="button"
+                              className={`pill-ctrl-button ${chatCustomization.theme === th.id ? "active-pink" : ""}`}
+                              style={{ padding: "4px 6px", fontSize: "0.68rem", fontWeight: chatCustomization.theme === th.id ? 800 : 500 }}
+                              onClick={() => setChatCustomization((prev) => ({ ...prev, theme: th.id as LiveChatTheme }))}
+                            >
+                              {th.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-
-                    {/* Selector de Temas de Burbuja */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span style={{ fontSize: "0.68rem", color: "#94A3B8" }}>Tema Visual de las Burbujas:</span>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
-                        {[
-                          { id: "glass-dark", label: "Glass Dark" },
-                          { id: "glass-white", label: "Glass White" },
-                          { id: "neon-pink", label: "Neón Pink" },
-                          { id: "clean-minimal", label: "Minimalista" },
-                        ].map((th) => (
-                          <button
-                            key={th.id}
-                            type="button"
-                            className={`pill-ctrl-button ${chatCustomization.theme === th.id ? "active-pink" : ""}`}
-                            style={{ padding: "4px 6px", fontSize: "0.68rem", fontWeight: chatCustomization.theme === th.id ? 800 : 500 }}
-                            onClick={() => setChatCustomization((prev) => ({ ...prev, theme: th.id as LiveChatTheme }))}
-                          >
-                            {th.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   <UnifiedLiveChatPanel
                     compactSidebar

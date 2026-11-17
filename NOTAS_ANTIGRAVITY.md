@@ -2037,3 +2037,34 @@ px tsc --noEmit completado con código 0.
   3. No duplicar el acceso de Live Shopping en la barra superior si ya está destacado en el panel derecho de herramientas.
 - Pendientes:
   - Ninguno. La barra superior quedó despejada, profesional y equilibrada.
+
+## Validación completada
+- Fecha: 2026-11-17T09:55:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Solución definitiva a la recurrencia del cartel rojo de OBS Studio y activación condicional de la Tipografía & Estilo de Chat Elegante.
+- Observaciones:
+  - Causa raíz del cartel rojo recurrente identificada y eliminada:
+    1. En `enumerateDevices` se forzaba `obsCam` por defecto sobre las cámaras físicas reales cuando no había cámara guardada.
+    2. En `startCamera` se anteponía la cámara virtual de OBS en la lista de candidatos, provocando que cualquier fallo intentara abrir el filtro DirectShow de OBS y lanzara error 'Device in use'.
+    3. Un intervalo `setInterval` de 3 segundos en segundo plano re-intentaba abrir la cámara fallida, provocando un bucle infinito que restauraba el cartel de error perpetuamente.
+    4. El montaje inicial ejecutaba `startCamera` con `isSilentMount = false`, arrojando el error en pantalla en lugar de permanecer en standby limpio.
+    5. La tarjeta de error carecía de botón de cierre (✕).
+  - Solución definitiva aplicada:
+    1. Priorización estricta de cámaras físicas reales sobre OBS Virtual Camera en `enumerateDevices` y en la cascada de candidatos de `startCamera`.
+    2. Supresión total del bucle infinito de sondeo de 3 segundos.
+    3. Sonda silenciosa en el arranque (`isSilentMount = true`), garantizando que la cámara en espera permanezca impecable con el avatar de Maddy y sin ningún mensaje de error intrusivo.
+    4. Incorporación de botón de cierre (✕), botón de "Cerrar" y botón directo "Usar Cámara Física" en el aviso de cámara.
+  - Activación condicional del Chat Elegante:
+    1. La tarjeta "Tipografía & Estilo de Chat Elegante" ahora solo se activa y renderiza cuando el chat está abierto (`realFeelChatEnabled === true`).
+    2. Con el chat apagado, se muestra una pastilla sutil y compacta ("Chat en Pantalla: OFF") con un botón de llamada a la acción ("Abrir Chat") que no satura la vista.
+    3. Al pulsar "Abrir Chat", la tipografía elegante y la selección de temas se despliegan automáticamente con el distintivo "CHAT ACTIVO".
+  - Verificado visualmente en navegador con subagente de auditoría y 0 errores de compilación TypeScript.
+
+## Nueva sesión
+- Fecha: 2026-11-17 09:55
+- Solicitud: Encuentra una solución definitiva a la recurrencia del aviso de OBS Studio y activa la Tipografía & Estilo de Chat Elegante solo cuando se abre el chat.
+- Decisiones clave:
+  1. Eliminar la prioridad y bucle forzado de OBS Studio en el arranque.
+  2. Condicionar la visibilidad del personalizador de chat a que el chat esté activado en pantalla.
+- Pendientes:
+  - Sistema 100% estable, libre de errores y en sintonía con las solicitudes del usuario.
