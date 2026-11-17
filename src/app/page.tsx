@@ -259,6 +259,7 @@ export default function StudioDeluluPage() {
   const recordedVideoRef = useRef<HTMLVideoElement | null>(null);
   const refFileInputRef = useRef<HTMLInputElement | null>(null);
   const createFileInputRef = useRef<HTMLInputElement | null>(null);
+  const isStartingCameraRef = useRef<boolean>(false);
 
   const realtimeClientRef = useRef<RealTimeClient | null>(null);
   const rawStreamRef = useRef<MediaStream | null>(null);
@@ -865,36 +866,67 @@ export default function StudioDeluluPage() {
     void refreshAccountStatus();
   }, [refreshAccountStatus]);
 
-  // Enumerar dispositivos de audio y video
+  // Enumerar dispositivos de audio y video con orden prioritario (cámaras físicas primero)
   const enumerateDevices = useCallback(async () => {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.enumerateDevices) return;
     try {
       const list = await navigator.mediaDevices.enumerateDevices();
       const cams = list.filter((d) => d.kind === "videoinput");
       const mics = list.filter((d) => d.kind === "audioinput");
-      setCameraDevices(cams);
+
+      // Ordenar cámaras: físicas reales primero, virtuales (OBS) al final
+      const sortedCams = [...cams].sort((a, b) => {
+        const aIsObs = /obs|virtual/i.test(a.label || "");
+        const bIsObs = /obs|virtual/i.test(b.label || "");
+        if (aIsObs === bIsObs) return 0;
+        return aIsObs ? 1 : -1;
+      });
+
+      setCameraDevices(sortedCams);
       setAudioDevices(mics);
-      if (cams.length > 0) {
+
+      if (sortedCams.length > 0) {
+        const realCams = sortedCams.filter((c) => !/obs|virtual/i.test(c.label || ""));
         const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
-        const matchedSaved = savedCam ? cams.find((c) => c.deviceId === savedCam) : null;
-        const realCams = cams.filter((c) => !/obs|virtual/i.test(c.label || ""));
-        const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
-        // Priorizar cámaras físicas reales siempre. Nunca forzar OBS Virtual Camera por defecto si hay una cámara real.
-        const preferred =
-          (matchedSaved && (!/obs/i.test(matchedSaved.label || "") || realCams.length === 0) ? matchedSaved : null) ||
-          realCams[0] ||
-          matchedSaved ||
-          obsCam ||
-          cams[0];
-        if (!selectedCameraId || (matchedSaved && selectedCameraId !== matchedSaved.deviceId)) {
-          setSelectedCameraId(preferred.deviceId);
+
+        // Purgar OBS de localStorage si hay cámaras físicas disponibles
+        if (savedCam && realCams.length > 0) {
+          const isSavedObs = sortedCams.some((c) => c.deviceId === savedCam && /obs|virtual/i.test(c.label || ""));
+          if (isSavedObs && typeof window !== "undefined") {
+            try {
+              localStorage.removeItem("virallive_preferred_camera");
+            } catch {}
+          }
+        }
+
+        const matchedSaved =
+          savedCam && realCams.some((c) => c.deviceId === savedCam)
+            ? sortedCams.find((c) => c.deviceId === savedCam)
+            : null;
+
+        const preferred = matchedSaved || (realCams.length > 0 ? realCams[0] : sortedCams[0]);
+
+        if (preferred) {
+          setSelectedCameraId((prev) => {
+            if (prev && sortedCams.some((c) => c.deviceId === prev)) {
+              const currentCam = sortedCams.find((c) => c.deviceId === prev);
+              const isCurrentObs = /obs|virtual/i.test(currentCam?.label || "");
+              if (!isCurrentObs || realCams.length === 0) {
+                return prev;
+              }
+            }
+            return preferred.deviceId;
+          });
         }
       }
-      if (!selectedAudioId && mics[0]) setSelectedAudioId(mics[0].deviceId);
+
+      if (mics.length > 0) {
+        setSelectedAudioId((prev) => (prev && mics.some((m) => m.deviceId === prev) ? prev : mics[0].deviceId));
+      }
     } catch {
       // Ignorar permisos
     }
-  }, [selectedAudioId, selectedCameraId]);
+  }, []);
 
   useEffect(() => {
     void enumerateDevices();
@@ -998,7 +1030,7 @@ export default function StudioDeluluPage() {
 
       if (localVideoRef.current) {
         // Enlazar stream directo a la etiqueta <video> cuando no hay Chroma Key para latencia cero y evitar pantalla negra
-        const displayStream = (chromaKeyEnabled && bgPreviewEnabled) ? processedStream : stream;
+        const displayStream = (chromaKeyEnabled && bgPreviewEnabled && bgPreviewMode === "chroma_key") ? processedStream : stream;
         localVideoRef.current.srcObject = displayStream;
         try {
           await localVideoRef.current.play();
@@ -1059,6 +1091,8 @@ export default function StudioDeluluPage() {
   // Iniciar cámara con detección inteligente para OBS Studio y fallback automático en cascada
   const startCamera = useCallback(
     async (overrideCameraId?: string, isSilentMount = false) => {
+      if (isStartingCameraRef.current) return;
+      isStartingCameraRef.current = true;
       if (!isSilentMount) {
         setSourceError(null);
       }
@@ -1070,75 +1104,128 @@ export default function StudioDeluluPage() {
         const targetFps: 15 | 24 | 25 | 30 = rawFps === 25 ? 25 : 30;
 
         // 1. Obtener lista actual de dispositivos de video
-        const list = await navigator.mediaDevices.enumerateDevices().catch(() => []);
-        const cams = list.filter((d) => d.kind === "videoinput");
-        if (cams.length > 0) setCameraDevices(cams);
+        let cams = (await navigator.mediaDevices?.enumerateDevices().catch(() => []))
+          ?.filter((d) => d.kind === "videoinput") || [];
 
-        const savedCam = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
-        const requestedId = overrideCameraId !== undefined ? overrideCameraId : (selectedCameraId || savedCam || "");
-
-        // 2. Orden de candidatos: probar cámaras físicas reales PRIMERO
-        const candidates: { id?: string; label?: string }[] = [];
-        if (requestedId) {
-          const m = cams.find((c) => c.deviceId === requestedId);
-          candidates.push({ id: requestedId, label: m?.label });
-        }
-        // Cámaras físicas reales disponibles
-        cams.forEach((c) => {
-          if (c.deviceId !== requestedId && !/obs|virtual/i.test(c.label || "")) {
-            candidates.push({ id: c.deviceId, label: c.label });
+        // Si los nombres están vacíos (aún no hay permiso concedido), solicitar un stream básico para desbloquear etiquetas
+        let tempStream: MediaStream | null = null;
+        if (cams.length === 0 || cams.every((c) => !c.label)) {
+          try {
+            tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            cams = (await navigator.mediaDevices.enumerateDevices().catch(() => []))
+              ?.filter((d) => d.kind === "videoinput") || [];
+          } catch (initErr) {
+            console.warn("Fallo al pedir stream inicial de permisos:", initErr);
           }
-        });
-        // Dispositivos virtuales (OBS) sólo al final si no hay físicas
-        const obsCam = cams.find((c) => /obs/i.test(c.label || ""));
-        if (obsCam && obsCam.deviceId !== requestedId) {
-          candidates.push({ id: obsCam.deviceId, label: obsCam.label });
         }
-        if (candidates.length === 0) {
-          candidates.push({});
+
+        // Ordenar: físicas primero, virtuales (OBS) al final
+        const realCams = cams.filter((c) => !/obs|virtual|screen|ndi|vcam|droidcam/i.test(c.label || ""));
+        const obsCams = cams.filter((c) => /obs|virtual/i.test(c.label || ""));
+        const sortedCams = [...realCams, ...obsCams];
+        if (sortedCams.length > 0) {
+          setCameraDevices(sortedCams);
+        }
+
+        // Limpiar de localStorage cualquier referencia a OBS si hay cámaras físicas reales
+        let savedCamId = typeof window !== "undefined" ? localStorage.getItem("virallive_preferred_camera") : null;
+        if (savedCamId && realCams.length > 0) {
+          const isSavedObs = obsCams.some((c) => c.deviceId === savedCamId);
+          if (isSavedObs) {
+            try {
+              localStorage.removeItem("virallive_preferred_camera");
+            } catch {}
+            savedCamId = null;
+          }
+        }
+
+        // Determinar ID objetivo
+        let targetId = "";
+        if (overrideCameraId) {
+          targetId = overrideCameraId;
+        } else if (savedCamId && realCams.some((c) => c.deviceId === savedCamId)) {
+          targetId = savedCamId;
+        } else if (realCams.length > 0) {
+          targetId = realCams[0].deviceId;
+        } else if (sortedCams.length > 0) {
+          targetId = sortedCams[0].deviceId;
         }
 
         let stream: MediaStream | null = null;
-        let lastErr: Error | null = null;
 
-        for (const cand of candidates) {
-          try {
-            const isObs = cand.label ? /obs/i.test(cand.label) : false;
-            const videoConstraints: MediaTrackConstraints = cand.id
-              ? isObs
-                ? { deviceId: { ideal: cand.id } }
-                : {
-                    deviceId: { ideal: cand.id },
+        // Si ya obtuvimos tempStream y coincide con el dispositivo objetivo (o no había objetivo y es física), usarlo
+        if (tempStream) {
+          const track = tempStream.getVideoTracks()[0];
+          const trackId = track?.getSettings()?.deviceId;
+          const isTrackObs = /obs|virtual/i.test(track?.label || "");
+          if ((!targetId || trackId === targetId) && (!isTrackObs || realCams.length === 0)) {
+            stream = tempStream;
+            if (trackId) targetId = trackId;
+          } else {
+            tempStream.getTracks().forEach((t) => t.stop());
+            tempStream = null;
+          }
+        }
+
+        // Lista de candidatos en orden prioritario:
+        // 1. targetId
+        // 2. Otras cámaras físicas reales
+        // 3. Cámaras virtuales (solo si todo lo anterior falla)
+        const candidates: string[] = [];
+        if (targetId) candidates.push(targetId);
+        realCams.forEach((c) => {
+          if (!candidates.includes(c.deviceId)) candidates.push(c.deviceId);
+        });
+        obsCams.forEach((c) => {
+          if (!candidates.includes(c.deviceId)) candidates.push(c.deviceId);
+        });
+        if (candidates.length === 0) candidates.push("");
+
+        let activeCandId = "";
+        let activeCandLabel = "";
+
+        if (!stream) {
+          for (const candId of candidates) {
+            try {
+              const videoConstraints: MediaTrackConstraints = candId
+                ? {
+                    deviceId: { ideal: candId },
                     width: { ideal: spec.width },
                     height: { ideal: spec.height },
-                    frameRate: { ideal: targetFps, max: targetFps },
+                    frameRate: { ideal: targetFps },
                   }
-              : {
-                  width: { ideal: spec.width },
-                  height: { ideal: spec.height },
-                  frameRate: { ideal: targetFps, max: targetFps },
-                };
+                : {
+                    width: { ideal: spec.width },
+                    height: { ideal: spec.height },
+                    frameRate: { ideal: targetFps },
+                  };
 
-            // Pedir video sin audio inicialmente para evitar bloqueos del controlador DirectShow de Windows
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: videoConstraints,
-              audio: false,
-            });
-
-            if (cand.id && cand.id !== selectedCameraId) {
-              setSelectedCameraId(cand.id);
-              if (typeof window !== "undefined") {
-                localStorage.setItem("virallive_preferred_camera", cand.id);
+              const s = await navigator.mediaDevices.getUserMedia({
+                video: videoConstraints,
+                audio: false,
+              });
+              const vt = s.getVideoTracks()[0];
+              activeCandId = candId || vt?.getSettings()?.deviceId || "";
+              activeCandLabel = vt?.label || "";
+              stream = s;
+              break;
+            } catch (cErr) {
+              console.warn(`Intento con cámara ${candId} falló:`, cErr);
+              // Intento relajado sin resolución específica para webcams USB sensibles
+              if (candId) {
+                try {
+                  const sSimple = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { ideal: candId } },
+                    audio: false,
+                  });
+                  const vt = sSimple.getVideoTracks()[0];
+                  activeCandId = candId || vt?.getSettings()?.deviceId || "";
+                  activeCandLabel = vt?.label || "";
+                  stream = sSimple;
+                  break;
+                } catch {}
               }
             }
-            if (cand.label) {
-              setStreamInfo(`Conectado a: ${cand.label}`);
-            }
-            setSourceError(null);
-            break;
-          } catch (cErr) {
-            console.warn(`Intento con cámara ${cand.label || cand.id || "default"} falló:`, cErr);
-            lastErr = cErr instanceof Error ? cErr : new Error(String(cErr));
           }
         }
 
@@ -1146,48 +1233,64 @@ export default function StudioDeluluPage() {
         if (!stream) {
           try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            setSourceError(null);
+            const vt = stream.getVideoTracks()[0];
+            activeCandId = vt?.getSettings()?.deviceId || "";
+            activeCandLabel = vt?.label || "";
           } catch (gErr) {
-            throw lastErr || gErr;
-          }
-        }
-
-        // Si hay stream de video y se requiere audio, vincular pista de micrófono de forma independiente
-        if (stream && includeAudio) {
-          try {
-            const audioStream = await navigator.mediaDevices.getUserMedia({
-              audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true,
-            });
-            audioStream.getAudioTracks().forEach((track) => stream?.addTrack(track));
-          } catch (aErr) {
-            console.warn("Micrófono no disponible, continuando en vivo solo con video:", aErr);
+            throw gErr;
           }
         }
 
         if (stream) {
+          const vt = stream.getVideoTracks()[0];
+          const finalId = activeCandId || vt?.getSettings()?.deviceId || "";
+          const finalLabel = activeCandLabel || vt?.label || "";
+          const isFinalObs = /obs|virtual/i.test(finalLabel);
+
+          // Sincronizar ID de cámara
+          if (finalId) {
+            setSelectedCameraId(finalId);
+            if (typeof window !== "undefined" && !isFinalObs) {
+              localStorage.setItem("virallive_preferred_camera", finalId);
+            }
+          }
+
+          if (finalLabel) {
+            setStreamInfo(`Cámara activa: ${finalLabel}`);
+          }
+
+          // Si el usuario intentó OBS pero OBS no estaba activo y nos conectamos a la cámara web física
+          if (overrideCameraId && obsCams.some((c) => c.deviceId === overrideCameraId) && !isFinalObs) {
+            setStreamInfo(`OBS Studio no emite señal. Conectado a cámara web física: ${finalLabel}`);
+          }
+
+          // Añadir audio si está activo
+          if (includeAudio) {
+            try {
+              const audioStream = await navigator.mediaDevices.getUserMedia({
+                audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true,
+              });
+              audioStream.getAudioTracks().forEach((track) => stream?.addTrack(track));
+            } catch (aErr) {
+              console.warn("Micrófono no disponible, continuando en vivo solo con video:", aErr);
+            }
+          }
+
           await attachNewLocalStream(stream);
-          void enumerateDevices();
           setSourceError(null);
         }
       } catch (err) {
         setCameraStreamActive(false);
-        // Si fue una comprobación silenciosa al cargar la página, NO mostrar cartel de error para mantener la cabina limpia en espera
         if (!isSilentMount) {
-          const errStr = err instanceof Error ? `${err.name} ${err.message}` : String(err);
-          const isObsSelected = selectedCameraId && cameraDevices.some((c) => c.deviceId === selectedCameraId && /obs/i.test(c.label || ""));
-          const isDeviceInUse = /in use|notreadable|busy|track start|could not start/i.test(errStr);
-
-          if (isObsSelected && isDeviceInUse) {
-            setSourceError("La Cámara Virtual de OBS aún no está emitiendo. Inicia 'Cámara virtual' en OBS Studio o selecciona tu cámara web.");
-          } else if (isDeviceInUse) {
-            setSourceError("La cámara parece ocupada por otra aplicación. Cierra la otra app o prueba seleccionar otra cámara.");
-          } else {
-            setSourceError(err instanceof Error ? `No se pudo conectar: ${err.message}` : "Cámara en espera.");
-          }
+          const errStr = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+          console.error("No se pudo iniciar ninguna cámara:", errStr);
+          setSourceError("No se detectó señal de video. Por favor verifica que tu cámara web esté conectada y que el navegador tenga permisos.");
         }
+      } finally {
+        isStartingCameraRef.current = false;
       }
     },
-    [attachNewLocalStream, cameraDevices, enumerateDevices, includeAudio, selectedAudioId, selectedCameraId, selectedModelId],
+    [attachNewLocalStream, includeAudio, selectedAudioId, selectedModelId],
   );
 
   // Iniciar video pregrabado
@@ -3513,7 +3616,7 @@ ${summary}
     if (!localStreamRef.current && sourceMode === "camera") {
       void startCamera(undefined, true);
     }
-  }, [selectedCameraId, sourceMode, startCamera]);
+  }, [sourceMode, startCamera]);
 
   // Renderizador unificado del módulo de Fondos Virtuales & Chroma Key (disponible en CAM, TRY ON, CLIPS y TIKTOK)
   const renderVirtualBackgroundSection = (tabContext: "CAM" | "TRY_ON" | "CLIPS" | "TIKTOK") => {
@@ -5983,20 +6086,19 @@ ${summary}
                             <div
                               style={{
                                 marginTop: 10,
-                                padding: "10px 14px",
-                                background: "rgba(239, 68, 68, 0.16)",
-                                border: "1.5px solid rgba(239, 68, 68, 0.45)",
-                                borderRadius: 12,
+                                padding: "8px 12px",
+                                background: "rgba(239, 68, 68, 0.14)",
+                                border: "1px solid rgba(239, 68, 68, 0.35)",
+                                borderRadius: 10,
                                 fontSize: "0.72rem",
                                 color: "#FECACA",
-                                maxWidth: 320,
+                                maxWidth: 290,
                                 textAlign: "center",
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
                                 gap: 6,
-                                lineHeight: 1.4,
-                                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                                lineHeight: 1.35,
                                 position: "relative",
                               }}
                             >
@@ -6005,54 +6107,35 @@ ${summary}
                                 onClick={() => setSourceError(null)}
                                 style={{
                                   position: "absolute",
-                                  top: 6,
-                                  right: 8,
+                                  top: 4,
+                                  right: 6,
                                   background: "transparent",
                                   border: "none",
                                   color: "#FCA5A5",
                                   cursor: "pointer",
-                                  fontSize: "0.85rem",
+                                  fontSize: "0.8rem",
                                   fontWeight: 700,
-                                  lineHeight: 1,
                                 }}
                                 title="Cerrar aviso"
                               >
                                 ✕
                               </button>
-                              <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 800, color: "#F87171" }}>
-                                <Dashicon name="warning" size={16} color="#EF4444" />
-                                <span>{/obs/i.test(sourceError) ? "OBS STUDIO EN ESPERA" : "AVISO DE CÁMARA"}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 700, color: "#F87171" }}>
+                                <Dashicon name="warning" size={14} color="#EF4444" />
+                                <span>Aviso de Cámara</span>
                               </div>
                               <span>{sourceError}</span>
-                              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-                                <button
-                                  type="button"
-                                  onClick={() => setSourceError(null)}
-                                  className="pill-ctrl-button"
-                                  style={{ padding: "3px 8px", fontSize: "0.66rem" }}
-                                >
-                                  Cerrar
-                                </button>
-                                {cameraDevices.some((c) => !/obs|virtual/i.test(c.label || "")) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const real = cameraDevices.find((c) => !/obs|virtual/i.test(c.label || ""));
-                                      if (real) {
-                                        setSelectedCameraId(real.deviceId);
-                                        if (typeof window !== "undefined") {
-                                          localStorage.setItem("virallive_preferred_camera", real.deviceId);
-                                        }
-                                        void startCamera(real.deviceId);
-                                      }
-                                    }}
-                                    className="pill-ctrl-button active-pink"
-                                    style={{ padding: "3px 8px", fontSize: "0.66rem" }}
-                                  >
-                                    Usar Cámara Física
-                                  </button>
-                                )}
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSourceError(null);
+                                  void startCamera();
+                                }}
+                                className="pill-ctrl-button active-pink"
+                                style={{ padding: "3px 10px", fontSize: "0.68rem", marginTop: 4 }}
+                              >
+                                Reintentar Conexión
+                              </button>
                             </div>
                           )}
 
@@ -6063,7 +6146,10 @@ ${summary}
                                 const nextId = e.target.value;
                                 setSelectedCameraId(nextId);
                                 if (typeof window !== "undefined") {
-                                  localStorage.setItem("virallive_preferred_camera", nextId);
+                                  const isObs = cameraDevices.some((c) => c.deviceId === nextId && /obs|virtual/i.test(c.label || ""));
+                                  if (!isObs) {
+                                    localStorage.setItem("virallive_preferred_camera", nextId);
+                                  }
                                 }
                                 void startCamera(nextId);
                               }}
@@ -6079,13 +6165,17 @@ ${summary}
                                 outline: "none",
                                 cursor: "pointer",
                               }}
-                              title="Seleccionar cámara de entrada (Física u OBS Virtual Camera)"
+                              title="Seleccionar cámara de entrada"
                             >
-                              {cameraDevices.map((d) => (
-                                <option key={d.deviceId} value={d.deviceId}>
-                                  {d.label || `Cámara (${d.deviceId.slice(0, 6)})`}
-                                </option>
-                              ))}
+                              {cameraDevices.map((d) => {
+                                const isObs = /obs|virtual/i.test(d.label || "");
+                                return (
+                                  <option key={d.deviceId} value={d.deviceId}>
+                                    {isObs ? "🎬 " : "📷 "}
+                                    {d.label || `Cámara (${d.deviceId.slice(0, 6)})`}
+                                  </option>
+                                );
+                              })}
                             </select>
                           )}
 
@@ -7718,16 +7808,23 @@ ${summary}
                     const newCamId = e.target.value;
                     setSelectedCameraId(newCamId);
                     if (typeof window !== "undefined") {
-                      localStorage.setItem("virallive_preferred_camera", newCamId);
+                      const isObs = cameraDevices.some((c) => c.deviceId === newCamId && /obs|virtual/i.test(c.label || ""));
+                      if (!isObs) {
+                        localStorage.setItem("virallive_preferred_camera", newCamId);
+                      }
                     }
                     void startCamera(newCamId);
                   }}
                 >
-                  {cameraDevices.map((d) => (
-                    <option key={d.deviceId} value={d.deviceId}>
-                      {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
-                    </option>
-                  ))}
+                  {cameraDevices.map((d) => {
+                    const isObs = /obs|virtual/i.test(d.label || "");
+                    return (
+                      <option key={d.deviceId} value={d.deviceId}>
+                        {isObs ? "🎬 " : "📷 "}
+                        {d.label || `Cámara ${d.deviceId.slice(0, 5)}`}
+                      </option>
+                    );
+                  })}
                 </select>
               )}
 
