@@ -10468,7 +10468,8 @@ body {
    ============================================================= */
 .delulu-monitor-container.aspect-9-16 .monitor-pip-camera,
 .delulu-monitor-container.in-phone-mockup .monitor-pip-camera {
-  bottom: 78px !important;
+  position: absolute !important;
+  bottom: 84px !important;
   right: 12px !important;
   top: auto !important;
   width: 114px !important;
@@ -10478,6 +10479,7 @@ body {
   border: 2px solid var(--accent-pink) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65) !important;
   z-index: 80 !important;
+  object-fit: cover !important;
 }
 
 .delulu-monitor-container.aspect-9-16:has(.monitor-pip-camera) .real-feel-hearts-col,
@@ -10711,33 +10713,36 @@ body {
 }
 
 .whatsapp-tab-pill,
+button.whatsapp-tab-pill,
 .tiktok-tab-btn {
-  padding: 6px 12px;
-  border-radius: 9999px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: #94A3B8;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  padding: 6px 12px !important;
+  border-radius: 9999px !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #94A3B8 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
 .whatsapp-tab-pill:hover,
+button.whatsapp-tab-pill:hover,
 .tiktok-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
 }
 
 .whatsapp-tab-pill.active,
+button.whatsapp-tab-pill.active,
 .tiktok-tab-btn.active {
-  background: rgba(37, 211, 102, 0.16);
-  border-color: #25D366;
-  color: #25D366;
-  box-shadow: 0 0 12px rgba(37, 211, 102, 0.2);
+  background: rgba(37, 211, 102, 0.18) !important;
+  border-color: #25D366 !important;
+  color: #25D366 !important;
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.25) !important;
 }
 
 /* 2. Badge / Tarjeta Flotante en Pantalla (Monitor en Vivo) */

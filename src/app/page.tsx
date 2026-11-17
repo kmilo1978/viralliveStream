@@ -1039,8 +1039,22 @@ export default function StudioDeluluPage() {
         bgMediaUrl: currentBgMediaUrl,
         bgMediaType: currentBgMediaType,
       });
+
+      // Conmutar reactivamente el stream en el monitor localVideoRef:
+      // Si Chroma Key está activo y el modo es chroma_key, mostrar el stream procesado por el canvas con el fondo detrás.
+      // Si está en PiP o cámara normal, mostrar el stream directo de la cámara.
+      if (localVideoRef.current) {
+        if (chromaKeyEnabled && bgPreviewMode === "chroma_key") {
+          const processedStream = preprocRef.current.getStream();
+          if (processedStream && localVideoRef.current.srcObject !== processedStream) {
+            localVideoRef.current.srcObject = processedStream;
+          }
+        } else if (rawStreamRef.current && localVideoRef.current.srcObject !== rawStreamRef.current) {
+          localVideoRef.current.srcObject = rawStreamRef.current;
+        }
+      }
     }
-  }, [chromaDespill, chromaKeyEnabled, chromaSimilarity, chromaSmoothness, currentBgMediaType, currentBgMediaUrl]);
+  }, [bgPreviewMode, chromaDespill, chromaKeyEnabled, chromaSimilarity, chromaSmoothness, currentBgMediaType, currentBgMediaUrl]);
 
   // Iniciar cámara con detección inteligente para OBS Studio y fallback automático en cascada
   const startCamera = useCallback(
@@ -2172,6 +2186,10 @@ export default function StudioDeluluPage() {
     async (bg: VirtualBackgroundItem) => {
       setSelectedBgId(bg.id);
       setBgPreviewEnabled(true);
+      if (bg.id !== "bg-chroma-green" && bg.id !== "bg-none") {
+        // Asegurar que la persona nunca desaparezca al escoger un diseño: si estaba en backdrop oculto, proyectar en PiP
+        setBgPreviewMode((prev) => (prev === "backdrop" ? "pip_camera" : prev));
+      }
       let nextPrompt = promptText;
       virtualBackgrounds.forEach((b) => {
         if (b.promptSuffix && nextPrompt.includes(b.promptSuffix)) {
@@ -3571,7 +3589,7 @@ ${summary}
               <button
                 type="button"
                 className={`pill-ctrl-button ${bgPreviewMode === "chroma_key" && chromaKeyEnabled ? "active-green" : ""}`}
-                style={{ padding: "5px 6px", fontSize: "0.68rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
+                style={{ padding: "6px 8px", fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
                 onClick={() => {
                   setBgPreviewMode("chroma_key");
                   setChromaKeyEnabled(true);
@@ -3580,17 +3598,17 @@ ${summary}
                     const defaultBg = virtualBackgrounds.find((b) => b.id === "bg-cyber-streamer") || virtualBackgrounds[0];
                     if (defaultBg) void handleSelectBackground(defaultBg);
                   }
-                  setStreamInfo("Modo Chroma Key activo: recorta el verde y proyecta el fondo escogido detrás de ti.");
+                  setStreamInfo("👤 Verme Encima (Chroma Key): silueta proyectada sobre el diseño de fondo.");
                 }}
-                title="Recorta la tela verde física detrás de ti y muestra el fondo escogido"
+                title="Recorta la tela verde detrás de ti y muestra el diseño de fondo seleccionado"
               >
-                <span>👤 Fondo Detrás (Chroma)</span>
+                <span>👤 Verme Encima (Chroma)</span>
               </button>
 
               <button
                 type="button"
                 className={`pill-ctrl-button ${bgPreviewMode === "pip_camera" && !chromaKeyEnabled ? "active-pink" : ""}`}
-                style={{ padding: "5px 6px", fontSize: "0.68rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
+                style={{ padding: "6px 8px", fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 5, justifyContent: "center" }}
                 onClick={() => {
                   setBgPreviewMode("pip_camera");
                   setChromaKeyEnabled(false);
@@ -3599,11 +3617,11 @@ ${summary}
                     const defaultBg = virtualBackgrounds.find((b) => b.id === "bg-cyber-streamer") || virtualBackgrounds[0];
                     if (defaultBg) void handleSelectBackground(defaultBg);
                   }
-                  setStreamInfo("Modo Fondo + PiP activo (ideal si estás en tu habitación normal sin tela verde).");
+                  setStreamInfo("🖼️ Pantalla Más Pequeña (PiP): tu cámara flota en ventana compacta sobre el fondo completo.");
                 }}
-                title="Tu cámara en ventana flotante sobre el fondo completo (sin necesidad de tela verde)"
+                title="Cámara en recuadro pequeño flotante sobre el diseño completo (ideal sin tela verde)"
               >
-                <span>🖼️ Fondo + PiP (Sin tela)</span>
+                <span>🖼️ Pantalla Pequeña (PiP)</span>
               </button>
 
               <button
@@ -3721,6 +3739,9 @@ ${summary}
                     setBgPreviewEnabled(true);
                     if (bg.id === "bg-chroma-green") {
                       setBgPreviewMode("backdrop");
+                      setChromaKeyEnabled(false);
+                    } else if (bgPreviewMode === "backdrop") {
+                      setBgPreviewMode("pip_camera");
                       setChromaKeyEnabled(false);
                     }
                   }}
@@ -8437,7 +8458,7 @@ ${summary}
                       title="Fondo proyectado detrás de la persona con Chroma Key"
                     >
                       <Dashicon name="admin-users" size={14} />
-                      <span>Fondo Detrás</span>
+                      <span>Verme Encima (Chroma)</span>
                     </button>
                     <button
                       type="button"
@@ -8447,10 +8468,10 @@ ${summary}
                         setChromaKeyEnabled(false);
                         setBgPreviewEnabled(true);
                       }}
-                      title="Tu cámara en ventana flotante sobre el fondo"
+                      title="Tu cámara en recuadro pequeño flotante sobre el fondo"
                     >
                       <Dashicon name="grid-view" size={14} />
-                      <span>Fondo + PiP</span>
+                      <span>Cámara Pequeña (PiP)</span>
                     </button>
                     <button
                       type="button"

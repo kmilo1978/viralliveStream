@@ -2095,3 +2095,27 @@ px tsc --noEmit completado con código 0.
   2. Limitar el ancho del banner a la izquierda para que nunca invada la esquina inferior derecha del carrito.
 - Pendientes:
   - Todo funcionando con visualización nativa y pulida.
+
+## Validación completada
+- Fecha: 2026-11-17T10:57:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Solución integral a Chroma Key (silueta sobre fondo), Cámara Pequeña PiP flotante, contraste en WhatsApp API y actualización de GitHub.
+- Observaciones:
+  1. En Chroma Key / Pantalla Verde: Al escoger cualquier diseño de fondo, la persona nunca desaparece:
+     - Modo "👤 Verme Encima (Chroma)": Proyecta la silueta del usuario recortada sobre el fondo virtual conectando reactivamente el lienzo del procesador con el monitor.
+     - Modo "🖼️ Cámara Pequeña (PiP)": La cámara web del streamer flota en ventana pequeña (16:9 con borde neón) en la esquina inferior derecha sobre el fondo completo, con `position: absolute !important;` y orden visual correcto.
+     - Selección de diseño visual activa por defecto PiP o Chroma según corresponda, evitando el modo 'backdrop' que ocultaba al usuario.
+  2. En WhatsApp & API: Refuerzo estricto con estilos en línea y CSS de alta especificidad para los botones de proveedores API (Webhook, Evolution API, Meta Cloud API), garantizando fondo oscuro con acento verde y texto de alto contraste sin riesgo de fondo blanco sobre blanco.
+  3. Carrito y Banners: Carrito único, 100% oculto cuando está vacío y sin superposición con la tarjeta de producto.
+  4. 0 errores en TypeScript (`tsc --noEmit`) y sincronización completa con el repositorio remoto de GitHub (`origin/main`).
+
+## Nueva sesión
+- Fecha: 2026-11-17 10:57
+- Solicitud: En Chroma Key / Pantalla Verde verse encima o en pantalla más pequeña (ambas opciones funcionales) y actualizar GitHub.
+- Decisiones clave:
+  1. Conmutar reactivamente `localVideoRef.current.srcObject` al stream procesado en modo Chroma y al stream nativo en modo PiP.
+  2. Añadir `position: absolute !important;` y coordenadas seguras a la cámara PiP en vistas 9:16 y mockup.
+  3. Prevenir que la selección de un fondo oculte a la persona forzando modos visibles.
+  4. Sincronizar todos los cambios con el repositorio remoto de GitHub en la rama main.
+- Pendientes:
+  - Todo completado y desplegado al repositorio.

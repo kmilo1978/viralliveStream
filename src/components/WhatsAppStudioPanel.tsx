@@ -441,7 +441,12 @@ export function WhatsAppStudioPanel({
                 type="button"
                 className={`whatsapp-tab-pill ${config.apiProvider === "webhook" ? "active" : ""}`}
                 onClick={() => onChangeConfig({ ...config, apiProvider: "webhook" })}
-                style={{ gap: 6 }}
+                style={{
+                  gap: 6,
+                  background: config.apiProvider === "webhook" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
+                  color: config.apiProvider === "webhook" ? "#25D366" : "#CBD5E1",
+                  borderColor: config.apiProvider === "webhook" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
+                }}
               >
                 <Dashicon name="rest-api" size={13} />
                 <span>Webhook / n8n / Make</span>
@@ -450,7 +455,12 @@ export function WhatsAppStudioPanel({
                 type="button"
                 className={`whatsapp-tab-pill ${config.apiProvider === "evolution_api" ? "active" : ""}`}
                 onClick={() => onChangeConfig({ ...config, apiProvider: "evolution_api" })}
-                style={{ gap: 6 }}
+                style={{
+                  gap: 6,
+                  background: config.apiProvider === "evolution_api" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
+                  color: config.apiProvider === "evolution_api" ? "#25D366" : "#CBD5E1",
+                  borderColor: config.apiProvider === "evolution_api" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
+                }}
               >
                 <Dashicon name="networking" size={13} />
                 <span>Evolution API</span>
@@ -459,7 +469,12 @@ export function WhatsAppStudioPanel({
                 type="button"
                 className={`whatsapp-tab-pill ${config.apiProvider === "cloud_api" ? "active" : ""}`}
                 onClick={() => onChangeConfig({ ...config, apiProvider: "cloud_api" })}
-                style={{ gap: 6 }}
+                style={{
+                  gap: 6,
+                  background: config.apiProvider === "cloud_api" ? "rgba(37, 211, 102, 0.18)" : "rgba(255, 255, 255, 0.05)",
+                  color: config.apiProvider === "cloud_api" ? "#25D366" : "#CBD5E1",
+                  borderColor: config.apiProvider === "cloud_api" ? "#25D366" : "rgba(255, 255, 255, 0.14)",
+                }}
               >
                 <Dashicon name="share" size={13} />
                 <span>Meta Cloud API</span>
