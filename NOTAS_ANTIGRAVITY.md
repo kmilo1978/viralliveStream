@@ -2151,3 +2151,14 @@ px tsc --noEmit completado con código 0.
   4. Saneamiento automático de `localStorage` para evitar que OBS quede persistido por error.
 - Pendientes:
   - Ninguno. Cámara y monitor 100% estables.
+
+## Validación completada
+- Fecha: 2026-11-17T14:51:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Corrección del bloqueo de hardware DirectShow en Windows que impedía que el video de la cámara física se mostrara en el monitor.
+- Observaciones:
+  1. Se eliminó la destrucción innecesaria del stream inicial (`tempStream.stop()`) que causaba que Windows bloqueara el driver de la cámara física por concurrencia ("NotReadableError").
+  2. Cuando el stream inicial de la cámara física se adquiere, se conserva y se enlaza de inmediato a `localVideoRef`.
+  3. Se relajaron las restricciones de resolución forzada a `{ ideal: candId }` para máxima compatibilidad con webcams integradas y USB en Windows.
+  4. Se añadió reproducción forzada reactiva con `useEffect` y evento `onLoadedMetadata` en la etiqueta `<video>` para evitar que el navegador quede pausado.
+  5. Sincronizado en GitHub (`origin/main`).

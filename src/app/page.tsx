@@ -1060,6 +1060,17 @@ export default function StudioDeluluPage() {
     ],
   );
 
+  // Asegurar que el elemento de video se reproduzca de inmediato en cuanto la cámara esté activa
+  useEffect(() => {
+    if (cameraStreamActive && localVideoRef.current) {
+      if (!localVideoRef.current.srcObject && rawStreamRef.current) {
+        localVideoRef.current.srcObject = rawStreamRef.current;
+      }
+      localVideoRef.current.muted = true;
+      localVideoRef.current.play().catch(() => {});
+    }
+  }, [cameraStreamActive]);
+
   // Sincronizar dinámicamente opciones de Chroma Key y Fondo con el preprocesador
   useEffect(() => {
     if (preprocRef.current) {
@@ -1153,17 +1164,22 @@ export default function StudioDeluluPage() {
 
         let stream: MediaStream | null = null;
 
-        // Si ya obtuvimos tempStream y coincide con el dispositivo objetivo (o no había objetivo y es física), usarlo
+        // Si ya obtuvimos tempStream y no es OBS (o no hay cámaras físicas), USARLO directamente sin detenerlo
         if (tempStream) {
           const track = tempStream.getVideoTracks()[0];
           const trackId = track?.getSettings()?.deviceId;
           const isTrackObs = /obs|virtual/i.test(track?.label || "");
-          if ((!targetId || trackId === targetId) && (!isTrackObs || realCams.length === 0)) {
+          if (!isTrackObs || realCams.length === 0) {
             stream = tempStream;
-            if (trackId) targetId = trackId;
+            const matchedCam = realCams.find((c) => c.label && c.label === track?.label);
+            activeCandId = matchedCam?.deviceId || trackId || (realCams[0]?.deviceId ?? "");
+            activeCandLabel = track?.label || "";
+            if (activeCandId) targetId = activeCandId;
           } else {
+            // Solo si era OBS y tenemos cámara física real, detenerlo dando tiempo al driver DirectShow de Windows
             tempStream.getTracks().forEach((t) => t.stop());
             tempStream = null;
+            await new Promise((r) => setTimeout(r, 200));
           }
         }
 
@@ -1181,24 +1197,14 @@ export default function StudioDeluluPage() {
         });
         if (candidates.length === 0) candidates.push("");
 
-        let activeCandId = "";
-        let activeCandLabel = "";
-
         if (!stream) {
           for (const candId of candidates) {
             try {
               const videoConstraints: MediaTrackConstraints = candId
                 ? {
                     deviceId: { ideal: candId },
-                    width: { ideal: spec.width },
-                    height: { ideal: spec.height },
-                    frameRate: { ideal: targetFps },
                   }
-                : {
-                    width: { ideal: spec.width },
-                    height: { ideal: spec.height },
-                    frameRate: { ideal: targetFps },
-                  };
+                : true;
 
               const s = await navigator.mediaDevices.getUserMedia({
                 video: videoConstraints,
@@ -1211,20 +1217,7 @@ export default function StudioDeluluPage() {
               break;
             } catch (cErr) {
               console.warn(`Intento con cámara ${candId} falló:`, cErr);
-              // Intento relajado sin resolución específica para webcams USB sensibles
-              if (candId) {
-                try {
-                  const sSimple = await navigator.mediaDevices.getUserMedia({
-                    video: { deviceId: { ideal: candId } },
-                    audio: false,
-                  });
-                  const vt = sSimple.getVideoTracks()[0];
-                  activeCandId = candId || vt?.getSettings()?.deviceId || "";
-                  activeCandLabel = vt?.label || "";
-                  stream = sSimple;
-                  break;
-                } catch {}
-              }
+              await new Promise((r) => setTimeout(r, 150));
             }
           }
         }
@@ -6233,6 +6226,9 @@ ${summary}
                     autoPlay
                     playsInline
                     muted
+                    onLoadedMetadata={() => {
+                      localVideoRef.current?.play().catch(() => {});
+                    }}
                     className={
                       bgPreviewEnabled && !isConnectedLive && selectedBgId !== "bg-none" && bgPreviewMode === "pip_camera"
                         ? "monitor-pip-camera"
@@ -6243,8 +6239,6 @@ ${summary}
                         isConnectedLive
                           ? "none"
                           : sourceMode === "video_file" && localVideoFileUrl
-                          ? "none"
-                          : bgPreviewEnabled && selectedBgId !== "bg-none" && bgPreviewMode === "backdrop"
                           ? "none"
                           : !cameraStreamActive
                           ? "none"
