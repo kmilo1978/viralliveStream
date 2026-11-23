@@ -3665,6 +3665,36 @@ ${summary}
     }
   }, [sourceMode, startCamera]);
 
+  // Vigilante automático y reconexión: si la cámara no ha iniciado o si el hardware estuvo ocupado, reintentar automáticamente cada 1.8s
+  useEffect(() => {
+    if (sourceMode !== "camera" || cameraStreamActive || isConnectedLive) return;
+
+    const timer = setTimeout(() => {
+      if (!cameraStreamActive && !isStartingCameraRef.current) {
+        void startCamera(undefined, true);
+      }
+    }, 1800);
+
+    return () => clearTimeout(timer);
+  }, [sourceMode, cameraStreamActive, isConnectedLive, startCamera]);
+
+  // Reconectar cámara automáticamente al volver a enfocar la pestaña del navegador
+  useEffect(() => {
+    const handleRecheckFocus = () => {
+      if (sourceMode === "camera" && !cameraStreamActive && !isStartingCameraRef.current) {
+        void startCamera(undefined, true);
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", handleRecheckFocus);
+      document.addEventListener("visibilitychange", handleRecheckFocus);
+      return () => {
+        window.removeEventListener("focus", handleRecheckFocus);
+        document.removeEventListener("visibilitychange", handleRecheckFocus);
+      };
+    }
+  }, [sourceMode, cameraStreamActive, startCamera]);
+
   // Renderizador unificado del módulo de Fondos Virtuales & Chroma Key (disponible en CAM, TRY ON, CLIPS y TIKTOK)
   const renderVirtualBackgroundSection = (tabContext: "CAM" | "TRY_ON" | "CLIPS" | "TIKTOK") => {
     return (
@@ -6127,8 +6157,9 @@ ${summary}
                           <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#FFFFFF" }}>
                             {streamerName || "Maddy"}
                           </span>
-                          <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
-                            Cámara en espera · Pulsa Iniciar o Cargar MP4
+                          <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginTop: 4, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                            <Dashicon name="video-alt2" size={13} color="#EC4899" />
+                            <span>Cámara en espera · Conectando automáticamente</span>
                           </span>
 
                           {sourceError && (

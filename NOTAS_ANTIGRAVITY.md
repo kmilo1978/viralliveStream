@@ -2208,3 +2208,21 @@ px tsc --noEmit completado con código 0.
   - Feed de video de la webcam física confirmado en monitor (estantería/habitación visible).
   - Selector de cámara fijado en "USB2.0 HD UVC WebCam (13d3:56a8) ★ Recomendada".
   - Barra de herramientas, WhatsApp dock y cabinas operativas.
+
+
+## Nueva sesión
+- Fecha: 2026-11-23 14:53
+- Solicitud: "porque volvio aparecer eso si ya lo habiamos solucionado".
+- Decisiones clave:
+  1. Identificar la causa raíz: el agente de pruebas en segundo plano mantuvo la cámara web ocupada en su proceso Chromium, impidiendo que el navegador del usuario tomara el stream por el bloqueo exclusivo de hardware DirectShow en Windows.
+  2. Cerrar y liberar definitivamente el subagente y procesos residuales de prueba.
+  3. Implementar un vigilante de reconexión automática en bucle cada 1.8 segundos (`useEffect` watchdog) que intenta restablecer la cámara web física sin exigir que el usuario pulse botones manuales.
+  4. Agregar listeners de reconexión inmediata en los eventos `focus` y `visibilitychange` para que tan pronto el usuario cambie o active la pestaña, el stream se reanude solo.
+  5. Mejorar el estado visual en espera a "Conectando automáticamente" con icono de sincronización.
+- Pendientes:
+  - Ninguno. Solución blindada contra colisiones de hardware.
+
+## Validación completada
+- Fecha: 2026-11-23T14:53:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Reconexión automática de cámara implementada, subagentes liberados y sincronización confirmada en TypeScript (0 errores).
