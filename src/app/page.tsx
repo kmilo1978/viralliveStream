@@ -932,17 +932,6 @@ export default function StudioDeluluPage() {
             return preferred.deviceId;
           });
         }
-
-        // Si la cámara activa actual es una capturadora 5843 sin señal, y tenemos la webcam física, conmutar en caliente
-        if (trueWebcams.length > 0) {
-          const currentTrack = rawStreamRef.current?.getVideoTracks()[0];
-          const currentTrackLabel = currentTrack?.label || "";
-          if (/5843|capture/i.test(currentTrackLabel)) {
-            console.log("[ViralLive AutoSwitch] Conmutando automáticamente desde capturadora 5843 a la webcam integrada:", trueWebcams[0].label);
-            setSelectedCameraId(trueWebcams[0].deviceId);
-            void startCamera(trueWebcams[0].deviceId);
-          }
-        }
       }
 
       if (mics.length > 0) {
@@ -1222,7 +1211,7 @@ export default function StudioDeluluPage() {
           if ((isTrackObs || isTrackCapture) && trueWebcams.length > 0) {
             tempStream.getTracks().forEach((t) => t.stop());
             tempStream = null;
-            await new Promise((r) => setTimeout(r, 150));
+            await new Promise((r) => setTimeout(r, 450));
           } else {
             stream = tempStream;
             const matchedCam = realCams.find((c) => c.label && c.label === track?.label);
@@ -1253,16 +1242,28 @@ export default function StudioDeluluPage() {
         if (!stream) {
           for (const candId of candidates) {
             try {
-              const videoConstraints: MediaTrackConstraints = candId
-                ? {
-                    deviceId: { ideal: candId },
-                  }
-                : {};
+              let s: MediaStream | null = null;
+              if (candId) {
+                // Primero intentar con exact para forzar al navegador a tomar la webcam física específica
+                try {
+                  s = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: candId } },
+                    audio: false,
+                  });
+                } catch {
+                  // Fallback a ideal si exact no es soportado
+                  s = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { ideal: candId } },
+                    audio: false,
+                  });
+                }
+              } else {
+                s = await navigator.mediaDevices.getUserMedia({
+                  video: true,
+                  audio: false,
+                });
+              }
 
-              const s = await navigator.mediaDevices.getUserMedia({
-                video: videoConstraints,
-                audio: false,
-              });
               const vt = s.getVideoTracks()[0];
               activeCandId = candId || vt?.getSettings()?.deviceId || "";
               activeCandLabel = vt?.label || "";
@@ -1270,7 +1271,7 @@ export default function StudioDeluluPage() {
               break;
             } catch (cErr) {
               console.warn(`Intento con cámara ${candId} falló:`, cErr);
-              await new Promise((r) => setTimeout(r, 150));
+              await new Promise((r) => setTimeout(r, 200));
             }
           }
         }
@@ -6122,7 +6123,7 @@ ${summary}
                       )}
 
                       {/* Standby visual si no hay stream activo todavía (siempre visible si la cámara no ha iniciado) */}
-                      {!isConnectedLive && !(sourceMode === "video_file" && localVideoFileUrl) && !cameraStreamActive && (
+                      {!isConnectedLive && !(sourceMode === "video_file" && localVideoFileUrl) && !cameraStreamActive && !rawStreamRef.current && (
                         <div
                           style={{
                             position: "absolute",
@@ -6262,7 +6263,12 @@ ${summary}
                           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
                             <button
                               type="button"
-                              onClick={() => void startCamera()}
+                              onClick={() => {
+                                setSourceError(null);
+                                const realCam = cameraDevices.find((c) => !/5843|capture|obs|virtual/i.test(c.label || ""));
+                                const target = selectedCameraId || realCam?.deviceId;
+                                void startCamera(target);
+                              }}
                               style={{
                                 padding: "6px 16px",
                                 borderRadius: 14,
@@ -6386,8 +6392,6 @@ ${summary}
                         isConnectedLive
                           ? "none"
                           : sourceMode === "video_file" && localVideoFileUrl
-                          ? "none"
-                          : !cameraStreamActive
                           ? "none"
                           : "block",
                       transform: mirrorInput ? "scaleX(-1)" : "none",

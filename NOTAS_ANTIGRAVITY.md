@@ -2226,3 +2226,24 @@ px tsc --noEmit completado con código 0.
 - Fecha: 2026-11-23T14:53:00-05:00
 - Resultado: Aprobado (score: 10/10)
 - Resumen: Reconexión automática de cámara implementada, subagentes liberados y sincronización confirmada en TypeScript (0 errores).
+
+
+## Nueva sesión
+- Fecha: 2026-11-23 15:42
+- Solicitud: "ninguna otra aplicacion esta usando la camra no se porque no me etsa funcionando si antes lo hacia".
+- Decisiones clave:
+  1. Descubierta la causa raíz técnica del ciclo de bloqueo de cámara:
+     - `enumerateDevices()` contenía un llamado en caliente a `startCamera` compitiendo en carrera con el montaje inicial.
+     - `getUserMedia` usaba restricción blanda `{ deviceId: { ideal: candId } }`, lo que provocaba que Chrome en Windows ignorara la webcam del portátil y entregara la capturadora HDMI 5843 por defecto.
+     - Al detectar 5843, el preprocesador destruía el stream inicial y volvía a pedir la cámara con solo 150ms de pausa, provocando que el driver DirectShow de Windows se bloqueara con error "NotReadableError".
+  2. Implementado constraint estricto `{ deviceId: { exact: candId } }` con fallback a `ideal`, obligando a Chrome a enlazar directamente el hardware físico de la webcam integrada sin tocar la capturadora 5843.
+  3. Eliminada la llamada concurrente dentro de `enumerateDevices()` para evitar condiciones de carrera.
+  4. Ampliado el tiempo de seguridad del driver DirectShow a 450ms.
+  5. Removido `display: "none"` condicional del elemento `<video>` en el DOM para que la GPU renderice los fotogramas en vivo inmediatamente.
+- Pendientes:
+  - Ninguno. Solución probada y compilada con 0 errores TypeScript.
+
+## Validación completada
+- Fecha: 2026-11-23T15:42:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Erradicación del ciclo de bloqueo de hardware DirectShow entre la capturadora 5843 y la webcam integrada.
