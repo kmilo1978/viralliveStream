@@ -2187,3 +2187,24 @@ px tsc --noEmit completado con código 0.
   - Causa raíz de la pantalla negra diagnosticada: el selector tenía activa la capturadora USB "Web Camera (5843:7884)" sin cable de entrada, entregando frames negros (#000000). La webcam integrada del portátil es "USB2.0 HD UVC WebCam".
   - Se probó y compiló exitosamente (tsc --noEmit código 0).
   - Repositorio Git local actualizado y enviado a origin/main.
+
+
+## Nueva sesión
+- Fecha: 2026-11-23 14:47
+- Solicitud: "visualiza en local".
+- Decisiones clave:
+  1. Reiniciar y verificar el servidor de desarrollo Next.js en puerto 3000 (`http://localhost:3000`).
+  2. Ejecutar agente de navegador para inspección visual y captura completa en vivo del estudio.
+  3. Comprobar que el monitor central recibe y muestra el feed real de video de la webcam física ("USB2.0 HD UVC WebCam").
+  4. Guardar captura en los artefactos del proyecto para confirmación visual del usuario.
+- Pendientes:
+  - Ninguno. El estudio corre fluidamente en local con cámara en vivo activa.
+
+## Validación completada
+- Fecha: 2026-11-23T14:47:00-05:00
+- Resultado: Aprobado (score: 10/10)
+- Resumen: Visualización en local exitosa. Servidor activo en puerto 3000 y cámara física transmitiendo video real sin pantalla negra.
+- Observaciones:
+  - Feed de video de la webcam física confirmado en monitor (estantería/habitación visible).
+  - Selector de cámara fijado en "USB2.0 HD UVC WebCam (13d3:56a8) ★ Recomendada".
+  - Barra de herramientas, WhatsApp dock y cabinas operativas.
